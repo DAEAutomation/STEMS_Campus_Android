@@ -38,6 +38,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,33 +68,77 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
+import com.dae.stems_campus.data.model.ProfileModel
+import com.dae.stems_campus.ui.components.LoadingView
+import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.ui.theme.STEMS_CampusTheme
+import com.dae.stems_campus.utils.calculateDuration
+import com.dae.stems_campus.utils.toAmountString
+import com.dae.stems_campus.viewmodel.ProfileViewModel
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
+import kotlinx.coroutines.delay
+import java.time.Instant
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 
 @Composable
-fun HomeScreen(mainNavController: NavController) {
+fun HomeScreen(mainNavController: NavController, profileViewModel: ProfileViewModel = hiltViewModel()) {
     val homeNavController = rememberNavController()
 
     NavHost(navController = homeNavController, startDestination = "Home") {
         composable("Home") {
-            homeMainLoad(mainNavController = mainNavController, onShowTabBarChange = {})
+            homeMainLoad(mainNavController = mainNavController,homeNavController, profileViewModel, onShowTabBarChange = {})
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun homeMainLoad(mainNavController: NavController, onShowTabBarChange: (Boolean) -> Unit) {
+private fun homeMainLoad(mainNavController: NavController, navHostController: NavHostController, profileViewModel: ProfileViewModel, onShowTabBarChange: (Boolean) -> Unit) {
+
+    val profileInfo by profileViewModel.profileInfo.collectAsState()
+    val showLoadingView by profileViewModel.showLoadingView.collectAsState()
+    val resGetProfileInfoSuccessFlag by profileViewModel.resGetProfileInfoSuccessFlag.collectAsState()
+    val showGetProfileInfoFailDialogFlag by profileViewModel.showGetProfileInfoFailDialogFlag.collectAsState()
+    val showGetProfileInfoFailMsg by profileViewModel.showGetProfileInfoFailMsg.collectAsState()
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            profileViewModel.getProfileInfoAction()
+            delay(30_000L)  // 30 秒
+        }
+    }
+    homeContent(mainNavController = mainNavController,
+        navHostController = navHostController,
+        profileInfo = profileInfo,
+        showLoadingView = showLoadingView,
+        resGetProfileInfoSuccessFlag = resGetProfileInfoSuccessFlag,
+        showGetProfileInfoFailDialogFlag = showGetProfileInfoFailDialogFlag,
+        showGetProfileInfoFailMsg = showGetProfileInfoFailMsg,
+        onGetProfileInfoFailDismissed = { profileViewModel.resetShowGetProfileInfoFailDialogFlag(false)})
+}
+
+@Composable
+private fun homeContent(mainNavController: NavController,
+                        navHostController: NavHostController,
+                        profileInfo: ProfileModel.ProfileData? = null,
+                        showLoadingView: Boolean = false,
+                        resGetProfileInfoSuccessFlag: Boolean = false,
+                        showGetProfileInfoFailDialogFlag: Boolean = false,
+                        showGetProfileInfoFailMsg: String? = null,
+                        onGetProfileInfoFailDismissed: () -> Unit = {}) {
 
     var showScanBottomSheet by remember { mutableStateOf(false) }
 
@@ -103,7 +148,7 @@ private fun homeMainLoad(mainNavController: NavController, onShowTabBarChange: (
 
         Column {
             Surface (modifier = Modifier
-                .weight(0.12f)
+                .weight(0.15f)
                 .fillMaxWidth(),  color = Color.Unspecified){
                 Column {
                     Spacer(modifier = Modifier.height(50.dp))
@@ -135,7 +180,12 @@ private fun homeMainLoad(mainNavController: NavController, onShowTabBarChange: (
             }
             Row {
                 Spacer(modifier = Modifier.width(25.dp))
-                Text(text = "Hi,張學友 副教授", color = Color(0xFF656565), style = MaterialTheme.typography.titleMedium)
+                if (profileInfo?.role.equals("staff")) {
+                    Text(text = "Hi,${profileInfo?.name} ${profileInfo?.jobTitle}", color = Color(0xFF656565), style = MaterialTheme.typography.titleMedium)
+                }else if (profileInfo?.role.equals("student")){
+                    Text(text = "Hi,${profileInfo?.name} 同學", color = Color(0xFF656565), style = MaterialTheme.typography.titleMedium)
+                }
+
             }
             Spacer(modifier = Modifier.height(30.dp))
 
@@ -144,18 +194,33 @@ private fun homeMainLoad(mainNavController: NavController, onShowTabBarChange: (
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState()),  color = Color.Unspecified){
                 Column {
-                    infoViewByTeacher(true)
-//                    infoViewByStudent(false)
+                    if (profileInfo?.role.equals("staff")) {
+                        infoViewByTeacher(profileInfo?.activeSession?.hasActive ?: false, profileInfo)
+                    }else if (profileInfo?.role.equals("student")){
+                        infoViewByStudent(profileInfo?.activeSession?.hasActive ?: false, profileInfo)
+                    }
+                }
+            }
+            if (showLoadingView) {
+                LoadingView() {}
+            }
+            if (showGetProfileInfoFailDialogFlag) {
+                textTNoButtonAlert(
+                    onDismissRequest = {},
+                    dialogTitle = parseDialogMsg(showGetProfileInfoFailMsg ?: "")
+                )
+                // 在 Dialog 顯示後啟動計時器
+                LaunchedEffect(Unit) {
+                    delay(1500) // 延遲 1.5 秒
+                    onGetProfileInfoFailDismissed()
                 }
             }
         }
-
-
     }
 }
 
 @Composable
-private fun infoViewByTeacher(hasDevice: Boolean) {
+private fun infoViewByTeacher(hasDevice: Boolean, aData: ProfileModel.ProfileData?) {
     Row {
         Spacer(modifier = Modifier.width(25.dp))
         Surface(
@@ -173,7 +238,7 @@ private fun infoViewByTeacher(hasDevice: Boolean) {
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(text = stringResource(id = R.string.wallet), color = Color.Black, style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.width(30.dp))
-                Text(text = "$${"1000"}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                Text(text = "$${aData?.balance?.toAmountString()}", color = Color(0xFF2D859D), style = MaterialTheme.typography.bodyLarge)
             }
         }
     }
@@ -195,15 +260,26 @@ private fun infoViewByTeacher(hasDevice: Boolean) {
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(text = stringResource(id = R.string.available_hours), color = Color.Black, style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.width(30.dp))
-                Text(text = "1小時23分鐘", color = Color(0xFFD08024), style = MaterialTheme.typography.bodyLarge)
+                Text(text = "${aData?.hoursBalance?.calculateDuration()}", color = Color(0xFFD08024), style = MaterialTheme.typography.bodyLarge)
             }
         }
     }
     Spacer(modifier = Modifier.height(20.dp))
     if (hasDevice) {
-        classroomView()
-        Spacer(modifier = Modifier.height(20.dp))
-        dormitoryView()
+        Column {
+            aData?.activeSession?.sessions?.forEach { item ->
+                when (item.space?.spaceType) {
+                    "classroom" -> {
+                        classroomView(aData = item)
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                    "dormitory" -> {
+                        dormitoryView(aData = item)
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                }
+            }
+        }
     }else{
         //未有裝置時
         Row {
@@ -264,7 +340,7 @@ private fun infoViewByTeacher(hasDevice: Boolean) {
 }
 
 @Composable
-private fun infoViewByStudent(hasDevice: Boolean) {
+private fun infoViewByStudent(hasDevice: Boolean, aData: ProfileModel.ProfileData?) {
     Row {
         Spacer(modifier = Modifier.width(25.dp))
         Surface(
@@ -282,7 +358,7 @@ private fun infoViewByStudent(hasDevice: Boolean) {
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(text = stringResource(id = R.string.wallet), color = Color.Black, style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.width(30.dp))
-                Text(text = "$${"1000"}", color = Color(0xFF2D859D), style = MaterialTheme.typography.bodyLarge)
+                Text(text = "$${aData?.balance?.toAmountString()}", color = Color(0xFF2D859D), style = MaterialTheme.typography.bodyLarge)
             }
         }
     }
@@ -343,7 +419,17 @@ private fun infoViewByStudent(hasDevice: Boolean) {
 }
 
 @Composable
-private fun classroomView() {
+private fun classroomView(aData: ProfileModel.UsingDeviceData?) {
+    var currentElapsed by remember {
+        mutableStateOf(elapsedTime(aData?.billing?.general?.startTime ?: "")) }
+
+    LaunchedEffect(aData?.billing?.general?.startTime) {
+        while (true) {
+            currentElapsed = elapsedTime(aData?.billing?.general?.startTime ?: "")
+            delay(1000L)
+        }
+    }
+
     Row {
         Spacer(modifier = Modifier.width(30.dp))
         Surface(
@@ -361,7 +447,7 @@ private fun classroomView() {
                         Spacer(modifier = Modifier.height(20.dp))
                         Row {
                             Spacer(modifier = Modifier.width(30.dp))
-                            Text("A101", color = Color.White,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
+                            Text("${aData?.space?.spaceName}", color = Color.White,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
                         }
                         Spacer(modifier = Modifier.height(15.dp))
                         Row {
@@ -369,8 +455,10 @@ private fun classroomView() {
                             Text(stringResource(R.string.classroom), color = Color.White,style = MaterialTheme.typography.bodyLarge, modifier = Modifier.background(Color.Unspecified).border(1.dp, Color.White).padding(2.dp))
                             Spacer(modifier = Modifier.width(5.dp))
                             Text(stringResource(R.string.general_power_supply), color = Color.White,style = MaterialTheme.typography.bodyLarge, modifier = Modifier.background(Color.Black).padding(2.dp))
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(stringResource(R.string.air_conditioner_power_supply), color = Color.White,style = MaterialTheme.typography.bodyLarge, modifier = Modifier.background(Color(0xFF2D859D)).padding(2.dp))
+                            if (aData?.device?.powerSupply?.ac?.on == true) {
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text(stringResource(R.string.air_conditioner_power_supply), color = Color.White,style = MaterialTheme.typography.bodyLarge, modifier = Modifier.background(Color(0xFF2D859D)).padding(2.dp))
+                            }
                         }
                         Spacer(modifier = Modifier.height(15.dp))
                         Row (verticalAlignment = Alignment.CenterVertically){
@@ -383,7 +471,7 @@ private fun classroomView() {
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(stringResource(R.string.cumulative_time), color = Color.White,style = MaterialTheme.typography.bodyLarge)
                             Spacer(modifier = Modifier.width(5.dp))
-                            Text("00:00:00", color = Color.White,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
+                            Text(currentElapsed, color = Color.White,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
                         }
 
                     }
@@ -408,7 +496,7 @@ private fun classroomView() {
 }
 
 @Composable
-private fun dormitoryView() {
+private fun dormitoryView(aData: ProfileModel.UsingDeviceData?) {
     Row {
         Spacer(modifier = Modifier.width(30.dp))
         Surface(
@@ -426,7 +514,7 @@ private fun dormitoryView() {
                         Spacer(modifier = Modifier.height(20.dp))
                         Row {
                             Spacer(modifier = Modifier.width(30.dp))
-                            Text("303", color = Color.White,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
+                            Text("${aData?.space?.spaceName}", color = Color.White,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
                         }
                         Spacer(modifier = Modifier.height(15.dp))
                         Row {
@@ -446,7 +534,7 @@ private fun dormitoryView() {
                             Spacer(modifier = Modifier.width(10.dp))
                             Text("${stringResource(R.string.cumulative_deduction_amount)}  $", color = Color.White,style = MaterialTheme.typography.bodyLarge)
                             Spacer(modifier = Modifier.width(2.dp))
-                            Text("1000", color = Color.White,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
+                            Text("${aData?.billing?.general?.totalAmount?.toAmountString()}", color = Color.White,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
                         }
 
                     }
@@ -609,6 +697,37 @@ private fun scanQRBottomSheetView() {
             }
         }
         Spacer(modifier = Modifier.height(50.dp))
+    }
+}
+
+@Composable
+private fun parseDialogMsg(aMsg: String):(String){
+    var msg: String = ""
+    if (aMsg == "PleaseReLogin") {
+        msg = stringResource(id = R.string.please_re_login)
+    }else if(aMsg == "PasswordNotEntered") {
+        msg = stringResource(R.string.password_not_entered)
+    }else {
+        msg = aMsg
+    }
+    return msg
+}
+
+private fun elapsedTime(startTime: String): String {
+    return try {
+        val startDate = ZonedDateTime.parse(startTime).toInstant()
+        val elapsed = ChronoUnit.SECONDS.between(startDate, Instant.now())
+
+        if (elapsed < 0) return "00:00:00"
+
+        val hours = elapsed / 3600
+        val minutes = (elapsed % 3600) / 60
+        val seconds = elapsed % 60
+
+        String.format("%02d:%02d:%02d", hours, minutes, seconds)
+
+    } catch (e: Exception) {
+        "00:00:00"
     }
 }
 
@@ -1266,7 +1385,7 @@ private fun HomePreview() {
 // 創建一個模擬的 NavController
     val navController = TestNavHostController(LocalContext.current)
 
-    homeMainLoad(navController, onShowTabBarChange = {})
+    homeContent(navController,navController)
 
 }
 

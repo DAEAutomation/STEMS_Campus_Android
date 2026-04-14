@@ -27,6 +27,7 @@
     <string name="please_enter_verification_code">請輸入驗證碼</string>
     <string name="account_not_entered">尚未輸入帳號</string>
     <string name="password_not_entered">尚未輸入密碼</string>
+    <string name="please_re_login">請重新登入</string>
     <string name="verify">驗證</string>
     <string name="forgot_password">忘記密碼</string>
     <string name="reset_password">重設密碼</string>
@@ -157,6 +158,7 @@
     <string name="organization">單位</string>
     <string name="biometric_not_supported_or_disabled">此裝置不支援生物辨識或未開啟</string>
     <string name="biometric_login_not_enabled">尚未啟用生物辨識登入功能</string>
+    <string name="biometric_not_supported">沒有生物辨識功能，預覽或非支援裝置</string>
     <string name="confirm_turn_on_air_conditioner">是否開啟冷氣</string>
     <string name="confirm_delete_account">確定要刪除帳戶？\n＊刪除後將無法進行復原</string>
     <string name="delete_success">刪除成功</string>

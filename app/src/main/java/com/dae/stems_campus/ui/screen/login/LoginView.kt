@@ -52,17 +52,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
+import com.dae.stems_campus.ui.components.LoadingView
+import com.dae.stems_campus.ui.components.textTNoButtonAlert
+import com.dae.stems_campus.viewmodel.LoginViewModel
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun login(navController: NavHostController, isLoginOrReg: Boolean) {
+fun login(navController: NavHostController, loginViewModel: LoginViewModel = hiltViewModel()) {
 
-    var loginOrRegister by remember { mutableStateOf(isLoginOrReg) }
+    var loginOrRegister by remember { mutableStateOf(true) }
     var pwVisibility by remember { mutableStateOf(false) }
 
     val focusRegisterEmail = remember { FocusRequester() }
@@ -74,15 +78,55 @@ fun login(navController: NavHostController, isLoginOrReg: Boolean) {
 //    val showRegisterInputFailMsg by accountViewModel.showRegisterInputFailMsg.collectAsState()
 //    val showLoadingView by accountViewModel.showLoadingView.collectAsState()
 //
-//    val accountText by loginViewModel.accountText.collectAsState()
-//    val passwordText by loginViewModel.passwordText.collectAsState()
-//
-//    val resLoginSuccessFlag by loginViewModel.resLoginSuccessFlag.collectAsState()
-//    val showLoginFailMsgDialogFlag by loginViewModel.showLoginFailMsgDialogFlag.collectAsState()
-//    val showLoginFailMsg by loginViewModel.showLoginFailMsg.collectAsState()
-//
-//    val rememberLoginInfoChecked by loginViewModel.rememberLoginInfoChecked.collectAsState()
+    val userNameText by loginViewModel.userNameText.collectAsState()
+    val passwordText by loginViewModel.passwordText.collectAsState()
+    val uuidText by loginViewModel.UUID.collectAsState()
 
+    val showLoadingView by loginViewModel.showLoadingView.collectAsState()
+
+    val resLoginSuccessFlag by loginViewModel.resLoginSuccessFlag.collectAsState()
+    val showLoginFailMsgDialogFlag by loginViewModel.showLoginFailMsgDialogFlag.collectAsState()
+    val showLoginFailMsg by loginViewModel.showLoginFailMsg.collectAsState()
+
+    val rememberLoginInfoChecked by loginViewModel.rememberLoginInfoChecked.collectAsState()
+
+    LoginContent(
+        navController = navController,
+        userNameText = userNameText,
+        passwordText = passwordText,
+        rememberLoginInfoChecked = rememberLoginInfoChecked,
+        showLoadingView = showLoadingView,
+        resLoginSuccessFlag = resLoginSuccessFlag,
+        showLoginFailMsgDialogFlag = showLoginFailMsgDialogFlag,
+        showLoginFailMsg = showLoginFailMsg,
+        onUserNameChange = { loginViewModel.updateInputAccount(it) },
+        onPasswordChange = { loginViewModel.updateInputPassword(it) },
+        onLoginClick = { loginViewModel.loginAction(userNameText, passwordText, uuidText) },
+        onRememberCheckedChange = { loginViewModel.updateRememberLoginInfoChecked(it)},
+        onLoginSuccessHandled = { loginViewModel.resetLoginSuccessFlag(false) },
+        onLoginFailDismissed = { loginViewModel.resetShowLoginFailMsgDialogFlag(false)
+        }
+    )
+}
+
+@Composable
+private fun LoginContent(navController: NavHostController,
+                         userNameText: String = "",
+                         passwordText: String = "",
+                         rememberLoginInfoChecked: Boolean = false,
+                         showLoadingView: Boolean = false,
+                         resLoginSuccessFlag: Boolean = false,
+                         showLoginFailMsgDialogFlag: Boolean = false,
+                         showLoginFailMsg: String? = null,
+                         onUserNameChange: (String) -> Unit = {},
+                         onPasswordChange: (String) -> Unit = {},
+                         onLoginClick: () -> Unit = {},
+                         onRememberCheckedChange: (Boolean) -> Unit = {},
+                         onLoginSuccessHandled: () -> Unit = {},
+                         onLoginFailDismissed: () -> Unit = {}) {
+
+    var loginOrRegister by remember { mutableStateOf(true) }
+    var pwVisibility by remember { mutableStateOf(false) }
     Column (){
         Surface(modifier = Modifier
             .weight(3f)
@@ -152,9 +196,9 @@ fun login(navController: NavHostController, isLoginOrReg: Boolean) {
                                 Row {
                                     Spacer(modifier = Modifier.width(30.dp))
                                     TextField(
-                                        value = "",  // 使用狀態作為輸入值
+                                        value = userNameText,  // 使用狀態作為輸入值
                                         onValueChange = {
-//                                            loginViewModel.updateInputAccount(it)
+                                            onUserNameChange(it)
                                         },
                                         modifier = Modifier
                                             .weight(1f)
@@ -167,7 +211,7 @@ fun login(navController: NavHostController, isLoginOrReg: Boolean) {
                                             disabledIndicatorColor = Color.Transparent,
                                         ),
                                         textStyle = MaterialTheme.typography.bodyLarge.copy(
-                                            color = Color.White
+                                            color = Color.Black
                                         ),
                                         placeholder = {
                                             Text(stringResource(id = R.string.account),
@@ -193,9 +237,9 @@ fun login(navController: NavHostController, isLoginOrReg: Boolean) {
                                 Row (verticalAlignment = Alignment.CenterVertically){
                                     Spacer(modifier = Modifier.width(30.dp))
                                     TextField(
-                                        value = "",  // 使用狀態作為輸入值
+                                        value = passwordText,  // 使用狀態作為輸入值
                                         onValueChange = {
-//                                            loginViewModel.updateInputPassword(it)
+                                            onPasswordChange(it)
                                         },
                                         modifier = Modifier
                                             .weight(1f)
@@ -208,7 +252,7 @@ fun login(navController: NavHostController, isLoginOrReg: Boolean) {
                                             disabledIndicatorColor = Color.Transparent,
                                         ),
                                         textStyle = MaterialTheme.typography.bodyLarge.copy(
-                                            color = Color.White
+                                            color = Color.Black
                                         ),
                                         placeholder = {
                                             Text(stringResource(id = R.string.password),
@@ -255,9 +299,9 @@ fun login(navController: NavHostController, isLoginOrReg: Boolean) {
                                         Row (verticalAlignment = Alignment.CenterVertically){
                                             Spacer(modifier = Modifier.width(20.dp))
                                             Checkbox(
-                                                checked = false,
+                                                checked = rememberLoginInfoChecked,
                                                 onCheckedChange = { isCheck ->
-//                                                    loginViewModel.updateRememberLoginInfoChecked(isCheck)
+                                                    onRememberCheckedChange(isCheck)
                                                 }
                                             )
                                             Text(text = stringResource(id = R.string.remember),
@@ -288,8 +332,7 @@ fun login(navController: NavHostController, isLoginOrReg: Boolean) {
                                             .background(Color(0xFF2D859D)
                                             )
                                             .clickable {
-//                                                loginViewModel.loginAction(accountText,passwordText)
-//                                                navController.navigate("first")
+                                                onLoginClick()
                                             },
 
                                         color = Color.Transparent
@@ -308,21 +351,24 @@ fun login(navController: NavHostController, isLoginOrReg: Boolean) {
                         Spacer(modifier = Modifier.width(30.dp))
                     }
 
-//                    if (resLoginSuccessFlag) {
-//                        loginViewModel.resetLoginSuccessFlag(false)
-//                        navController.navigate("first")
-//                    }
-//                    if (showLoginFailMsgDialogFlag) {
-//                        textTNoButtonAlert(
-//                            onDismissRequest = {},
-//                            dialogTitle = parseDialogMsg(showLoginFailMsg ?: "")
-//                        )
-//                        // 在 Dialog 顯示後啟動計時器
-//                        LaunchedEffect(Unit) {
-//                            delay(1500) // 延遲 1.5 秒
-//                            loginViewModel.resetShowLoginFailMsgDialogFlag(false) // 自動關閉 Dialog
-//                        }
-//                    }
+                    if (showLoadingView) {
+                        LoadingView() {}
+                    }
+                    if (resLoginSuccessFlag) {
+                        onLoginSuccessHandled()
+                        navController.navigate("first")
+                    }
+                    if (showLoginFailMsgDialogFlag) {
+                        textTNoButtonAlert(
+                            onDismissRequest = {},
+                            dialogTitle = parseDialogMsg(showLoginFailMsg ?: "")
+                        )
+                        // 在 Dialog 顯示後啟動計時器
+                        LaunchedEffect(Unit) {
+                            delay(1500) // 延遲 1.5 秒
+                            onLoginFailDismissed()
+                        }
+                    }
 
 
                 }
@@ -508,6 +554,7 @@ fun login(navController: NavHostController, isLoginOrReg: Boolean) {
             }
         }
     }
+
 }
 
 private fun getCurrentYear(): String {
@@ -532,6 +579,12 @@ private fun parseDialogMsg(aMsg: String):(String){
         msg = stringResource(id = R.string.account_not_entered)
     }else if (aMsg == "PasswordNotEntered") {
         msg = stringResource(id = R.string.password_not_entered)
+    }else if (aMsg == "BiometricLoginNotEnabled") {
+        msg = stringResource(R.string.biometric_login_not_enabled)
+    }else if (aMsg == "BiometricNotSupportedOrDisabled") {
+        msg = stringResource(id = R.string.biometric_not_supported_or_disabled)
+    }else if (aMsg == "BiometricNotSupported") {
+        msg = stringResource(id = R.string.biometric_not_supported)
     }else if (aMsg == "EmailNotEntered") {
 
     }else {
@@ -561,8 +614,5 @@ private fun loginView() {
 //        credentialRepository = FakeRepositoryManager.FakeCredentialRepository(LocalContext.current)
 //    )
 
-    login(
-        navController,
-        true
-    )
+    LoginContent(navController = navController)
 }

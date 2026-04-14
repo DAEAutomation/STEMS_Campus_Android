@@ -33,6 +33,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.ui.components.NavigationItem
+import com.dae.stems_campus.ui.screen.home.HomeScreen
 
 @Composable
 fun mainTabScreen(mainNavController: NavController) {
@@ -134,7 +135,7 @@ private fun BottomNavigationBar(bottomBarNavController: NavController, onItemSel
 private fun Navigation(bottomBarNavHostController: NavHostController,mainNavController: NavController, startRote: String) {
     NavHost(bottomBarNavHostController, startDestination = startRote) {
         composable(NavigationItem.Home.route) {
-
+            HomeScreen(mainNavController = mainNavController)
         }
         composable(NavigationItem.Wallet.route) {
 
