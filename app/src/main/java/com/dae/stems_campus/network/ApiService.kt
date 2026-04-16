@@ -28,6 +28,13 @@ interface ApiService {
 
 
     /**
+     * 登出
+     */
+    @POST("api/app/auth/logout")
+    suspend fun logout(): APIResponse.ApiResponse<Unit>
+
+
+    /**
      * 刷新 Token
      */
     @POST("api/app/auth/refresh")

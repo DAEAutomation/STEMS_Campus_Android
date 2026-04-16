@@ -26,4 +26,10 @@ open class LoginRepository @Inject constructor(apiService: ApiService, tokenMana
             ))
         }
     }
+
+    suspend fun logout(): Result<Unit> {
+        return executeAuthenticatedRequestNoData {
+            apiService.logout()
+        }
+    }
 }

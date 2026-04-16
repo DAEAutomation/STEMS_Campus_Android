@@ -54,6 +54,16 @@ class LoginViewModel @Inject constructor(private var loginRepository: LoginRepos
     private val _showVerifyPasswordFailMsg = MutableStateFlow<String?>("")
     val showVerifyPasswordFailMsg: StateFlow<String?> = _showVerifyPasswordFailMsg
 
+    //登出
+    private val _resLogoutSuccessFlag = MutableStateFlow(false)
+    val resLogoutSuccessFlag: StateFlow<Boolean> get() = _resLogoutSuccessFlag
+
+    private val _showLogoutFailDialogFlag = MutableStateFlow(false)
+    val showLogoutFailDialogFlag: StateFlow<Boolean> get() = _showLogoutFailDialogFlag
+
+    private val _showLogoutFailMsg = MutableStateFlow<String?>("")
+    val showLogoutFailMsg: StateFlow<String?> = _showLogoutFailMsg
+
 
     init {
         loadLoginPreferences()
@@ -172,6 +182,29 @@ class LoginViewModel @Inject constructor(private var loginRepository: LoginRepos
         }
     }
 
+    fun logoutAction() {
+        viewModelScope.launch {
+            _showLoadingView.value = true
+            when (val result = loginRepository.logout()) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _resLogoutSuccessFlag.value = true
+                }
+                is BaseRepository.Result.Error -> {
+                    _showLoadingView.value = false
+                    _showLogoutFailDialogFlag.value = true
+                    _showLogoutFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showLogoutFailDialogFlag.value = true
+                    _showLogoutFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+
 
     // 儲存 Name(使用者名稱)
     private fun saveNameValueToDataStore(value: String) {
@@ -241,5 +274,13 @@ class LoginViewModel @Inject constructor(private var loginRepository: LoginRepos
 
     fun resetShowVerifyPasswordFailDialogFlag(value: Boolean) {
         _showVerifyPasswordFailDialogFlag.value = value
+    }
+
+    fun resetResLogoutSuccessFlag(value: Boolean) {
+        _resLogoutSuccessFlag.value = value
+    }
+
+    fun resetShowLogoutFailDialogFlag(value: Boolean) {
+        _showLogoutFailDialogFlag.value = value
     }
 }

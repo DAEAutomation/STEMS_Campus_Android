@@ -74,48 +74,47 @@ open class BaseRepository @Inject constructor(
      * 執行需要認證的 API 請求，但無回傳data欄位
      * 自動處理 Token 過期和重試
      */
-//    protected suspend fun <T> executeAuthenticatedRequestByNoData(
-//        apiCall: suspend () -> APIResponse.ApiResponse<T>
-//    ): Result<T> {
-//        return withContext(Dispatchers.IO) {
-//            repeat(2) { attempt ->
-//                try {
-//                    val response = apiCall()
-//
-//                    return@withContext when {
-//                        response.success == true -> {
-//                            @Suppress("UNCHECKED_CAST")
-//                            Result.Success(response.data as T)
-//                        }
-//                        else -> Result.Error("請求失敗")
-//                    }
-//
-//                } catch (e: HttpException) {
-//                    if (e.code() == 401 && isTokenExpiredError(e) && attempt == 0) {
-//                        Log.d("BaseRepository", "Token 過期，嘗試刷新")
-//                        if (tokenManager.refreshToken() != null) {
-//                            Log.d("BaseRepository", "Token 刷新成功，重試請求")
-//                            return@repeat
-//                        } else {
-//                            Log.e("BaseRepository", "Token 刷新失敗")
-//                            tokenManager.clearTokens()
-//                            return@withContext Result.Unauthorized
-//                        }
-//                    } else if (e.code() == 401) {
-//                        tokenManager.clearTokens()
-//                        return@withContext Result.Unauthorized
-//                    } else {
-//                        return@withContext Result.Error(parseErrorMessage(e) ?: "請求失敗 (${e.code()})")
-//                    }
-//                } catch (e: Exception) {
-//                    Log.e("BaseRepository", "API 請求錯誤", e)
-//                    return@withContext Result.Error(e.message ?: "網路錯誤")
-//                }
-//            }
-//
-//            Result.Error("請求失敗")
-//        }
-//    }
+    protected suspend fun executeAuthenticatedRequestNoData(
+        apiCall: suspend () -> APIResponse.ApiResponse<Unit>
+    ): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            repeat(2) { attempt ->
+                try {
+                    val response = apiCall()
+
+                    return@withContext when {
+                        response.success == true -> {
+                            Result.Success(Unit)          // 只看 success，不管 data
+                        }
+                        else -> Result.Error(response.message ?: "請求失敗")
+                    }
+                } catch (e: HttpException) {
+                    val errorResponse = parseErrorResponse(e)
+                    val errorCode = errorResponse?.error?.code
+                    val errorMessage = errorResponse?.error?.message
+
+                    // 處理 HTTP 401 Token 過期
+                    if (e.code() == 401 && errorCode == "TOKEN_EXPIRED" && attempt == 0) {
+                        Log.d("DAE_Develop", "Token 過期，嘗試刷新")
+                        if (tokenManager.refreshToken() != null) {
+                            Log.d("DAE_Develop", "Token 刷新成功，重試請求")
+                            return@repeat
+                        } else {
+                            Log.e("DAE_Develop", "Token 刷新失敗")
+                            tokenManager.clearTokens()
+                            return@withContext Result.Unauthorized
+                        }
+                    } else {
+                        return@withContext Result.Error(errorMessage ?: "請求失敗 (${e.code()})")
+                    }
+                } catch (e: Exception) {
+                    Log.e("DAE_Develop", "API 請求錯誤", e)
+                    return@withContext Result.Error(e.message ?: "網路錯誤")
+                }
+            }
+            Result.Error("請求失敗")
+        }
+    }
 
     /**
      * 執行不需要認證的 API 請求（登入等）

@@ -34,6 +34,7 @@ import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.ui.components.NavigationItem
 import com.dae.stems_campus.ui.screen.home.HomeScreen
+import com.dae.stems_campus.ui.screen.setting.settingScreen
 
 @Composable
 fun mainTabScreen(mainNavController: NavController) {
@@ -144,7 +145,7 @@ private fun Navigation(bottomBarNavHostController: NavHostController,mainNavCont
 
         }
         composable(NavigationItem.Setting.route) {
-
+            settingScreen(mainNavController = mainNavController, onShowTabBarChange = {})
         }
 
 

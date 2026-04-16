@@ -4,7 +4,8 @@ class APIResponse {
     // 成功時的回應
     data class ApiResponse<T>(
         val success: Boolean?,
-        val data: T?
+        val data: T?,
+        val message: String?
     )
 
     // 錯誤時的回應結構
