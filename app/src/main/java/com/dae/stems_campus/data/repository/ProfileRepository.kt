@@ -13,4 +13,15 @@ open class ProfileRepository @Inject constructor(apiService: ApiService, tokenMa
             apiService.fetchProfileData()
         }
     }
+
+    // 使用中裝置內容
+    suspend fun getUsingDeviceDetail(aDeviceCode: String, aDeviceID: String): Result<ProfileModel.ActiveSession> {
+        return executeAuthenticatedRequest {
+            apiService.usingDeviceDetail(ProfileModel.UsingDeviceDetailRequest(
+                    device_code = aDeviceCode,
+                    device_id = aDeviceID
+                )
+            )
+        }
+    }
 }

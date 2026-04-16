@@ -42,8 +42,12 @@ open class BaseRepository @Inject constructor(
                     }
 
                 } catch (e: HttpException) {
+                    val errorResponse = parseErrorResponse(e)
+                    val errorCode = errorResponse?.error?.code
+                    val errorMessage = errorResponse?.error?.message
+
                     // 處理 HTTP 401 Token 過期
-                    if (e.code() == 401 && isTokenExpiredError(e) && attempt == 0) {
+                    if (e.code() == 401 && errorCode == "TOKEN_EXPIRED" && attempt == 0) {
                         Log.d("DAE_Develop", "Token 過期，嘗試刷新")
                         if (tokenManager.refreshToken() != null) {
                             Log.d("DAE_Develop", "Token 刷新成功，重試請求")
@@ -53,11 +57,8 @@ open class BaseRepository @Inject constructor(
                             tokenManager.clearTokens()
                             return@withContext Result.Unauthorized
                         }
-                    } else if (e.code() == 401) {
-                        tokenManager.clearTokens()
-                        return@withContext Result.Unauthorized
                     } else {
-                        return@withContext Result.Error(parseErrorMessage(e) ?: "請求失敗 (${e.code()})")
+                        return@withContext Result.Error(errorMessage ?: "請求失敗 (${e.code()})")
                     }
                 } catch (e: Exception) {
                     Log.e("DAE_Develop", "API 請求錯誤", e)
@@ -136,7 +137,8 @@ open class BaseRepository @Inject constructor(
 
             } catch (e: HttpException) {
                 Log.e("DAE_Develop", "API 請求錯誤", e)
-                Result.Error(parseErrorMessage(e) ?: "請求失敗 (${e.code()})")
+                val errorResponse = parseErrorResponse(e)
+                Result.Error(errorResponse?.error?.message ?: "請求失敗 (${e.code()})")
             } catch (e: Exception) {
                 Log.e("DAE_Develop", "API 請求錯誤", e)
                 Result.Error(e.message ?: "網路錯誤")
@@ -171,36 +173,18 @@ open class BaseRepository @Inject constructor(
 //    }
 
     /**
-     * 從 HttpException 的 errorBody 解析是否為 TOKEN_EXPIRED
+     * 從 HttpException 解析 errorBody（只讀一次）
      */
-    private fun isTokenExpiredError(e: HttpException): Boolean {
+    private fun parseErrorResponse(e: HttpException): APIResponse.ErrorResponse? {
         return try {
             val errorBody = e.response()?.errorBody()?.string()
             if (errorBody != null) {
-                val errorResponse = Gson().fromJson(errorBody, APIResponse.ErrorResponse::class.java)
-                errorResponse.error?.code == "TOKEN_EXPIRED"
-            } else {
-                false
-            }
-        } catch (ex: Exception) {
-            Log.e("BaseRepository", "解析錯誤回應失敗", ex)
-            false
-        }
-    }
-
-    /**
-     * 從 HttpException 的 errorBody 取出錯誤訊息
-     */
-    private fun parseErrorMessage(e: HttpException): String? {
-        return try {
-            val errorBody = e.response()?.errorBody()?.string()
-            if (errorBody != null) {
-                val errorResponse = Gson().fromJson(errorBody, APIResponse.ErrorResponse::class.java)
-                errorResponse.error?.message
+                Gson().fromJson(errorBody, APIResponse.ErrorResponse::class.java)
             } else {
                 null
             }
         } catch (ex: Exception) {
+            Log.e("DAE_Develop", "解析錯誤回應失敗", ex)
             null
         }
     }

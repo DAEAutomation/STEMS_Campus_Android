@@ -1,6 +1,8 @@
 package com.dae.stems_campus.ui.screen.home
 
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
@@ -36,6 +38,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -78,11 +81,14 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.ProfileModel
+import com.dae.stems_campus.data.model.ScanModel
 import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.ui.theme.STEMS_CampusTheme
 import com.dae.stems_campus.utils.calculateDuration
 import com.dae.stems_campus.utils.toAmountString
+import com.dae.stems_campus.viewmodel.HomeInfoViewModel
+import com.dae.stems_campus.viewmodel.LoginViewModel
 import com.dae.stems_campus.viewmodel.ProfileViewModel
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
@@ -94,19 +100,27 @@ import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
 @Composable
-fun HomeScreen(mainNavController: NavController, profileViewModel: ProfileViewModel = hiltViewModel()) {
+fun HomeScreen(mainNavController: NavController, profileViewModel: ProfileViewModel = hiltViewModel(), homeInfoViewModel: HomeInfoViewModel = hiltViewModel(), loginViewModel: LoginViewModel = hiltViewModel()) {
     val homeNavController = rememberNavController()
 
     NavHost(navController = homeNavController, startDestination = "Home") {
         composable("Home") {
-            homeMainLoad(mainNavController = mainNavController,homeNavController, profileViewModel, onShowTabBarChange = {})
+            homeMainLoad(mainNavController = mainNavController,homeNavController, profileViewModel, homeInfoViewModel, loginViewModel, onShowTabBarChange = {})
+        }
+        composable("ClassroomDetail/{deviceCode}") { backStackEntry ->
+            val deviceCode = backStackEntry.arguments?.getString("deviceCode")
+            classroomDetailScreen(navController = homeNavController, selectDeviceCode = deviceCode ?: "", onShowTabBarChange = {})
+        }
+        composable("DormitoryDetail/{deviceCode}") { backStackEntry ->
+            val deviceCode = backStackEntry.arguments?.getString("deviceCode")
+            dormitoryDetailScreen(navController = homeNavController, selectDeviceCode = deviceCode ?: "", onShowTabBarChange = {})
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun homeMainLoad(mainNavController: NavController, navHostController: NavHostController, profileViewModel: ProfileViewModel, onShowTabBarChange: (Boolean) -> Unit) {
+private fun homeMainLoad(mainNavController: NavController, navHostController: NavHostController, profileViewModel: ProfileViewModel, homeInfoViewModel: HomeInfoViewModel, loginViewModel: LoginViewModel, onShowTabBarChange: (Boolean) -> Unit) {
 
     val profileInfo by profileViewModel.profileInfo.collectAsState()
     val showLoadingView by profileViewModel.showLoadingView.collectAsState()
@@ -114,33 +128,141 @@ private fun homeMainLoad(mainNavController: NavController, navHostController: Na
     val showGetProfileInfoFailDialogFlag by profileViewModel.showGetProfileInfoFailDialogFlag.collectAsState()
     val showGetProfileInfoFailMsg by profileViewModel.showGetProfileInfoFailMsg.collectAsState()
 
-    LaunchedEffect(Unit) {
-        while (true) {
-            profileViewModel.getProfileInfoAction()
-            delay(30_000L)  // 30 秒
-        }
-    }
+    val uuid by homeInfoViewModel.UUID.collectAsState()
+    val scanInfo by homeInfoViewModel.scanInfo.collectAsState()
+    val resScanInfoSuccessFlag by homeInfoViewModel.resScanInfoSuccessFlag.collectAsState()
+    val showScanInfoFailDialogFlag by homeInfoViewModel.showScanInfoFailDialogFlag.collectAsState()
+    val showScanInfoFailMsg by homeInfoViewModel.showScanInfoFailMsg.collectAsState()
+
+    val resVerifyPasswordSuccessFlag by loginViewModel.resVerifyPasswordSuccessFlag.collectAsState()
+    val showVerifyPasswordFailDialogFlag by loginViewModel.showVerifyPasswordFailDialogFlag.collectAsState()
+    val showVerifyPasswordFailMsg by loginViewModel.showVerifyPasswordFailMsg.collectAsState()
+
+    val resStartPowerSuccessFlag by homeInfoViewModel.resStartPowerSuccessFlag.collectAsState()
+    val showStartPowerFailDialogFlag by homeInfoViewModel.showStartPowerFailDialogFlag.collectAsState()
+    val showStartPowerFailMsg by homeInfoViewModel.showStartPowerFailMsg.collectAsState()
+
+    var isAcControl by remember { mutableStateOf(false) }
+
     homeContent(mainNavController = mainNavController,
         navHostController = navHostController,
         profileInfo = profileInfo,
+        onRefreshProfile = { profileViewModel.getProfileInfoAction() },
         showLoadingView = showLoadingView,
         resGetProfileInfoSuccessFlag = resGetProfileInfoSuccessFlag,
         showGetProfileInfoFailDialogFlag = showGetProfileInfoFailDialogFlag,
         showGetProfileInfoFailMsg = showGetProfileInfoFailMsg,
-        onGetProfileInfoFailDismissed = { profileViewModel.resetShowGetProfileInfoFailDialogFlag(false)})
+        onGetProfileInfoFailDismissed = { profileViewModel.resetShowGetProfileInfoFailDialogFlag(false)},
+        onScanInfoFinishHandled = { code -> homeInfoViewModel.getScanInfoAction(aQrCode = code, aDeviceID = uuid)},
+        scanInfo = scanInfo,
+        resScanInfoSuccessFlag = resScanInfoSuccessFlag,
+        showScanInfoFailDialogFlag = showScanInfoFailDialogFlag,
+        showScanInfoFailMsg = showScanInfoFailMsg,
+        onScanInfoFailDismissed = { homeInfoViewModel.resetScanInfoFailDialogFlag(false)},
+        onScanInfoSuccessFlagReset = { homeInfoViewModel.resetScanInfoSuccessFlag(false)},
+        onVerifyPasswordHandled = { value ->  loginViewModel.verifyPasswordAction(value,"bind_device",uuid)},
+        resVerifyPasswordSuccessFlag = resVerifyPasswordSuccessFlag,
+        showVerifyPasswordFailDialogFlag = showVerifyPasswordFailDialogFlag,
+        showVerifyPasswordFailMsg = showVerifyPasswordFailMsg,
+        onVerifyPasswordFailDismissed = { loginViewModel.resetShowVerifyPasswordFailDialogFlag(false)},
+        acControlHandled = { value -> isAcControl = value })
+
+    //密碼驗證成功後
+    if (resVerifyPasswordSuccessFlag) {
+        loginViewModel.resetResVerifyPasswordSuccessFlag(false)
+        if (profileInfo?.role.equals("staff")) {
+            homeInfoViewModel.startPowerAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "")
+        }else if (profileInfo?.role.equals("student")){
+            homeInfoViewModel.startPowerByStudentAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "", isAcControl)
+        }
+    }
+
+    if (resStartPowerSuccessFlag) {
+        homeInfoViewModel.resetStartPowerSuccessFlag(false)
+        profileViewModel.getProfileInfoAction()
+    }
+    if (showStartPowerFailDialogFlag) {
+        textTNoButtonAlert(
+            onDismissRequest = {},
+            dialogTitle = parseDialogMsg(showStartPowerFailMsg ?: "")
+        )
+        // 在 Dialog 顯示後啟動計時器
+        LaunchedEffect(Unit) {
+            delay(1500) // 延遲 1.5 秒
+            homeInfoViewModel.resetStartPowerFailDialogFlag(false)
+        }
+    }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun homeContent(mainNavController: NavController,
                         navHostController: NavHostController,
                         profileInfo: ProfileModel.ProfileData? = null,
+                        onRefreshProfile: () -> Unit = {},
                         showLoadingView: Boolean = false,
                         resGetProfileInfoSuccessFlag: Boolean = false,
                         showGetProfileInfoFailDialogFlag: Boolean = false,
                         showGetProfileInfoFailMsg: String? = null,
-                        onGetProfileInfoFailDismissed: () -> Unit = {}) {
+                        onGetProfileInfoFailDismissed: () -> Unit = {},
+                        onScanInfoFinishHandled:(String) -> Unit = {},
+                        scanInfo: ScanModel.ScanData? = null,
+                        resScanInfoSuccessFlag: Boolean = false,
+                        showScanInfoFailDialogFlag: Boolean = false,
+                        showScanInfoFailMsg: String? = null,
+                        onScanInfoSuccessFlagReset: () -> Unit = {},
+                        onScanInfoFailDismissed: () -> Unit = {},
+                        onVerifyPasswordHandled:(String) -> Unit = {},
+                        resVerifyPasswordSuccessFlag: Boolean = false,
+                        showVerifyPasswordFailDialogFlag: Boolean = false,
+                        showVerifyPasswordFailMsg: String? = null,
+                        onVerifyPasswordFailDismissed: () -> Unit = {},
+                        acControlHandled:(Boolean) -> Unit = {}) {
 
+    val classroomTeacherSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val dormitoryTeacherSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val classroomStudentSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val dormitoryStudentSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val inUseStudentSheetState = rememberModalBottomSheetState()
+    val powerEnableStudentSheetState = rememberModalBottomSheetState()
+    val inputPasswordSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    var showClassroomPowerSupplyByTeacherBottomSheet by remember { mutableStateOf(false) }
+    var showDormitoryPowerSupplyByTeacherBottomSheet by remember { mutableStateOf(false) }
+    var showClassroomPowerSupplyByStudentBottomSheet by remember { mutableStateOf(false) }
+    var showDormitoryPowerSupplyByStudentBottomSheet by remember { mutableStateOf(false) }
+    var showingInUseBottomSheet by remember { mutableStateOf(false) }
+    var showingPowerEnableBottomSheet by remember { mutableStateOf(false) }
+    var showingInputPasswordBottomSheet by remember { mutableStateOf(false) }
     var showScanBottomSheet by remember { mutableStateOf(false) }
+    val scanSheetState = rememberModalBottomSheetState()
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            showScanBottomSheet = true
+        }
+    }
+
+    // 判斷是否有任何 BottomSheet 正在顯示
+    val isAnyBottomSheetShowing = showClassroomPowerSupplyByTeacherBottomSheet ||
+        showDormitoryPowerSupplyByTeacherBottomSheet ||
+        showClassroomPowerSupplyByStudentBottomSheet ||
+        showDormitoryPowerSupplyByStudentBottomSheet ||
+        showingInUseBottomSheet ||
+        showingPowerEnableBottomSheet ||
+        showingInputPasswordBottomSheet ||
+        showScanBottomSheet
+
+    // BottomSheet 沒開的時候才每 30 秒刷新
+    LaunchedEffect(isAnyBottomSheetShowing) {
+        if (!isAnyBottomSheetShowing) {
+            while (true) {
+                onRefreshProfile()
+                delay(30_000L)
+            }
+        }
+    }
 
     Box(modifier = Modifier
         .fillMaxSize()
@@ -161,6 +283,9 @@ private fun homeContent(mainNavController: NavController,
                         Surface (modifier = Modifier.weight(1f)){  }
                         Surface (modifier = Modifier, color = Color.Unspecified){
                             Surface (modifier = Modifier
+                                .clickable {
+                                    cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                                }
                                 , color = Color.Unspecified)
                             {
                                 Image(painter = painterResource(id = R.drawable.qrcode), contentDescription = "")
@@ -195,9 +320,9 @@ private fun homeContent(mainNavController: NavController,
                 .verticalScroll(rememberScrollState()),  color = Color.Unspecified){
                 Column {
                     if (profileInfo?.role.equals("staff")) {
-                        infoViewByTeacher(profileInfo?.activeSession?.hasActive ?: false, profileInfo)
+                        infoViewByTeacher(profileInfo?.activeSession?.hasActive ?: false, profileInfo, onScanClick = { cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA) }, onGetUsingDeviceDetailByClassroomHandled = { value -> navHostController.navigate("ClassroomDetail/${value}")}, onGetUsingDeviceDetailByDormitoryHandled = { value -> navHostController.navigate("DormitoryDetail/${value}")})
                     }else if (profileInfo?.role.equals("student")){
-                        infoViewByStudent(profileInfo?.activeSession?.hasActive ?: false, profileInfo)
+                        infoViewByStudent(profileInfo?.activeSession?.hasActive ?: false, profileInfo, onScanClick = { cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA) }, onGetUsingDeviceDetailByClassroomHandled = { value -> navHostController.navigate("ClassroomDetail/${value}")}, onGetUsingDeviceDetailByDormitoryHandled = { value -> navHostController.navigate("DormitoryDetail/${value}")})
                     }
                 }
             }
@@ -215,12 +340,212 @@ private fun homeContent(mainNavController: NavController,
                     onGetProfileInfoFailDismissed()
                 }
             }
+
+            if (resScanInfoSuccessFlag) {
+                when (scanInfo?.usageStatus) {
+                    0 -> {
+                        if (profileInfo?.role.equals("staff")) {
+                            if (scanInfo?.spaceType.equals("classroom")) {
+                                showClassroomPowerSupplyByTeacherBottomSheet = true
+                            }else if (scanInfo?.spaceType.equals("dormitory")){
+                                showDormitoryPowerSupplyByTeacherBottomSheet = true
+                            }
+                        }else if (profileInfo?.role.equals("student")){
+                            if (scanInfo?.spaceType.equals("classroom")) {
+                                showClassroomPowerSupplyByStudentBottomSheet = true
+                            }else if (scanInfo?.spaceType.equals("dormitory")){
+                                showDormitoryPowerSupplyByStudentBottomSheet = true
+                            }
+                        }
+                        onScanInfoSuccessFlagReset()
+                    }
+                    1 -> {
+                        showingInUseBottomSheet = true
+                        onScanInfoSuccessFlagReset()
+                    }
+                    2 -> {
+                        showingPowerEnableBottomSheet = true
+                        onScanInfoSuccessFlagReset()
+                    }
+                    3 -> {
+                        textTNoButtonAlert(
+                            onDismissRequest = {},
+                            dialogTitle = scanInfo.canStartReason ?: ""
+                        )
+                        // 在 Dialog 顯示後啟動計時器
+                        LaunchedEffect(Unit) {
+                            delay(1500) // 延遲 1.5 秒
+                            onScanInfoSuccessFlagReset()
+                        }
+                    }
+                }
+
+            }
+
+            if (showScanInfoFailDialogFlag) {
+                textTNoButtonAlert(
+                    onDismissRequest = {},
+                    dialogTitle = parseDialogMsg(showScanInfoFailMsg ?: "")
+                )
+                // 在 Dialog 顯示後啟動計時器
+                LaunchedEffect(Unit) {
+                    delay(1500) // 延遲 1.5 秒
+                    onScanInfoFailDismissed()
+                }
+            }
+
+            //老師開教室
+            if (showClassroomPowerSupplyByTeacherBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showClassroomPowerSupplyByTeacherBottomSheet = false
+                    },
+                    sheetState = classroomTeacherSheetState,
+                    containerColor = Color.White
+                ) {
+                    classroomPowerSupplyByTeacherBottomSheetView(scanInfo,
+                        onPowerSupplyHandled = {
+                            showingInputPasswordBottomSheet = true
+                    }, onCancelHandled = {
+                        showClassroomPowerSupplyByTeacherBottomSheet = false
+                    })
+                }
+            }
+
+            //老師開宿舍
+            if (showDormitoryPowerSupplyByTeacherBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showDormitoryPowerSupplyByTeacherBottomSheet = false
+                    },
+                    sheetState = dormitoryTeacherSheetState,
+                    containerColor = Color.White
+                ) {
+                    dormitoryPowerSupplyByTeacherBottomSheetView(scanInfo,
+                        onPowerSupplyHandled = {
+                            showingInputPasswordBottomSheet = true
+                    }, onCancelHandled = {
+                        showDormitoryPowerSupplyByTeacherBottomSheet = false
+                    })
+                }
+            }
+
+            //學生開教室
+            if (showClassroomPowerSupplyByStudentBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showClassroomPowerSupplyByStudentBottomSheet = false
+                    },
+                    sheetState = classroomStudentSheetState,
+                    containerColor = Color.White
+                ) {
+                    classroomPowerSupplyByStudentBottomSheetView(scanInfo,
+                        onPowerSupplyHandled = { value ->
+                            acControlHandled(value)
+                            showingInputPasswordBottomSheet = true
+                        }, onCancelHandled = {
+                            showClassroomPowerSupplyByStudentBottomSheet = false
+                        })
+                }
+            }
+
+            //學生開宿舍
+            if (showDormitoryPowerSupplyByStudentBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showDormitoryPowerSupplyByStudentBottomSheet = false
+                    },
+                    sheetState = dormitoryStudentSheetState,
+                    containerColor = Color.White
+                ) {
+                    dormitoryPowerSupplyByStudentBottomSheetView(scanInfo,
+                        onPowerSupplyHandled = {
+                            showingInputPasswordBottomSheet = true
+                    }, onCancelHandled = {
+                        showDormitoryPowerSupplyByStudentBottomSheet = false
+                    })
+                }
+            }
+
+            if (showingInUseBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showingInUseBottomSheet = false
+                    },
+                    sheetState = inUseStudentSheetState,
+                    containerColor = Color.White
+                ) {
+                    inUseBottomSheetView(scanInfo, onCancelHandled = {
+                        showingInUseBottomSheet = false
+                    })
+                }
+            }
+
+            if (showingPowerEnableBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showingPowerEnableBottomSheet = false
+                    },
+                    sheetState = powerEnableStudentSheetState,
+                    containerColor = Color.White
+                ) {
+                    powerEnabledBottomSheetView(onCancelHandled = {
+                        showingPowerEnableBottomSheet = false
+                    })
+                }
+            }
+
+            if (resVerifyPasswordSuccessFlag) {
+                showingInputPasswordBottomSheet = false
+                showDormitoryPowerSupplyByTeacherBottomSheet = false
+                showClassroomPowerSupplyByTeacherBottomSheet = false
+                showClassroomPowerSupplyByStudentBottomSheet = false
+                showDormitoryPowerSupplyByStudentBottomSheet = false
+            }
+
+            //輸入密碼
+            if (showingInputPasswordBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showingInputPasswordBottomSheet = false
+                    },
+                    sheetState = inputPasswordSheetState,
+                    containerColor = Color.White
+                ) {
+                    inputPasswordAndLinkBottomSheetView(onInputText = { value ->
+                        onVerifyPasswordHandled(value)
+                    }, onCancelHandled = {
+                            showingInputPasswordBottomSheet = false
+                    }, showVerifyPasswordFailDialogFlag = showVerifyPasswordFailDialogFlag,
+                        showVerifyPasswordFailMsg = showVerifyPasswordFailMsg,
+                        onVerifyPasswordFailDismissed = {
+                            onVerifyPasswordFailDismissed()
+                        })
+                }
+            }
+
+            if (showScanBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showScanBottomSheet = false
+                    },
+                    sheetState = scanSheetState,
+                    containerColor = Color.White
+                ) {
+                    scanQRBottomSheetView(onCodeScanned = { code ->
+                        showScanBottomSheet = false
+                        onScanInfoFinishHandled(code)
+                    })
+                }
+            }
+
         }
     }
 }
 
 @Composable
-private fun infoViewByTeacher(hasDevice: Boolean, aData: ProfileModel.ProfileData?) {
+private fun infoViewByTeacher(hasDevice: Boolean, aData: ProfileModel.ProfileData?, onScanClick: () -> Unit, onGetUsingDeviceDetailByClassroomHandled: (String) -> Unit, onGetUsingDeviceDetailByDormitoryHandled: (String) -> Unit) {
+
     Row {
         Spacer(modifier = Modifier.width(25.dp))
         Surface(
@@ -270,11 +595,15 @@ private fun infoViewByTeacher(hasDevice: Boolean, aData: ProfileModel.ProfileDat
             aData?.activeSession?.sessions?.forEach { item ->
                 when (item.space?.spaceType) {
                     "classroom" -> {
-                        classroomView(aData = item)
+                        classroomView(aData = item, onDetailClick = { value ->
+                            onGetUsingDeviceDetailByClassroomHandled(value)
+                        })
                         Spacer(modifier = Modifier.height(20.dp))
                     }
                     "dormitory" -> {
-                        dormitoryView(aData = item)
+                        dormitoryView(aData = item, onDetailClick = { value ->
+                            onGetUsingDeviceDetailByDormitoryHandled(value)
+                        })
                         Spacer(modifier = Modifier.height(20.dp))
                     }
                 }
@@ -311,7 +640,7 @@ private fun infoViewByTeacher(hasDevice: Boolean, aData: ProfileModel.ProfileDat
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clickable { },
+                        .clickable { onScanClick() },
                     color = Color.White,
                     shape = RoundedCornerShape(9.dp)
                 ) {
@@ -335,12 +664,11 @@ private fun infoViewByTeacher(hasDevice: Boolean, aData: ProfileModel.ProfileDat
             Spacer(modifier = Modifier.width(30.dp))
         }
     }
-
-
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun infoViewByStudent(hasDevice: Boolean, aData: ProfileModel.ProfileData?) {
+private fun infoViewByStudent(hasDevice: Boolean, aData: ProfileModel.ProfileData?, onScanClick: () -> Unit, onGetUsingDeviceDetailByClassroomHandled: (String) -> Unit, onGetUsingDeviceDetailByDormitoryHandled: (String) -> Unit) {
     Row {
         Spacer(modifier = Modifier.width(25.dp))
         Surface(
@@ -364,62 +692,83 @@ private fun infoViewByStudent(hasDevice: Boolean, aData: ProfileModel.ProfileDat
     }
 
     Spacer(modifier = Modifier.height(20.dp))
-    Row {
-        Spacer(modifier = Modifier.width(30.dp))
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(230.dp)
-                .drawWithContent {
-                    drawContent() // 先畫內容（Surface）
-                    val strokeWidthPx = 1.dp.toPx()
-                    val cornerRadiusPx = 9.dp.toPx()
-                    val inset = strokeWidthPx / 2
-                    drawRoundRect(
-                        color = Color(0xFF656565),
-                        topLeft = Offset(inset, inset),
-                        size = Size(
-                            width = size.width - strokeWidthPx,
-                            height = size.height - strokeWidthPx
-                        ),
-                        style = Stroke(
-                            width = strokeWidthPx,
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 10f), 0f)
-                        ),
-                        cornerRadius = CornerRadius(cornerRadiusPx, cornerRadiusPx)
-                    )
-                }
-        ) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable { },
-                color = Color.White,
-                shape = RoundedCornerShape(9.dp)
-            ) {
-                Row (verticalAlignment = Alignment.CenterVertically){
-                    Surface (modifier = Modifier.weight(1f), color = Color.Unspecified){
-                        Column (horizontalAlignment = Alignment.CenterHorizontally){
-                            Spacer(modifier = Modifier.height(20.dp))
-                            Surface (modifier = Modifier, color = Color.Unspecified){
-                                Image(painter = painterResource(id = R.drawable.qrcode_blue), contentDescription = "")
-                            }
-                            Spacer(modifier = Modifier.height(25.dp))
-                            Text(stringResource(R.string.scan_for_power_usage), color = Color.Black,style = MaterialTheme.typography.bodyLarge)
-                            Spacer(modifier = Modifier.height(5.dp))
-                            Text(stringResource(R.string.scan_location_qr_code_to_start), color = Color(0xFF656565),style = MaterialTheme.typography.bodyMedium)
-                            Spacer(modifier = Modifier.height(20.dp))
-                        }
+    if (hasDevice) {
+        Column {
+            aData?.activeSession?.sessions?.forEach { item ->
+                when (item.space?.spaceType) {
+                    "classroom" -> {
+                        classroomView(aData = item, onDetailClick = { value ->
+                            onGetUsingDeviceDetailByClassroomHandled(value)
+                        })
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                    "dormitory" -> {
+                        dormitoryView(aData = item, onDetailClick = { value ->
+                            onGetUsingDeviceDetailByDormitoryHandled(value)
+                        })
+                        Spacer(modifier = Modifier.height(20.dp))
                     }
                 }
             }
         }
-        Spacer(modifier = Modifier.width(30.dp))
+    }else{
+        Row {
+            Spacer(modifier = Modifier.width(30.dp))
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(230.dp)
+                    .drawWithContent {
+                        drawContent() // 先畫內容（Surface）
+                        val strokeWidthPx = 1.dp.toPx()
+                        val cornerRadiusPx = 9.dp.toPx()
+                        val inset = strokeWidthPx / 2
+                        drawRoundRect(
+                            color = Color(0xFF656565),
+                            topLeft = Offset(inset, inset),
+                            size = Size(
+                                width = size.width - strokeWidthPx,
+                                height = size.height - strokeWidthPx
+                            ),
+                            style = Stroke(
+                                width = strokeWidthPx,
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 10f), 0f)
+                            ),
+                            cornerRadius = CornerRadius(cornerRadiusPx, cornerRadiusPx)
+                        )
+                    }
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable { onScanClick() },
+                    color = Color.White,
+                    shape = RoundedCornerShape(9.dp)
+                ) {
+                    Row (verticalAlignment = Alignment.CenterVertically){
+                        Surface (modifier = Modifier.weight(1f), color = Color.Unspecified){
+                            Column (horizontalAlignment = Alignment.CenterHorizontally){
+                                Spacer(modifier = Modifier.height(20.dp))
+                                Surface (modifier = Modifier, color = Color.Unspecified){
+                                    Image(painter = painterResource(id = R.drawable.qrcode_blue), contentDescription = "")
+                                }
+                                Spacer(modifier = Modifier.height(25.dp))
+                                Text(stringResource(R.string.scan_for_power_usage), color = Color.Black,style = MaterialTheme.typography.bodyLarge)
+                                Spacer(modifier = Modifier.height(5.dp))
+                                Text(stringResource(R.string.scan_location_qr_code_to_start), color = Color(0xFF656565),style = MaterialTheme.typography.bodyMedium)
+                                Spacer(modifier = Modifier.height(20.dp))
+                            }
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.width(30.dp))
+        }
     }
 }
 
 @Composable
-private fun classroomView(aData: ProfileModel.UsingDeviceData?) {
+private fun classroomView(aData: ProfileModel.UsingDeviceData?, onDetailClick: (String) -> Unit) {
     var currentElapsed by remember {
         mutableStateOf(elapsedTime(aData?.billing?.general?.startTime ?: "")) }
 
@@ -435,7 +784,7 @@ private fun classroomView(aData: ProfileModel.UsingDeviceData?) {
         Surface(
             modifier = Modifier
                 .weight(1f)
-                .clickable { },
+                .clickable { onDetailClick(aData?.device?.deviceCode ?: "") },
             color = Color(0xFFD08024),
             shape = RoundedCornerShape(9.dp)
         ) {
@@ -496,13 +845,13 @@ private fun classroomView(aData: ProfileModel.UsingDeviceData?) {
 }
 
 @Composable
-private fun dormitoryView(aData: ProfileModel.UsingDeviceData?) {
+private fun dormitoryView(aData: ProfileModel.UsingDeviceData?, onDetailClick: (String) -> Unit) {
     Row {
         Spacer(modifier = Modifier.width(30.dp))
         Surface(
             modifier = Modifier
                 .weight(1f)
-                .clickable { },
+                .clickable { onDetailClick(aData?.device?.deviceCode ?: "") },
             color = Color(0xFF2D859D),
             shape = RoundedCornerShape(9.dp)
         ) {
@@ -618,7 +967,7 @@ private fun processImageProxy(
             .addOnSuccessListener { barcodes ->
                 for (barcode in barcodes) {
                     barcode.rawValue?.let {
-                        Log.d("QRCode", "掃描成功：$it")
+                        Log.d("DAE_Develop", "掃描成功：$it")
                         onCodeScanned(it)
                     }
                 }
@@ -633,15 +982,15 @@ private fun processImageProxy(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun scanQRBottomSheetView() {
+private fun scanQRBottomSheetView(onCodeScanned: (String) -> Unit) {
     Column {
         Row (verticalAlignment = Alignment.CenterVertically){
             Surface (modifier = Modifier.weight(1f), color = Color.Unspecified){
                 Column (horizontalAlignment = Alignment.CenterHorizontally){
-                    Spacer(modifier = Modifier.height(30.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Text(stringResource(R.string.scan_location_qr_code_to_start), color = Color.Black, style = MaterialTheme.typography.bodyLarge)
-                    Spacer(modifier = Modifier.height(35.dp))
+                    Spacer(modifier = Modifier.height(25.dp))
 
                 }
             }
@@ -653,20 +1002,21 @@ private fun scanQRBottomSheetView() {
         ) {
             Box(
                 modifier = Modifier
-                    .width(300.dp)
-                    .height(300.dp)
+                    .width(200.dp)
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(1.dp))
             ) {
                 CameraPreview(
                     modifier = Modifier.fillMaxSize(),
                     onCodeScanned = {
-
+                        onCodeScanned(it)
                     }
                 )
 
                 // 四角直角線條
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val cornerLength = 40.dp.toPx()   // 線條長度
-                    val strokeWidth = 4.dp.toPx()      // 線條粗細
+                    val strokeWidth = 5.dp.toPx()      // 線條粗細
                     val color = Color(0xFF2D859D)             // 線條顏色
                     val offset = 0f                     // 離邊緣的距離（0 = 貼邊）
 
@@ -733,7 +1083,7 @@ private fun elapsedTime(startTime: String): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun classroomPowerSupplyByTeacherBottomSheetView() {
+private fun classroomPowerSupplyByTeacherBottomSheetView(aData: ScanModel.ScanData?, onPowerSupplyHandled: () -> Unit, onCancelHandled: () -> Unit) {
     Column {
         Row (verticalAlignment = Alignment.CenterVertically){
             Surface (modifier = Modifier.weight(1f), color = Color.Unspecified){
@@ -763,10 +1113,10 @@ private fun classroomPowerSupplyByTeacherBottomSheetView() {
                     Spacer(modifier = Modifier.height( 35.dp))
                     Text(stringResource(R.string.classroom), color = Color(0xFFDF8927),style = MaterialTheme.typography.bodyLarge, modifier = Modifier.background(Color.Unspecified).border(1.dp, Color(0xFFDF8927)).padding(2.dp))
                     Spacer(modifier = Modifier.height(15.dp))
-                    Text("A101", color = Color.Black,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
+                    Text("${aData?.spaceName}", color = Color.Black,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
 
                     Spacer(modifier = Modifier.height(15.dp))
-                    Text("XXXX", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${aData?.buildingName} ${aData?.floorName}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                 }
 
             }
@@ -785,8 +1135,9 @@ private fun classroomPowerSupplyByTeacherBottomSheetView() {
                     .background(
                         color = Color(0xFF2D859D)
                     )
-                    ,
-
+                    .clickable {
+                        onPowerSupplyHandled()
+                    },
                 color = Color.Transparent
             ) {
                 Text(
@@ -806,6 +1157,9 @@ private fun classroomPowerSupplyByTeacherBottomSheetView() {
                     .weight(1f)
                     .height(40.dp)
                     .align(Alignment.CenterVertically)
+                    .clickable{
+                        onCancelHandled()
+                    }
                     ,
                 color = Color.Transparent
             ) {
@@ -825,7 +1179,7 @@ private fun classroomPowerSupplyByTeacherBottomSheetView() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun dormitoryPowerSupplyByTeacherBottomSheetView() {
+private fun dormitoryPowerSupplyByTeacherBottomSheetView(aData: ScanModel.ScanData?, onPowerSupplyHandled: () -> Unit, onCancelHandled: () -> Unit) {
     Column {
         Row (verticalAlignment = Alignment.CenterVertically){
             Surface (modifier = Modifier.weight(1f), color = Color.Unspecified){
@@ -855,16 +1209,16 @@ private fun dormitoryPowerSupplyByTeacherBottomSheetView() {
                     Spacer(modifier = Modifier.height( 30.dp))
                     Text(stringResource(R.string.dormitory), color = Color(0xFF2D859D), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.background(Color.Unspecified).border(1.dp, Color(0xFF2D859D)).padding(2.dp))
                     Spacer(modifier = Modifier.height(15.dp))
-                    Text("A101", color = Color.Black,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
+                    Text("${aData?.spaceName}", color = Color.Black,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
 
                     Spacer(modifier = Modifier.height(15.dp))
-                    Text("XXXX", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${aData?.buildingName} ${aData?.floorName}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.height(15.dp))
                     Row (verticalAlignment = Alignment.CenterVertically){
                         Spacer(modifier = Modifier.width(20.dp))
                         Text("${stringResource(R.string.rate)}：", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                         Spacer(modifier = Modifier.width(5.dp))
-                        Text("3.5", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                        Text("${aData?.rate}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                         Spacer(modifier = Modifier.width(5.dp))
                         Text("${stringResource(R.string.currency_unit)}/${stringResource(R.string.electricity_unit)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     }
@@ -886,8 +1240,9 @@ private fun dormitoryPowerSupplyByTeacherBottomSheetView() {
                     .background(
                         color = Color(0xFF2D859D)
                     )
-                ,
-
+                    .clickable {
+                        onPowerSupplyHandled()
+                    },
                 color = Color.Transparent
             ) {
                 Text(
@@ -907,6 +1262,9 @@ private fun dormitoryPowerSupplyByTeacherBottomSheetView() {
                     .weight(1f)
                     .height(40.dp)
                     .align(Alignment.CenterVertically)
+                    .clickable {
+                        onCancelHandled()
+                    }
                 ,
                 color = Color.Transparent
             ) {
@@ -926,7 +1284,8 @@ private fun dormitoryPowerSupplyByTeacherBottomSheetView() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun classroomPowerSupplyByStudentBottomSheetView() {
+private fun classroomPowerSupplyByStudentBottomSheetView(aData: ScanModel.ScanData?, onPowerSupplyHandled: (Boolean) -> Unit, onCancelHandled: () -> Unit) {
+    var isAcControl by remember { mutableStateOf(false) }
     Column {
         Row (verticalAlignment = Alignment.CenterVertically){
             Surface (modifier = Modifier.weight(1f), color = Color.Unspecified){
@@ -956,16 +1315,16 @@ private fun classroomPowerSupplyByStudentBottomSheetView() {
                     Spacer(modifier = Modifier.height( 30.dp))
                     Text(stringResource(R.string.classroom), color = Color(0xFFD08024), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.background(Color.Unspecified).border(1.dp, Color(0xFFD08024)).padding(2.dp))
                     Spacer(modifier = Modifier.height(15.dp))
-                    Text("A101", color = Color.Black,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
+                    Text("${aData?.spaceName}", color = Color.Black,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
 
                     Spacer(modifier = Modifier.height(15.dp))
-                    Text("XXXX", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${aData?.buildingName} ${aData?.floorName}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.height(15.dp))
                     Row (verticalAlignment = Alignment.CenterVertically){
                         Spacer(modifier = Modifier.width(20.dp))
                         Text("${stringResource(R.string.rate)}：", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                         Spacer(modifier = Modifier.width(5.dp))
-                        Text("3.5", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                        Text("${aData?.rate}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                         Spacer(modifier = Modifier.width(5.dp))
                         Text("${stringResource(R.string.currency_unit)}/${stringResource(R.string.minute)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     }
@@ -982,13 +1341,9 @@ private fun classroomPowerSupplyByStudentBottomSheetView() {
             Spacer(modifier = Modifier.weight(1f))
             Surface (modifier = Modifier.padding(start = 10.dp),color = Color.Unspecified){
                 Switch(
-                    checked = true,
+                    checked = isAcControl,
                     onCheckedChange = { checked ->
-                        if (checked) {
-
-                        } else {
-
-                        }
+                        isAcControl = checked
                     }
                 )
             }
@@ -1007,8 +1362,9 @@ private fun classroomPowerSupplyByStudentBottomSheetView() {
                     .background(
                         color = Color(0xFF2D859D)
                     )
-                ,
-
+                    .clickable {
+                        onPowerSupplyHandled(isAcControl)
+                    },
                 color = Color.Transparent
             ) {
                 Text(
@@ -1028,6 +1384,9 @@ private fun classroomPowerSupplyByStudentBottomSheetView() {
                     .weight(1f)
                     .height(40.dp)
                     .align(Alignment.CenterVertically)
+                    .clickable {
+                        onCancelHandled()
+                    }
                 ,
                 color = Color.Transparent
             ) {
@@ -1047,7 +1406,7 @@ private fun classroomPowerSupplyByStudentBottomSheetView() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun dormitoryPowerSupplyByStudentBottomSheetView() {
+private fun dormitoryPowerSupplyByStudentBottomSheetView(aData: ScanModel.ScanData?, onPowerSupplyHandled: () -> Unit, onCancelHandled: () -> Unit) {
     Column {
         Row (verticalAlignment = Alignment.CenterVertically){
             Surface (modifier = Modifier.weight(1f), color = Color.Unspecified){
@@ -1077,16 +1436,16 @@ private fun dormitoryPowerSupplyByStudentBottomSheetView() {
                     Spacer(modifier = Modifier.height( 30.dp))
                     Text(stringResource(R.string.dormitory), color = Color(0xFF2D859D), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.background(Color.Unspecified).border(1.dp, Color(0xFF2D859D)).padding(2.dp))
                     Spacer(modifier = Modifier.height(15.dp))
-                    Text("A101", color = Color.Black,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
+                    Text("${aData?.spaceName}", color = Color.Black,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
 
                     Spacer(modifier = Modifier.height(15.dp))
-                    Text("XXXX", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${aData?.buildingName} ${aData?.floorName}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.height(15.dp))
                     Row (verticalAlignment = Alignment.CenterVertically){
                         Spacer(modifier = Modifier.width(20.dp))
                         Text("${stringResource(R.string.rate)}：", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                         Spacer(modifier = Modifier.width(5.dp))
-                        Text("3.5", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                        Text("${aData?.rate}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                         Spacer(modifier = Modifier.width(5.dp))
                         Text("${stringResource(R.string.currency_unit)}/${stringResource(R.string.electricity_unit)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     }
@@ -1108,8 +1467,9 @@ private fun dormitoryPowerSupplyByStudentBottomSheetView() {
                     .background(
                         color = Color(0xFF2D859D)
                     )
-                ,
-
+                    .clickable {
+                        onPowerSupplyHandled()
+                    },
                 color = Color.Transparent
             ) {
                 Text(
@@ -1129,6 +1489,9 @@ private fun dormitoryPowerSupplyByStudentBottomSheetView() {
                     .weight(1f)
                     .height(40.dp)
                     .align(Alignment.CenterVertically)
+                    .clickable {
+                        onCancelHandled()
+                    }
                 ,
                 color = Color.Transparent
             ) {
@@ -1148,7 +1511,8 @@ private fun dormitoryPowerSupplyByStudentBottomSheetView() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun inputPasswordAndLinkBottomSheetView(inputText: String) {
+private fun inputPasswordAndLinkBottomSheetView(onInputText:(String) -> Unit, onCancelHandled: () -> Unit, showVerifyPasswordFailDialogFlag: Boolean, showVerifyPasswordFailMsg: String?, onVerifyPasswordFailDismissed: () -> Unit) {
+    var inputPasswordText by remember { mutableStateOf("") }
     Column {
         Spacer(modifier = Modifier.height(40.dp))
         Row {
@@ -1160,9 +1524,9 @@ private fun inputPasswordAndLinkBottomSheetView(inputText: String) {
 
         Row {
             BasicTextField(
-                value = inputText,
-                onValueChange = { it },
-                textStyle = TextStyle( color = Color.White),
+                value = inputPasswordText,
+                onValueChange = { inputPasswordText = it },
+                textStyle = TextStyle( color = Color.Black),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done
@@ -1175,26 +1539,28 @@ private fun inputPasswordAndLinkBottomSheetView(inputText: String) {
                             .fillMaxWidth()
                             .border(
                                 width = 2.dp,
-                                color = if (true) Color(0xFFE54343) else Color(0xFF999999),
+                                color = if (showVerifyPasswordFailDialogFlag) Color(0xFFE54343) else Color(0xFF999999),
                                 shape = RoundedCornerShape(10.dp)
                             ).padding(15.dp)
                     ) {
-//                        if (inputPasswordText.isEmpty()) {
-//                            Text(
-//                                text = stringResource(R.string.enter_password),
-//                                color = Color(0xFFAAAAAA)
-//                            )
-//                        }else{
-////                            settingViewModel.resetShowPwAuthenticationInputFailFlag(false)
-//                        }
+                        if (inputPasswordText.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.enter_password),
+                                color = Color(0xFFAAAAAA)
+                            )
+                        }else{
+                            onVerifyPasswordFailDismissed()
+                        }
                         innerTextField()
                     }
                 },
                 visualTransformation = PasswordVisualTransformation()
             )
+
         }
+
         //處理錯誤輸入顯示
-        if (true) {
+        if (showVerifyPasswordFailDialogFlag) {
             Spacer(modifier = Modifier.height( 10.dp))
             Row {
                 Spacer(modifier = Modifier.width(20.dp))
@@ -1206,7 +1572,7 @@ private fun inputPasswordAndLinkBottomSheetView(inputText: String) {
                     style = TextStyle(textDecoration = TextDecoration.Underline)
                 )
                 Spacer(Modifier.weight(1f))
-                Text("xxxxx", color = Color(0xFFE54343))
+                Text(parseDialogMsg(showVerifyPasswordFailMsg ?: ""), color = Color(0xFFE54343))
                 Spacer(modifier = Modifier.width(20.dp))
             }
         }else {
@@ -1237,7 +1603,8 @@ private fun inputPasswordAndLinkBottomSheetView(inputText: String) {
                     )
                     .clickable {
 //                        settingViewModel.passwordAuthenticationAction(inputPasswordText)
-//                        inputPasswordText = ""
+                        onInputText(inputPasswordText)
+                        inputPasswordText = ""
                     },
 
                 color = Color.Transparent
@@ -1260,7 +1627,7 @@ private fun inputPasswordAndLinkBottomSheetView(inputText: String) {
                     .height(40.dp)
                     .align(Alignment.CenterVertically)
                     .clickable {
-//                        showChargingPowerOffBottomSheet = false
+                        onCancelHandled()
                     },
                 color = Color.Transparent
             ) {
@@ -1280,7 +1647,7 @@ private fun inputPasswordAndLinkBottomSheetView(inputText: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun powerEnabledBottomSheetView() {
+private fun powerEnabledBottomSheetView(onCancelHandled: () -> Unit) {
     Column {
         Row (verticalAlignment = Alignment.CenterVertically){
             Surface (modifier = Modifier.weight(1f), color = Color.Unspecified){
@@ -1309,8 +1676,9 @@ private fun powerEnabledBottomSheetView() {
                     .background(
                         color = Color(0xFF2D859D)
                     )
-                ,
-
+                    .clickable {
+                        onCancelHandled()
+                    },
                 color = Color.Transparent
             ) {
                 Text(
@@ -1329,7 +1697,7 @@ private fun powerEnabledBottomSheetView() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun inUseBottomSheetView() {
+private fun inUseBottomSheetView(aData: ScanModel.ScanData?, onCancelHandled: () -> Unit) {
     Column {
         Row (verticalAlignment = Alignment.CenterVertically){
             Surface (modifier = Modifier.weight(1f), color = Color.Unspecified){
@@ -1338,7 +1706,7 @@ private fun inUseBottomSheetView() {
 
                     Text("該空間已被使用", color = Color.Black, style = MaterialTheme.typography.titleLarge)
                     Spacer(modifier = Modifier.height(35.dp))
-                    Text("如需用電，請至 ${"xxxx"} \n" + "按下「Enter按鈕」", color = Color.Black, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center,)
+                    Text("如需用電，請至 ${aData?.spaceName} \n" + "按下「Enter按鈕」", color = Color.Black, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center,)
                     Spacer(modifier = Modifier.height(20.dp))
                 }
             }
@@ -1357,6 +1725,9 @@ private fun inUseBottomSheetView() {
                     .background(
                         color = Color(0xFF2D859D)
                     )
+                    .clickable {
+                        onCancelHandled()
+                    }
                 ,
 
                 color = Color.Transparent
@@ -1399,7 +1770,7 @@ private fun BottomSheetViewPreview() {
 //        inputPasswordAndLinkBottomSheetView("")
 //        powerEnabledBottomSheetView()
 //        inUseBottomSheetView()
-        scanQRBottomSheetView()
+//        scanQRBottomSheetView()
     }
 
 }

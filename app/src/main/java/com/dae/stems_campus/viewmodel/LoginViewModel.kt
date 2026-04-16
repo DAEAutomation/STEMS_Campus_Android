@@ -3,6 +3,7 @@ package com.dae.stems_campus.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dae.stems_campus.data.model.ScanModel
 import com.dae.stems_campus.data.repository.BaseRepository
 import com.dae.stems_campus.data.repository.CredentialRepository
 import com.dae.stems_campus.data.repository.LoginRepository
@@ -42,6 +43,18 @@ class LoginViewModel @Inject constructor(private var loginRepository: LoginRepos
 
     private val _UUID = MutableStateFlow("")
     val UUID: StateFlow<String> = _UUID
+
+    //密碼驗證
+    private val _resVerifyPasswordSuccessFlag = MutableStateFlow(false)
+    val resVerifyPasswordSuccessFlag: StateFlow<Boolean> get() = _resVerifyPasswordSuccessFlag
+
+    private val _showVerifyPasswordFailDialogFlag = MutableStateFlow(false)
+    val showVerifyPasswordFailDialogFlag: StateFlow<Boolean> get() = _showVerifyPasswordFailDialogFlag
+
+    private val _showVerifyPasswordFailMsg = MutableStateFlow<String?>("")
+    val showVerifyPasswordFailMsg: StateFlow<String?> = _showVerifyPasswordFailMsg
+
+
     init {
         loadLoginPreferences()
     }
@@ -70,6 +83,7 @@ class LoginViewModel @Inject constructor(private var loginRepository: LoginRepos
         }
     }
 
+    //登入
     fun loginAction(userName: String, password: String, uuid: String) {
         viewModelScope.launch {
             if (uuid.isEmpty()) {
@@ -115,6 +129,8 @@ class LoginViewModel @Inject constructor(private var loginRepository: LoginRepos
 
                         // 儲存 LoginInfo Checked
                         saveRememberLoginInfoCheckedValueToDataStore(rememberLoginInfoChecked.value)
+                        // 儲存 UUID
+                        saveUUIDValueToDataStore(_UUID.value)
 
                         _resLoginSuccessFlag.value = true
                     }
@@ -131,10 +147,43 @@ class LoginViewModel @Inject constructor(private var loginRepository: LoginRepos
         }
     }
 
+    // 密碼驗證
+    fun verifyPasswordAction(aPassword: String, aType: String, aDeviceID: String) {
+        viewModelScope.launch {
+            _showLoadingView.value = true
+            when (val result = loginRepository.verifyPassword(aPassword,aType,aDeviceID)) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _resVerifyPasswordSuccessFlag.value = true
+                    result.data
+                }
+                is BaseRepository.Result.Error -> {
+                    Log.d("DAE_Develop", "verifyPassword Res ->${result.message}")
+                    _showLoadingView.value = false
+                    _showVerifyPasswordFailDialogFlag.value = true
+                    _showVerifyPasswordFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showVerifyPasswordFailDialogFlag.value = true
+                    _showVerifyPasswordFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+
     // 儲存 Name(使用者名稱)
     private fun saveNameValueToDataStore(value: String) {
         viewModelScope.launch {
             userPreferences.setNameValue(value)
+        }
+    }
+
+    // 儲存 UUID
+    private fun saveUUIDValueToDataStore(value: String) {
+        viewModelScope.launch {
+            userPreferences.setUUIDValue(value)
         }
     }
 
@@ -184,5 +233,13 @@ class LoginViewModel @Inject constructor(private var loginRepository: LoginRepos
 
     fun resetShowLoginFailMsgDialogFlag(value: Boolean) {
         _showLoginFailMsgDialogFlag.value = value
+    }
+
+    fun resetResVerifyPasswordSuccessFlag(value: Boolean) {
+        _resVerifyPasswordSuccessFlag.value = value
+    }
+
+    fun resetShowVerifyPasswordFailDialogFlag(value: Boolean) {
+        _showVerifyPasswordFailDialogFlag.value = value
     }
 }

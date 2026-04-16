@@ -16,4 +16,14 @@ open class LoginRepository @Inject constructor(apiService: ApiService, tokenMana
             ))
         }
     }
+
+    suspend fun verifyPassword(aPassword: String, aType: String, aDeviceID: String): Result<LoginModel.VerifyData> {
+        return executeAuthenticatedRequest {
+            apiService.verifyPassword(LoginModel.VerifyRequest(
+                password = aPassword,
+                type = aType,
+                device_id = aDeviceID
+            ))
+        }
+    }
 }

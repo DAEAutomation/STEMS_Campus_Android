@@ -126,4 +126,10 @@ class ProfileModel {
         val controlTokenExpiresAt: String? = null,
         val availableCommands: List<String>? = null
     )
+
+    // 使用中裝置內容 Request
+    data class UsingDeviceDetailRequest(
+        val device_code: String,
+        val device_id: String,
+    )
 }

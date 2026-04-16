@@ -28,6 +28,11 @@ object NetworkModule {
             .create()
     }
 
+    @Provides
+    @Singleton
+    fun provideResponseLoggingInterceptor(): ResponseLoggingInterceptor {
+        return ResponseLoggingInterceptor()
+    }
 
     /**
      * 提供 TokenInterceptor
@@ -44,9 +49,11 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(
-        tokenInterceptor: TokenInterceptor
+        tokenInterceptor: TokenInterceptor,
+        responseLoggingInterceptor: ResponseLoggingInterceptor
     ): OkHttpClient {
         return OkHttpClient.Builder()
+            .addInterceptor(responseLoggingInterceptor)
             .addInterceptor(tokenInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)

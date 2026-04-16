@@ -38,4 +38,17 @@ class LoginModel {
         val topicPrefix: String? = null
     )
 
+    //密碼驗證
+    data class VerifyRequest(
+        val password: String,
+        val type: String,
+        val device_id: String
+    )
+
+    data class VerifyData(
+        val verifyToken: String? = null,
+        val type: String? = null,
+        val expiresAt: String? = null
+    )
+
 }
