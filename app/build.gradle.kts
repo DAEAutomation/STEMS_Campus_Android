@@ -83,4 +83,9 @@ dependencies {
 
     // ML Kit 條碼掃描
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
+
+    //生物辨識
+    implementation("androidx.biometric:biometric:1.1.0") // 建議使用穩定版
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
 }

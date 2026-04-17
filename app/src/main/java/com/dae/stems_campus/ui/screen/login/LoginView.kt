@@ -1,5 +1,6 @@
 package com.dae.stems_campus.ui.screen.login
 
+import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -52,19 +53,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
+import com.dae.stems_campus.ui.components.BiometricHelper
 import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.viewmodel.LoginViewModel
+import com.dae.stems_campus.viewmodel.SettingViewModel
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun login(navController: NavHostController, loginViewModel: LoginViewModel = hiltViewModel()) {
+fun login(navController: NavHostController, loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel()) {
 
     var loginOrRegister by remember { mutableStateOf(true) }
     var pwVisibility by remember { mutableStateOf(false) }
@@ -90,6 +94,12 @@ fun login(navController: NavHostController, loginViewModel: LoginViewModel = hil
 
     val rememberLoginInfoChecked by loginViewModel.rememberLoginInfoChecked.collectAsState()
 
+    val isBiometricFlag by settingViewModel.isBiometricEnabled.collectAsState()
+
+    LaunchedEffect(Unit) {
+        settingViewModel.getBiometricValue()
+    }
+
     LoginContent(
         navController = navController,
         userNameText = userNameText,
@@ -105,7 +115,9 @@ fun login(navController: NavHostController, loginViewModel: LoginViewModel = hil
         onRememberCheckedChange = { loginViewModel.updateRememberLoginInfoChecked(it)},
         onLoginSuccessHandled = { loginViewModel.resetLoginSuccessFlag(false) },
         onLoginFailDismissed = { loginViewModel.resetShowLoginFailMsgDialogFlag(false)
-        }
+        },
+        isBiometricFlag = isBiometricFlag,
+        onBiometricLoginHandled = { loginViewModel.loginAction(userNameText, passwordText, uuidText)}
     )
 }
 
@@ -123,10 +135,22 @@ private fun LoginContent(navController: NavHostController,
                          onLoginClick: () -> Unit = {},
                          onRememberCheckedChange: (Boolean) -> Unit = {},
                          onLoginSuccessHandled: () -> Unit = {},
-                         onLoginFailDismissed: () -> Unit = {}) {
+                         onLoginFailDismissed: () -> Unit = {},
+                         isBiometricFlag: Boolean = false,
+                         onBiometricLoginHandled: () -> Unit) {
 
     var loginOrRegister by remember { mutableStateOf(true) }
     var pwVisibility by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val activity = context as? FragmentActivity
+    val biometricHelper = remember(activity) {
+        activity?.let { BiometricHelper(it) }
+    }
+    var showBiometricFailDialogFlag by remember { mutableStateOf(false) }
+    var showBiometricFailMsg by remember { mutableStateOf("") }
+
+
     Column (){
         Surface(modifier = Modifier
             .weight(3f)
@@ -160,17 +184,17 @@ private fun LoginContent(navController: NavHostController,
 
                     color = Color.Transparent
                 ) {
-                    if (loginOrRegister) {
-                        Surface (modifier = Modifier,
-                            color = Color.Unspecified){
-                            Image(painter = painterResource(id = R.drawable.loginswitch_2), contentDescription = "")
-                        }
-                    }else {
-                        Surface (modifier = Modifier,
-                            color = Color.Unspecified){
-                            Image(painter = painterResource(id = R.drawable.loginswitch_1), contentDescription = "")
-                        }
-                    }
+//                    if (loginOrRegister) {
+//                        Surface (modifier = Modifier,
+//                            color = Color.Unspecified){
+//                            Image(painter = painterResource(id = R.drawable.loginswitch_2), contentDescription = "")
+//                        }
+//                    }else {
+//                        Surface (modifier = Modifier,
+//                            color = Color.Unspecified){
+//                            Image(painter = painterResource(id = R.drawable.loginswitch_1), contentDescription = "")
+//                        }
+//                    }
                 }
                 Spacer(modifier = Modifier.width(30.dp))
             }
@@ -178,7 +202,7 @@ private fun LoginContent(navController: NavHostController,
 
         if (loginOrRegister) {
             Surface (modifier = Modifier
-                .weight(5f)
+                .weight(7f)
                 .fillMaxWidth(),
                 color = Color(0xFFF4F4F4)){
                 Column {
@@ -346,6 +370,44 @@ private fun LoginContent(navController: NavHostController,
                                     }
                                     Spacer(modifier = Modifier.width(30.dp))
                                 }
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Row {
+                                    Spacer(modifier = Modifier.width(30.dp))
+                                    Surface (modifier = Modifier.weight(0.4f), color = Color.Unspecified){
+                                        TextButton(
+                                            onClick = {
+                                                if (isBiometricFlag) {
+                                                    if (biometricHelper != null) {
+                                                        if (biometricHelper.canAuthenticate()) {
+                                                            biometricHelper?.authenticate(
+                                                                onSuccess = {
+                                                                    onBiometricLoginHandled()
+                                                                },
+                                                                onError = {
+                                                                    Toast.makeText(context, "$it", Toast.LENGTH_SHORT).show()
+                                                                }
+                                                            )
+                                                        } else {
+                                                            showBiometricFailDialogFlag = true
+                                                            showBiometricFailMsg = "BiometricNotSupportedOrDisabled"
+                                                        }
+                                                    }else{
+                                                        showBiometricFailDialogFlag = true
+                                                        showBiometricFailMsg = "BiometricNotSupported"
+                                                    }
+
+                                                }else{
+                                                    showBiometricFailDialogFlag = true
+                                                    showBiometricFailMsg = "BiometricLoginNotEnabled"
+                                                }
+                                            }
+                                        ) {
+                                            Text(stringResource(id = R.string.biometric_login),style = TextStyle(textDecoration = TextDecoration.Underline), color = Color(0xFF303236),)
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.width(30.dp))
+                                }
+
                             }
                         }
                         Spacer(modifier = Modifier.width(30.dp))
@@ -367,6 +429,20 @@ private fun LoginContent(navController: NavHostController,
                         LaunchedEffect(Unit) {
                             delay(1500) // 延遲 1.5 秒
                             onLoginFailDismissed()
+                        }
+                    }
+
+                    if (showBiometricFailDialogFlag) {
+                        textTNoButtonAlert(
+                            onDismissRequest = {},
+                            dialogTitle = parseDialogMsg(
+                                showBiometricFailMsg
+                            )
+                        )
+                        // 在 Dialog 顯示後啟動計時器
+                        LaunchedEffect(Unit) {
+                            delay(1500) // 延遲 1.5 秒
+                            showBiometricFailDialogFlag = false // 自動關閉 Dialog
                         }
                     }
 
@@ -614,5 +690,5 @@ private fun loginView() {
 //        credentialRepository = FakeRepositoryManager.FakeCredentialRepository(LocalContext.current)
 //    )
 
-    LoginContent(navController = navController)
+    LoginContent(navController = navController,"","",false,false,false,false,"",{},{},{},{},{},{},false,{})
 }

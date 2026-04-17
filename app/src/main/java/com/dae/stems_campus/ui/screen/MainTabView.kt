@@ -136,7 +136,12 @@ private fun BottomNavigationBar(bottomBarNavController: NavController, onItemSel
 private fun Navigation(bottomBarNavHostController: NavHostController,mainNavController: NavController, startRote: String) {
     NavHost(bottomBarNavHostController, startDestination = startRote) {
         composable(NavigationItem.Home.route) {
-            HomeScreen(mainNavController = mainNavController)
+            HomeScreen(mainNavController = mainNavController, onNavigateToSetting = {
+                bottomBarNavHostController.navigate(NavigationItem.Setting.route) {
+                    popUpTo(NavigationItem.Setting.route) { inclusive = true }
+                    launchSingleTop = true
+                }
+            })
         }
         composable(NavigationItem.Wallet.route) {
 

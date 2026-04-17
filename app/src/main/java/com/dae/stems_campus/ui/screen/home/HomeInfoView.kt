@@ -1,6 +1,7 @@
 package com.dae.stems_campus.ui.screen.home
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -71,6 +72,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
@@ -82,6 +84,7 @@ import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.ProfileModel
 import com.dae.stems_campus.data.model.ScanModel
+import com.dae.stems_campus.ui.components.BiometricHelper
 import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.ui.theme.STEMS_CampusTheme
@@ -90,6 +93,7 @@ import com.dae.stems_campus.utils.toAmountString
 import com.dae.stems_campus.viewmodel.HomeInfoViewModel
 import com.dae.stems_campus.viewmodel.LoginViewModel
 import com.dae.stems_campus.viewmodel.ProfileViewModel
+import com.dae.stems_campus.viewmodel.SettingViewModel
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.Dispatchers
@@ -100,12 +104,12 @@ import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
 @Composable
-fun HomeScreen(mainNavController: NavController, profileViewModel: ProfileViewModel = hiltViewModel(), homeInfoViewModel: HomeInfoViewModel = hiltViewModel(), loginViewModel: LoginViewModel = hiltViewModel()) {
+fun HomeScreen(mainNavController: NavController, onNavigateToSetting: () -> Unit = {}, profileViewModel: ProfileViewModel = hiltViewModel(), homeInfoViewModel: HomeInfoViewModel = hiltViewModel(), loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel()) {
     val homeNavController = rememberNavController()
 
     NavHost(navController = homeNavController, startDestination = "Home") {
         composable("Home") {
-            homeMainLoad(mainNavController = mainNavController,homeNavController, profileViewModel, homeInfoViewModel, loginViewModel, onShowTabBarChange = {})
+            homeMainLoad(mainNavController = mainNavController,homeNavController, profileViewModel, homeInfoViewModel, loginViewModel, settingViewModel, onShowTabBarChange = {}, onNavigateToSetting = { onNavigateToSetting() })
         }
         composable("ClassroomDetail/{deviceCode}") { backStackEntry ->
             val deviceCode = backStackEntry.arguments?.getString("deviceCode")
@@ -120,7 +124,10 @@ fun HomeScreen(mainNavController: NavController, profileViewModel: ProfileViewMo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun homeMainLoad(mainNavController: NavController, navHostController: NavHostController, profileViewModel: ProfileViewModel, homeInfoViewModel: HomeInfoViewModel, loginViewModel: LoginViewModel, onShowTabBarChange: (Boolean) -> Unit) {
+private fun homeMainLoad(mainNavController: NavController, navHostController: NavHostController, profileViewModel: ProfileViewModel, homeInfoViewModel: HomeInfoViewModel, loginViewModel: LoginViewModel, settingViewModel: SettingViewModel, onShowTabBarChange: (Boolean) -> Unit, onNavigateToSetting: () -> Unit) {
+
+    val context = LocalContext.current
+    val activity = context as? FragmentActivity
 
     val profileInfo by profileViewModel.profileInfo.collectAsState()
     val showLoadingView by profileViewModel.showLoadingView.collectAsState()
@@ -144,6 +151,37 @@ private fun homeMainLoad(mainNavController: NavController, navHostController: Na
 
     var isAcControl by remember { mutableStateOf(false) }
 
+    val isBiometricFlag by settingViewModel.isBiometricEnabled.collectAsState()
+    val biometricHelper = remember(activity) {
+        activity?.let { BiometricHelper(it) }
+    }
+    val passwordText by loginViewModel.passwordText.collectAsState()
+
+    //生物辨識判斷
+    val handleBiometricStartPower = {
+        if (!isBiometricFlag) {
+            Toast.makeText(context, "BiometricNotSupportedOrDisabled",
+                Toast.LENGTH_SHORT).show()
+        } else if (biometricHelper == null) {
+            Toast.makeText(context, "BiometricNotSupported", Toast.LENGTH_SHORT).show()
+        } else if (!biometricHelper.canAuthenticate()) {
+            Toast.makeText(context, "BiometricLoginNotEnabled", Toast.LENGTH_SHORT).show()
+        } else {
+            biometricHelper.authenticate(
+                onSuccess = {
+                    loginViewModel.verifyPasswordAction(passwordText, "bind_device", uuid)
+                },
+                onError = {
+                    Toast.makeText(context, "$it", Toast.LENGTH_SHORT).show()
+                }
+            )
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        settingViewModel.getBiometricValue()
+    }
+
     homeContent(mainNavController = mainNavController,
         navHostController = navHostController,
         profileInfo = profileInfo,
@@ -165,7 +203,11 @@ private fun homeMainLoad(mainNavController: NavController, navHostController: Na
         showVerifyPasswordFailDialogFlag = showVerifyPasswordFailDialogFlag,
         showVerifyPasswordFailMsg = showVerifyPasswordFailMsg,
         onVerifyPasswordFailDismissed = { loginViewModel.resetShowVerifyPasswordFailDialogFlag(false)},
-        acControlHandled = { value -> isAcControl = value })
+        acControlHandled = { value -> isAcControl = value },
+        isBiometricFlag = isBiometricFlag,
+        biometricHelper = biometricHelper,
+        onBiometricsStartPowerSupplyHandled = { handleBiometricStartPower() },
+        onNavigateToSetting = { onNavigateToSetting() })
 
     //密碼驗證成功後
     if (resVerifyPasswordSuccessFlag) {
@@ -217,7 +259,11 @@ private fun homeContent(mainNavController: NavController,
                         showVerifyPasswordFailDialogFlag: Boolean = false,
                         showVerifyPasswordFailMsg: String? = null,
                         onVerifyPasswordFailDismissed: () -> Unit = {},
-                        acControlHandled:(Boolean) -> Unit = {}) {
+                        acControlHandled:(Boolean) -> Unit = {},
+                        isBiometricFlag: Boolean = false,
+                        biometricHelper: BiometricHelper? = null,
+                        onBiometricsStartPowerSupplyHandled: () -> Unit,
+                        onNavigateToSetting: () -> Unit = {}) {
 
     val classroomTeacherSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val dormitoryTeacherSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -405,7 +451,12 @@ private fun homeContent(mainNavController: NavController,
                 ) {
                     classroomPowerSupplyByTeacherBottomSheetView(scanInfo,
                         onPowerSupplyHandled = {
-                            showingInputPasswordBottomSheet = true
+                            if (isBiometricFlag) {
+                                onBiometricsStartPowerSupplyHandled()
+                            }else{
+                                showingInputPasswordBottomSheet = true
+                            }
+
                     }, onCancelHandled = {
                         showClassroomPowerSupplyByTeacherBottomSheet = false
                     })
@@ -423,7 +474,15 @@ private fun homeContent(mainNavController: NavController,
                 ) {
                     dormitoryPowerSupplyByTeacherBottomSheetView(scanInfo,
                         onPowerSupplyHandled = {
-                            showingInputPasswordBottomSheet = true
+                            if (isBiometricFlag) {
+                                onBiometricsStartPowerSupplyHandled()
+
+
+
+
+                            }else{
+                                showingInputPasswordBottomSheet = true
+                            }
                     }, onCancelHandled = {
                         showDormitoryPowerSupplyByTeacherBottomSheet = false
                     })
@@ -441,8 +500,13 @@ private fun homeContent(mainNavController: NavController,
                 ) {
                     classroomPowerSupplyByStudentBottomSheetView(scanInfo,
                         onPowerSupplyHandled = { value ->
-                            acControlHandled(value)
-                            showingInputPasswordBottomSheet = true
+                            if (isBiometricFlag) {
+
+                            }else{
+                                acControlHandled(value)
+                                showingInputPasswordBottomSheet = true
+                            }
+
                         }, onCancelHandled = {
                             showClassroomPowerSupplyByStudentBottomSheet = false
                         })
@@ -460,7 +524,11 @@ private fun homeContent(mainNavController: NavController,
                 ) {
                     dormitoryPowerSupplyByStudentBottomSheetView(scanInfo,
                         onPowerSupplyHandled = {
-                            showingInputPasswordBottomSheet = true
+                            if (isBiometricFlag) {
+                                onBiometricsStartPowerSupplyHandled()
+                            }else{
+                                showingInputPasswordBottomSheet = true
+                            }
                     }, onCancelHandled = {
                         showDormitoryPowerSupplyByStudentBottomSheet = false
                     })
@@ -520,6 +588,8 @@ private fun homeContent(mainNavController: NavController,
                         showVerifyPasswordFailMsg = showVerifyPasswordFailMsg,
                         onVerifyPasswordFailDismissed = {
                             onVerifyPasswordFailDismissed()
+                        }, onNavigateToSetting = {
+                            onNavigateToSetting()
                         })
                 }
             }
@@ -1511,7 +1581,7 @@ private fun dormitoryPowerSupplyByStudentBottomSheetView(aData: ScanModel.ScanDa
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun inputPasswordAndLinkBottomSheetView(onInputText:(String) -> Unit, onCancelHandled: () -> Unit, showVerifyPasswordFailDialogFlag: Boolean, showVerifyPasswordFailMsg: String?, onVerifyPasswordFailDismissed: () -> Unit) {
+private fun inputPasswordAndLinkBottomSheetView(onInputText:(String) -> Unit, onCancelHandled: () -> Unit, showVerifyPasswordFailDialogFlag: Boolean, showVerifyPasswordFailMsg: String?, onVerifyPasswordFailDismissed: () -> Unit, onNavigateToSetting: () -> Unit) {
     var inputPasswordText by remember { mutableStateOf("") }
     Column {
         Spacer(modifier = Modifier.height(40.dp))
@@ -1567,7 +1637,7 @@ private fun inputPasswordAndLinkBottomSheetView(onInputText:(String) -> Unit, on
                 Text(
                     text = stringResource(R.string.go_to_enable_biometric),
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.wrapContentHeight(),
+                    modifier = Modifier.wrapContentHeight().clickable{ onNavigateToSetting() },
                     color = Color.Black,
                     style = TextStyle(textDecoration = TextDecoration.Underline)
                 )
@@ -1582,7 +1652,7 @@ private fun inputPasswordAndLinkBottomSheetView(onInputText:(String) -> Unit, on
                 Text(
                     text = stringResource(R.string.go_to_enable_biometric),
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.wrapContentHeight(),
+                    modifier = Modifier.wrapContentHeight().clickable{ onNavigateToSetting() },
                     color = Color.Black,
                     style = TextStyle(textDecoration = TextDecoration.Underline)
                 )
@@ -1756,7 +1826,7 @@ private fun HomePreview() {
 // 創建一個模擬的 NavController
     val navController = TestNavHostController(LocalContext.current)
 
-    homeContent(navController,navController)
+    //homeContent(navController,navController)
 
 }
 

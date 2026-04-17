@@ -72,16 +72,18 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.ProfileModel
+import com.dae.stems_campus.ui.components.BiometricHelper
 import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.ui.theme.STEMS_CampusTheme
 import com.dae.stems_campus.viewmodel.LoginViewModel
 import com.dae.stems_campus.viewmodel.ProfileViewModel
+import com.dae.stems_campus.viewmodel.SettingViewModel
 import kotlinx.coroutines.delay
 
 
 @Composable
-fun settingScreen(mainNavController: NavController, loginViewModel: LoginViewModel = hiltViewModel(), profileViewModel: ProfileViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
+fun settingScreen(mainNavController: NavController, loginViewModel: LoginViewModel = hiltViewModel(), profileViewModel: ProfileViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
     val settingNavController = rememberNavController()
 
     NavHost(navController = settingNavController, startDestination = "Setting") {
@@ -90,6 +92,7 @@ fun settingScreen(mainNavController: NavController, loginViewModel: LoginViewMod
                 navController = settingNavController,
                 loginViewModel = loginViewModel,
                 profileViewModel = profileViewModel,
+                settingViewModel = settingViewModel,
                 onShowTabBarChange = {})
         }
     }
@@ -98,15 +101,17 @@ fun settingScreen(mainNavController: NavController, loginViewModel: LoginViewMod
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun settingMainLoad(mainNavController: NavController, navController: NavHostController, loginViewModel: LoginViewModel, profileViewModel: ProfileViewModel, onShowTabBarChange: (Boolean) -> Unit) {
+private fun settingMainLoad(mainNavController: NavController, navController: NavHostController, loginViewModel: LoginViewModel, profileViewModel: ProfileViewModel, settingViewModel: SettingViewModel, onShowTabBarChange: (Boolean) -> Unit) {
 
-    val sheetState = rememberModalBottomSheetState()
+    val context = LocalContext.current
+
 
 
 //    val accountName by settingViewModel.accountName.collectAsState()
 //    val email by settingViewModel.email.collectAsState()
 //    val rToken by settingViewModel.rToken.collectAsState()
-//
+
+    val uuid by settingViewModel.UUID.collectAsState()
     val profileInfo by profileViewModel.profileInfo.collectAsState()
     val profileShowLoadingView by profileViewModel.showLoadingView.collectAsState()
     val showGetProfileInfoFailDialogFlag by profileViewModel.showGetProfileInfoFailDialogFlag.collectAsState()
@@ -115,18 +120,17 @@ private fun settingMainLoad(mainNavController: NavController, navController: Nav
     val resLogoutSuccessFlag by loginViewModel.resLogoutSuccessFlag.collectAsState()
     val showLogoutFailDialogFlag by loginViewModel.showLogoutFailDialogFlag.collectAsState()
     val showLogoutFailMsg by loginViewModel.showLogoutFailMsg.collectAsState()
+
+    val resVerifyPasswordSuccessFlag by loginViewModel.resVerifyPasswordSuccessFlag.collectAsState()
+    val showVerifyPasswordFailDialogFlag by loginViewModel.showVerifyPasswordFailDialogFlag.collectAsState()
+    val showVerifyPasswordFailMsg by loginViewModel.showVerifyPasswordFailMsg.collectAsState()
 //
 //    val showLoadingView by settingViewModel.showLoadingView.collectAsState()
-//    var showInputPasswordOpenBiometricBottomSheet by remember { mutableStateOf(false) }
-//    var showInputPasswordCloseBiometricBottomSheet by remember { mutableStateOf(false) }
-//    var inputPasswordText by remember { mutableStateOf("") }
+
 //
-//    val isBiometric by settingViewModel.isBiometricEnabled.collectAsState()
-//    val biometricHelper = remember(activity) {
-//        activity?.let { BiometricHelper(it) }
-//    }
-//    var showBiometricFailDialogFlag by remember { mutableStateOf(false) }
-//    var showBiometricFailMsg by remember { mutableStateOf("") }
+    val isBiometric by settingViewModel.isBiometricEnabled.collectAsState()
+
+
 //
 //    val resPwAuthenticationSuccessFlag by settingViewModel.resPwAuthenticationSuccessFlag.collectAsState()
 //    val showPwAuthenticationFailMsgDialogFlag by settingViewModel.showPwAuthenticationFailMsgDialogFlag.collectAsState()
@@ -138,13 +142,22 @@ private fun settingMainLoad(mainNavController: NavController, navController: Nav
 
     LaunchedEffect(Unit) {
         profileViewModel.getProfileInfoAction()
+        settingViewModel.getBiometricValue()
     }
 
     settingContent(mainNavController = mainNavController,
         navController = navController,
         profileInfo = profileInfo,
         onShowTabBarChange = { value -> },
-        onLogoutClick = { loginViewModel.logoutAction()})
+        onLogoutClick = { loginViewModel.logoutAction()},
+        onVerifyPasswordHandled = { value ->  loginViewModel.verifyPasswordAction(value,"biometric",uuid)},
+        resVerifyPasswordSuccessFlag = resVerifyPasswordSuccessFlag,
+        showVerifyPasswordFailDialogFlag = showVerifyPasswordFailDialogFlag,
+        showVerifyPasswordFailMsg = showVerifyPasswordFailMsg,
+        onVerifyPasswordFailDismissed = { loginViewModel.resetShowVerifyPasswordFailDialogFlag(false)},
+        isBiometric = isBiometric,
+        updateBiometricValue = { value -> settingViewModel.updateBiometricValue(value)},
+        onResVerifyPasswordSuccessFlagDismissed = { loginViewModel.resetResVerifyPasswordSuccessFlag(false) })
 
 
     if (profileShowLoadingView) {
@@ -184,7 +197,6 @@ private fun settingMainLoad(mainNavController: NavController, navController: Nav
             loginViewModel.resetShowLogoutFailDialogFlag(false)
         }
     }
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -194,13 +206,34 @@ private fun settingContent(
     navController: NavHostController,
     profileInfo: ProfileModel.ProfileData? = null,
     onShowTabBarChange: (Boolean) -> Unit,
-    onLogoutClick: () -> Unit) {
+    onLogoutClick: () -> Unit,
+    onVerifyPasswordHandled:(String) -> Unit = {},
+    resVerifyPasswordSuccessFlag: Boolean = false,
+    showVerifyPasswordFailDialogFlag: Boolean = false,
+    showVerifyPasswordFailMsg: String? = null,
+    onVerifyPasswordFailDismissed: () -> Unit = {},
+    isBiometric: Boolean = false,
+    updateBiometricValue:(Boolean) -> Unit = {},
+    onResVerifyPasswordSuccessFlagDismissed: () -> Unit = {}) {
 
     val context = LocalContext.current
     val activity = context as? FragmentActivity
 
     val LogoutSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val InputPasswordOpenBiometricSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val InputPasswordCloseBiometricSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showLogoutBottomSheet by remember { mutableStateOf(false) }
+
+    var showInputPasswordOpenBiometricBottomSheet by remember { mutableStateOf(false) }
+    var showInputPasswordCloseBiometricBottomSheet by remember { mutableStateOf(false) }
+    var inputPasswordText by remember { mutableStateOf("") }
+
+    var showBiometricFailDialogFlag by remember { mutableStateOf(false) }
+    var showBiometricFailMsg by remember { mutableStateOf("") }
+
+    val biometricHelper = remember(activity) {
+        activity?.let { BiometricHelper(it) }
+    }
 
     // 進入畫面時隱藏
     LaunchedEffect(Unit) {
@@ -356,28 +389,28 @@ private fun settingContent(
                                         Spacer(modifier = Modifier.height(20.dp))
                                     }
                                 }
-//                                    Surface (modifier = Modifier.padding(start = 10.dp),color = Color.Unspecified){
-//                                        Switch(
-//                                            checked = isBiometric,
-//                                            onCheckedChange = { checked ->
-//                                                if (checked) {
-//                                                    if (biometricHelper != null) {
-//                                                        if (biometricHelper.canAuthenticate()) {
-//                                                            showInputPasswordOpenBiometricBottomSheet = true
-//                                                        } else {
-//                                                            showBiometricFailDialogFlag = true
-//                                                            showBiometricFailMsg = "BiometricNotSupportedOrDisabled"
-//                                                        }
-//                                                    }else{
-//                                                        showBiometricFailDialogFlag = true
-//                                                        showBiometricFailMsg = "BiometricNotSupported"
-//                                                    }
-//                                                } else {
-//                                                    showInputPasswordCloseBiometricBottomSheet = true
-//                                                }
-//                                            }
-//                                        )
-//                                    }
+                                Surface (modifier = Modifier.padding(start = 10.dp),color = Color.Unspecified){
+                                    Switch(
+                                        checked = isBiometric,
+                                        onCheckedChange = { checked ->
+                                            if (checked) {
+                                                if (biometricHelper != null) {
+                                                    if (biometricHelper.canAuthenticate()) {
+                                                        showInputPasswordOpenBiometricBottomSheet = true
+                                                    } else {
+                                                        showBiometricFailDialogFlag = true
+                                                        showBiometricFailMsg = "BiometricNotSupportedOrDisabled"
+                                                    }
+                                                }else{
+                                                    showBiometricFailDialogFlag = true
+                                                    showBiometricFailMsg = "BiometricNotSupported"
+                                                }
+                                            } else {
+                                                showInputPasswordCloseBiometricBottomSheet = true
+                                            }
+                                        }
+                                    )
+                                }
                                 Spacer(modifier = Modifier.width(20.dp))
                             }
                         }
@@ -619,294 +652,72 @@ private fun settingContent(
                 }
             }
 
-//
-//                // 開啟生物辨識
-//                if (showInputPasswordOpenBiometricBottomSheet) {
-//                    ModalBottomSheet(
-//                        onDismissRequest = {
-//                            showInputPasswordOpenBiometricBottomSheet = false
-//                        },
-//                        sheetState = sheetState,
-//                        containerColor = Color(0xFF2C2C2C)
-//                    ) {
-//                        Column {
-//                            Row {
-//                                Spacer(modifier = Modifier.width(20.dp))
-//                                Text("${stringResource(R.string.enable_touch_face_id_login)}", color = Color.White)
-//                                Spacer(modifier = Modifier.width(20.dp))
-//                            }
-//                            Spacer(modifier = Modifier.height(20.dp))
-//                            Row {
-//                                Spacer(modifier = Modifier.width(10.dp))
-//                                Spacer(modifier = Modifier
-//                                    .height(1.dp)
-//                                    .weight(1f)
-//                                    .background(color = Color(0xFF414141)))
-//                                Spacer(modifier = Modifier.width(10.dp))
-//                            }
-//                            Spacer(modifier = Modifier.height( 10.dp))
-//                            Row {
-//                                BasicTextField(
-//                                    value = inputPasswordText,
-//                                    onValueChange = { inputPasswordText = it },
-//                                    textStyle = TextStyle( color = Color.White),
-//                                    keyboardOptions = KeyboardOptions(
-//                                        keyboardType = KeyboardType.Password,
-//                                        imeAction = ImeAction.Done
-//                                    ),
-//                                    modifier = Modifier
-//                                        .fillMaxWidth().padding(start = 20.dp, end = 20.dp) ,
-//                                    decorationBox = { innerTextField ->
-//                                        Box(
-//                                            modifier = Modifier
-//                                                .fillMaxWidth()
-//                                                .border(
-//                                                    width = 2.dp,
-//                                                    color = if (showPwAuthenticationInputFailFlag) Color(0xFFF55454) else Color.White,
-//                                                    shape = RoundedCornerShape(10.dp)
-//                                                ).padding(15.dp)
-//                                        ) {
-//                                            if (inputPasswordText.isEmpty()) {
-//                                                Text(
-//                                                    text = stringResource(R.string.enter_password),
-//                                                    color = Color(0xFFAAAAAA)
-//                                                )
-//                                            }else{
-//                                                settingViewModel.resetShowPwAuthenticationInputFailFlag(false)
-//                                            }
-//                                            innerTextField()
-//                                        }
-//                                    },
-//                                    visualTransformation = PasswordVisualTransformation()
-//                                )
-//                            }
-//                            //處理錯誤輸入顯示
-//                            if (showPwAuthenticationInputFailFlag) {
-//                                Spacer(modifier = Modifier.height( 10.dp))
-//                                Row {
-//                                    Spacer(modifier = Modifier.width(20.dp))
-//                                    Text(parseDialogMsg(showPwAuthenticationInputFailMsg ?: ""), color = Color(0xFFF55454))
-//                                    Spacer(modifier = Modifier.width(20.dp))
-//                                }
-//                            }
-//                            Spacer(modifier = Modifier.height( 35.dp))
-//                            Row {
-//                                Spacer(modifier = Modifier.width(30.dp))
-//                                Surface(
-//                                    modifier = Modifier
-//                                        .weight(1f)
-//                                        .height(40.dp)
-//                                        .align(Alignment.CenterVertically)
-//                                        .clip(RoundedCornerShape(10.dp))
-//                                        .background(
-//                                            brush = Brush.linearGradient(
-//                                                colors = listOf(Color(0xFF60BCE5), Color(0xFF7253C7))
-//                                            )
-//                                        )
-//                                        .clickable {
-//                                            settingViewModel.passwordAuthenticationAction(inputPasswordText)
-//                                            inputPasswordText = ""
-//                                        },
-//
-//                                    color = Color.Transparent
-//                                ) {
-//                                    Text(
-//                                        text = stringResource(R.string.confirm),
-//                                        textAlign = TextAlign.Center,
-//                                        modifier = Modifier.wrapContentHeight(),
-//                                        color = Color.White
-//                                    )
-//                                }
-//                                Spacer(modifier = Modifier.width(30.dp))
-//                            }
-//                            Spacer(modifier = Modifier.height(20.dp))
-//                            Row {
-//                                Spacer(modifier = Modifier.width(50.dp))
-//                                Surface(
-//                                    modifier = Modifier
-//                                        .weight(1f)
-//                                        .height(40.dp)
-//                                        .align(Alignment.CenterVertically)
-//                                        .clickable {
-//                                            showInputPasswordOpenBiometricBottomSheet = false
-//                                        },
-//                                    color = Color.Transparent
-//                                ) {
-//                                    Text(
-//                                        text = stringResource(R.string.cancel),
-//                                        textAlign = TextAlign.Center,
-//                                        modifier = Modifier.wrapContentHeight(),
-//                                        color = Color.White,
-//                                        style = TextStyle(textDecoration = TextDecoration.Underline)
-//                                    )
-//                                }
-//                                Spacer(modifier = Modifier.width(50.dp))
-//                            }
-//                            Spacer(modifier = Modifier.height(40.dp))
-//                        }
-//                    }
-//                }
-//
-//                // 關閉生物辨識
-//                if (showInputPasswordCloseBiometricBottomSheet) {
-//                    ModalBottomSheet(
-//                        onDismissRequest = {
-//                            showInputPasswordCloseBiometricBottomSheet = false
-//                        },
-//                        sheetState = sheetState,
-//                        containerColor = Color(0xFF2C2C2C)
-//                    ) {
-//                        Column {
-//                            Row {
-//                                Spacer(modifier = Modifier.width(20.dp))
-//                                Text("${stringResource(R.string.disable_touch_face_id_login)}", color = Color.White)
-//                                Spacer(modifier = Modifier.width(20.dp))
-//                            }
-//                            Spacer(modifier = Modifier.height(20.dp))
-//                            Row {
-//                                Spacer(modifier = Modifier.width(10.dp))
-//                                Spacer(modifier = Modifier
-//                                    .height(1.dp)
-//                                    .weight(1f)
-//                                    .background(color = Color(0xFF414141)))
-//                                Spacer(modifier = Modifier.width(10.dp))
-//                            }
-//                            Spacer(modifier = Modifier.height( 10.dp))
-//                            Row {
-//                                BasicTextField(
-//                                    value = inputPasswordText,
-//                                    onValueChange = { inputPasswordText = it },
-//                                    textStyle = TextStyle( color = Color.White),
-//                                    keyboardOptions = KeyboardOptions(
-//                                        keyboardType = KeyboardType.Password,
-//                                        imeAction = ImeAction.Done
-//                                    ),
-//                                    modifier = Modifier
-//                                        .fillMaxWidth().padding(start = 20.dp, end = 20.dp) ,
-//                                    decorationBox = { innerTextField ->
-//                                        Box(
-//                                            modifier = Modifier
-//                                                .fillMaxWidth()
-//                                                .border(
-//                                                    width = 2.dp,
-//                                                    color = if (showPwAuthenticationInputFailFlag) Color(0xFFF55454) else Color.White,
-//                                                    shape = RoundedCornerShape(10.dp)
-//                                                ).padding(15.dp)
-//                                        ) {
-//                                            if (inputPasswordText.isEmpty()) {
-//                                                Text(
-//                                                    text = stringResource(R.string.enter_password),
-//                                                    color = Color(0xFFAAAAAA)
-//                                                )
-//                                            }else{
-//                                                settingViewModel.resetShowPwAuthenticationInputFailFlag(false)
-//                                            }
-//                                            innerTextField()
-//                                        }
-//                                    },
-//                                    visualTransformation = PasswordVisualTransformation()
-//                                )
-//                            }
-//                            //處理錯誤輸入顯示
-//                            if (showPwAuthenticationInputFailFlag) {
-//                                Spacer(modifier = Modifier.height( 10.dp))
-//                                Row {
-//                                    Spacer(modifier = Modifier.width(20.dp))
-//                                    Text(parseDialogMsg(showPwAuthenticationInputFailMsg ?: ""), color = Color(0xFFF55454))
-//                                    Spacer(modifier = Modifier.width(20.dp))
-//                                }
-//                            }
-//                            Spacer(modifier = Modifier.height( 35.dp))
-//                            Row {
-//                                Spacer(modifier = Modifier.width(30.dp))
-//                                Surface(
-//                                    modifier = Modifier
-//                                        .weight(1f)
-//                                        .height(40.dp)
-//                                        .align(Alignment.CenterVertically)
-//                                        .clip(RoundedCornerShape(10.dp))
-//                                        .background(
-//                                            brush = Brush.linearGradient(
-//                                                colors = listOf(Color(0xFF60BCE5), Color(0xFF7253C7))
-//                                            )
-//                                        )
-//                                        .clickable {
-//                                            settingViewModel.passwordAuthenticationAction(inputPasswordText)
-//                                            inputPasswordText = ""
-//                                        },
-//
-//                                    color = Color.Transparent
-//                                ) {
-//                                    Text(
-//                                        text = stringResource(R.string.confirm),
-//                                        textAlign = TextAlign.Center,
-//                                        modifier = Modifier.wrapContentHeight(),
-//                                        color = Color.White
-//                                    )
-//                                }
-//                                Spacer(modifier = Modifier.width(30.dp))
-//                            }
-//                            Spacer(modifier = Modifier.height(20.dp))
-//                            Row {
-//                                Spacer(modifier = Modifier.width(50.dp))
-//                                Surface(
-//                                    modifier = Modifier
-//                                        .weight(1f)
-//                                        .height(40.dp)
-//                                        .align(Alignment.CenterVertically)
-//                                        .clickable {
-//                                            showInputPasswordCloseBiometricBottomSheet = false
-//                                        },
-//                                    color = Color.Transparent
-//                                ) {
-//                                    Text(
-//                                        text = stringResource(R.string.cancel),
-//                                        textAlign = TextAlign.Center,
-//                                        modifier = Modifier.wrapContentHeight(),
-//                                        color = Color.White,
-//                                        style = TextStyle(textDecoration = TextDecoration.Underline)
-//                                    )
-//                                }
-//                                Spacer(modifier = Modifier.width(50.dp))
-//                            }
-//                            Spacer(modifier = Modifier.height(40.dp))
-//                        }
-//                    }
-//                }
-//
-//                if (resPwAuthenticationSuccessFlag) {
-//                    settingViewModel.resetResPwAuthenticationSuccessFlag(false)
-//                    if (showInputPasswordOpenBiometricBottomSheet) {
-//                        showInputPasswordOpenBiometricBottomSheet = false
-//                        settingViewModel.updateBiometricValue(true)
-//                    }else if (showInputPasswordCloseBiometricBottomSheet) {
-//                        showInputPasswordCloseBiometricBottomSheet = false
-//                        settingViewModel.updateBiometricValue(false)
-//                    }
-//                }
-//                if (showPwAuthenticationFailMsgDialogFlag) {
-//                    textTNoButtonAlert(
-//                        onDismissRequest = {},
-//                        dialogTitle = parseDialogMsg(showPwAuthenticationFailMsg ?: "")
-//                    )
-//                    // 在 Dialog 顯示後啟動計時器
-//                    LaunchedEffect(Unit) {
-//                        delay(1500) // 延遲 1.5 秒
-//                        settingViewModel.resetShowPwAuthenticationFailMsgDialogFlag(false) // 自動關閉 Dialog
-//                    }
-//                }
-//
-//                if (showBiometricFailDialogFlag) {
-//                    textTNoButtonAlert(
-//                        onDismissRequest = {},
-//                        dialogTitle = parseDialogMsg(showBiometricFailMsg)
-//                    )
-//                    // 在 Dialog 顯示後啟動計時器
-//                    LaunchedEffect(Unit) {
-//                        delay(1500) // 延遲 1.5 秒
-//                        showBiometricFailDialogFlag = false // 自動關閉 Dialog
-//                    }
-//                }
+            if (resVerifyPasswordSuccessFlag) {
+                onResVerifyPasswordSuccessFlagDismissed()
+                if (showInputPasswordOpenBiometricBottomSheet) {
+                    showInputPasswordOpenBiometricBottomSheet = false
+                    updateBiometricValue(true)
+                }else if (showInputPasswordCloseBiometricBottomSheet) {
+                    showInputPasswordCloseBiometricBottomSheet = false
+                    updateBiometricValue(false)
+                }
+            }
+
+            // 開啟生物辨識
+            if (showInputPasswordOpenBiometricBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showInputPasswordOpenBiometricBottomSheet = false
+                    },
+                    sheetState = InputPasswordOpenBiometricSheetState,
+                    containerColor = Color.White
+                ) {
+
+                    inputPasswordBottomSheetView(stringResource(R.string.enable_touch_face_id_login),onInputText = { value ->
+                        onVerifyPasswordHandled(value)
+                    }, onCancelHandled = {
+                        showInputPasswordOpenBiometricBottomSheet = false
+                    }, showVerifyPasswordFailDialogFlag = showVerifyPasswordFailDialogFlag,
+                        showVerifyPasswordFailMsg = showVerifyPasswordFailMsg,
+                        onVerifyPasswordFailDismissed = {
+                            onVerifyPasswordFailDismissed()
+                        })
+                }
+            }
+
+            // 關閉生物辨識
+            if (showInputPasswordCloseBiometricBottomSheet) {
+
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showInputPasswordCloseBiometricBottomSheet = false
+                    },
+                    sheetState = InputPasswordCloseBiometricSheetState,
+                    containerColor = Color.White
+                ) {
+
+                    inputPasswordBottomSheetView(stringResource(R.string.disable_touch_face_id_login),onInputText = { value ->
+                        onVerifyPasswordHandled(value)
+                    }, onCancelHandled = {
+                        showInputPasswordCloseBiometricBottomSheet = false
+                    }, showVerifyPasswordFailDialogFlag = showVerifyPasswordFailDialogFlag,
+                        showVerifyPasswordFailMsg = showVerifyPasswordFailMsg,
+                        onVerifyPasswordFailDismissed = {
+                            onVerifyPasswordFailDismissed()
+                        })
+                }
+            }
+            if (showBiometricFailDialogFlag) {
+                textTNoButtonAlert(
+                    onDismissRequest = {},
+                    dialogTitle = parseDialogMsg(showBiometricFailMsg)
+                )
+                // 在 Dialog 顯示後啟動計時器
+                LaunchedEffect(Unit) {
+                    delay(1500) // 延遲 1.5 秒
+                    showBiometricFailDialogFlag = false // 自動關閉 Dialog
+                }
+            }
 
 
 
@@ -1413,41 +1224,121 @@ private fun logoutBottomSheetView(onLogoutHandled: () -> Unit, onCancelHandled: 
 }
 
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopTitleBar(navTitle: String, navController: NavHostController, onShowTabBarChange: (Boolean) -> Unit) {
-    CenterAlignedTopAppBar(
-        modifier = Modifier.statusBarsPadding(),
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = Color.Transparent,
-            titleContentColor = Color.White,
-        ),
-        title = {
-            Text(
-                navTitle,
-                maxLines = 1,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+private fun inputPasswordBottomSheetView(title: String, onInputText:(String) -> Unit, onCancelHandled: () -> Unit, showVerifyPasswordFailDialogFlag: Boolean, showVerifyPasswordFailMsg: String?, onVerifyPasswordFailDismissed: () -> Unit) {
+    var inputPasswordText by remember { mutableStateOf("") }
+    Column {
+        Spacer(modifier = Modifier.height(40.dp))
+        Row {
+            Spacer(modifier = Modifier.width(20.dp))
+            Text(title, color = Color.Black, style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.width(20.dp))
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Row {
+            BasicTextField(
+                value = inputPasswordText,
+                onValueChange = { inputPasswordText = it },
+                textStyle = TextStyle( color = Color.Black),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                modifier = Modifier
+                    .fillMaxWidth().padding(start = 20.dp, end = 20.dp) ,
+                decorationBox = { innerTextField ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(
+                                width = 2.dp,
+                                color = if (showVerifyPasswordFailDialogFlag) Color(0xFFE54343) else Color(0xFF999999),
+                                shape = RoundedCornerShape(10.dp)
+                            ).padding(15.dp)
+                    ) {
+                        if (inputPasswordText.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.enter_password),
+                                color = Color(0xFFAAAAAA)
+                            )
+                        }else{
+                            onVerifyPasswordFailDismissed()
+                        }
+                        innerTextField()
+                    }
+                },
+                visualTransformation = PasswordVisualTransformation()
             )
-        },
-        navigationIcon = {
-            IconButton(onClick = {
-                // 返回或離開時再顯示
-                onShowTabBarChange(true)
-                navController.navigateUp()
-            }) {
-                Icon(
-                    painterResource(id = R.drawable.arrowbendupleft),
-                    contentDescription = "Localized description",
-                    tint = Color.Unspecified
+
+        }
+
+        //處理錯誤輸入顯示
+        if (showVerifyPasswordFailDialogFlag) {
+            Spacer(modifier = Modifier.height( 10.dp))
+            Row {
+                Spacer(modifier = Modifier.width(20.dp))
+                Text(parseDialogMsg(showVerifyPasswordFailMsg ?: ""), color = Color(0xFFE54343))
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }
+        Spacer(modifier = Modifier.height( 35.dp))
+        Row {
+            Spacer(modifier = Modifier.width(30.dp))
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .align(Alignment.CenterVertically)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(
+                        color = Color(0xFF2D859D)
+                    )
+                    .clickable {
+//                        settingViewModel.passwordAuthenticationAction(inputPasswordText)
+                        onInputText(inputPasswordText)
+                        inputPasswordText = ""
+                    },
+
+                color = Color.Transparent
+            ) {
+                Text(
+                    text = stringResource(R.string.confirm),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.wrapContentHeight(),
+                    color = Color.White
                 )
             }
-        },
-        actions = {},
-
-        )
+            Spacer(modifier = Modifier.width(30.dp))
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+        Row {
+            Spacer(modifier = Modifier.width(50.dp))
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .align(Alignment.CenterVertically)
+                    .clickable {
+                        onCancelHandled()
+                    },
+                color = Color.Transparent
+            ) {
+                Text(
+                    text = stringResource(R.string.cancel),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.wrapContentHeight(),
+                    color = Color.Black,
+                    style = TextStyle(textDecoration = TextDecoration.Underline)
+                )
+            }
+            Spacer(modifier = Modifier.width(50.dp))
+        }
+        Spacer(modifier = Modifier.height(40.dp))
+    }
 }
+
 
 @Composable
 private fun parseDialogMsg(aMsg: String):(String){
@@ -1501,7 +1392,8 @@ private fun SettingPreview() {
 @Composable
 private fun BottomSheetViewPreview() {
     STEMS_CampusTheme {
-        logoutBottomSheetView({},{})
+//        logoutBottomSheetView({},{})
+        inputPasswordBottomSheetView("XXXXX",{},{},false,"",{})
     }
 
 }
