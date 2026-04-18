@@ -73,7 +73,7 @@ private fun BottomNavigationBar(bottomBarNavController: NavController, onItemSel
     items = listOf(
         NavigationItem.Home,
         NavigationItem.Wallet,
-        NavigationItem.History,
+//        NavigationItem.History,
         NavigationItem.Setting,
     ).toMutableList()
 
@@ -148,9 +148,9 @@ private fun Navigation(bottomBarNavHostController: NavHostController,mainNavCont
         composable(NavigationItem.Wallet.route) {
             walletScreen(mainNavController = mainNavController, onShowTabBarChange = {})
         }
-        composable(NavigationItem.History.route) {
-            historyScreen(mainNavController = mainNavController, onShowTabBarChange = {})
-        }
+//        composable(NavigationItem.History.route) {
+//            historyScreen(mainNavController = mainNavController, onShowTabBarChange = {})
+//        }
         composable(NavigationItem.Setting.route) {
             settingScreen(mainNavController = mainNavController, onShowTabBarChange = {})
         }

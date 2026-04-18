@@ -337,14 +337,14 @@ private fun homeContent(mainNavController: NavController,
                                 Image(painter = painterResource(id = R.drawable.qrcode), contentDescription = "")
                             }
                         }
-                        Spacer(modifier = Modifier.width(20.dp))
-                        Surface (modifier = Modifier, color = Color.Unspecified){
-                            Surface (modifier = Modifier
-                                , color = Color.Unspecified)
-                            {
-                                Image(painter = painterResource(id = R.drawable.bell), contentDescription = "")
-                            }
-                        }
+//                        Spacer(modifier = Modifier.width(20.dp))
+//                        Surface (modifier = Modifier, color = Color.Unspecified){
+//                            Surface (modifier = Modifier
+//                                , color = Color.Unspecified)
+//                            {
+//                                Image(painter = painterResource(id = R.drawable.bell), contentDescription = "")
+//                            }
+//                        }
                         Spacer(modifier = Modifier.width(20.dp))
                     }
                 }
