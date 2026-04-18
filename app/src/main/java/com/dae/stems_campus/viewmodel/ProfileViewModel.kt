@@ -56,6 +56,9 @@ class ProfileViewModel @Inject constructor(private var profileRepository: Profil
         }
     }
 
+    fun resetResGetProfileInfoSuccessFailDialogFlag(value: Boolean) {
+        _resGetProfileInfoSuccessFlag.value = value
+    }
 
     fun resetShowGetProfileInfoFailDialogFlag(value: Boolean) {
         _showGetProfileInfoFailDialogFlag.value = value

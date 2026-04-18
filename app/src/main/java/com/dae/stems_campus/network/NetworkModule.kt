@@ -71,7 +71,7 @@ object NetworkModule {
         gson: Gson
     ): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://stemscampus.dae.tw:8443/")
+            .baseUrl("https://stemscampus.dae.thu.edu.tw/")
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()

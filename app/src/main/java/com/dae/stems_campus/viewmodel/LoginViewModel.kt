@@ -130,10 +130,10 @@ class LoginViewModel @Inject constructor(private var loginRepository: LoginRepos
                         result.data?.mqtt?.topicPrefix?.let {
                             saveMqttTopicValueToDataStore(it)
                         }
-                        result.data?.mqtt?.brokerInternal?.let {
+                        result.data?.mqtt?.broker?.let {
                             saveMqttHostValueToDataStore(it)
                         }
-                        result.data?.mqtt?.portInternal?.let {
+                        result.data?.mqtt?.port?.let {
                             saveMqttPortValueToDataStore(it)
                         }
 

@@ -41,6 +41,23 @@ android {
     buildFeatures {
         compose = true
     }
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/INDEX.LIST",
+                "META-INF/io.netty.versions.properties",
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/license.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt",
+                "META-INF/notice.txt",
+                "META-INF/ASL2.0"
+            )
+            pickFirsts += setOf("**/libnetty_*.so")
+        }
+    }
 }
 
 dependencies {
@@ -60,6 +77,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.androidx.media3.common.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -87,5 +105,8 @@ dependencies {
     //生物辨識
     implementation("androidx.biometric:biometric:1.1.0") // 建議使用穩定版
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // MQTT
+    implementation("com.hivemq:hivemq-mqtt-client:1.3.3")
 
 }

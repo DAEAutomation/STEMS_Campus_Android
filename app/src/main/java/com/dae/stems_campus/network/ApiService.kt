@@ -4,6 +4,7 @@ import com.dae.stems_campus.data.model.LoginModel
 import com.dae.stems_campus.data.model.ProfileModel
 import com.dae.stems_campus.data.model.ScanModel
 import com.dae.stems_campus.data.model.TokenModel
+import com.dae.stems_campus.data.model.TopUpModel
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -103,4 +104,22 @@ interface ApiService {
     suspend fun control(
         @Body request: ScanModel.ControlRequest
     ): APIResponse.ApiResponse<ScanModel.ControlData>
+
+
+    /**
+     * 掃描儲值機
+     */
+    @POST("api/app/deposit/scan")
+    suspend fun scanDeposit(
+        @Body request: TopUpModel.TopUpScanDepositRequest
+    ): APIResponse.ApiResponse<TopUpModel.ScanDepositData>
+
+
+    /**
+     * 發起加值
+     */
+    @POST("api/app/deposit")
+    suspend fun startTopUp(
+        @Body request: TopUpModel.StartTopUpRequest
+    ): APIResponse.ApiResponse<TopUpModel.StartTopUpData>
 }

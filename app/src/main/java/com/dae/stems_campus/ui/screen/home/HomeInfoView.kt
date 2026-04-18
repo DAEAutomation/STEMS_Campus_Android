@@ -978,7 +978,7 @@ private fun dormitoryView(aData: ProfileModel.UsingDeviceData?, onDetailClick: (
 }
 
 @Composable
-fun CameraPreview(modifier: Modifier = Modifier, onCodeScanned: (String) -> Unit) {
+private fun CameraPreview(modifier: Modifier = Modifier, onCodeScanned: (String) -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val previewView = remember { PreviewView(context) }

@@ -86,6 +86,18 @@ open class UserPreferencesRepository @Inject constructor (@ApplicationContext pr
         }
     }
 
+    // 讀取 Subscription topic
+    var getSubscriptionTopicValue: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesStrings.SUBSCRIPTION_TOPIC] ?: ""
+    }
+
+    // 儲存 Subscription topic
+    suspend fun setSubscriptionTopiValue(value: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesStrings.SUBSCRIPTION_TOPIC] = value
+        }
+    }
+
     // 讀取 Account & Password Checkbox 狀態
     val getRememberLoginInfoCheckedFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[PreferencesStrings.REMEMBER_LOGIN_INFO_CHECKBOX] ?: false // 默認值為 false
