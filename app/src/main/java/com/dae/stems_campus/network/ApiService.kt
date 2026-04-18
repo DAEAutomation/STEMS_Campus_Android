@@ -1,5 +1,6 @@
 package com.dae.stems_campus.network
 import com.dae.stems_campus.data.model.APIResponse
+import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.data.model.LoginModel
 import com.dae.stems_campus.data.model.ProfileModel
 import com.dae.stems_campus.data.model.ScanModel
@@ -122,4 +123,13 @@ interface ApiService {
     suspend fun startTopUp(
         @Body request: TopUpModel.StartTopUpRequest
     ): APIResponse.ApiResponse<TopUpModel.StartTopUpData>
+
+
+    /**
+     * 錢包儲值紀錄
+     */
+    @POST("api/app/records/wallet")
+    suspend fun walletHistory(
+        @Body request: HistoryModel.HistoryRequest
+    ): APIResponse.ApiResponse<List<HistoryModel.WalletHistory>>
 }

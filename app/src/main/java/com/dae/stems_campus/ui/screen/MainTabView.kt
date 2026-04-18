@@ -33,6 +33,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.ui.components.NavigationItem
+import com.dae.stems_campus.ui.screen.history.historyScreen
 import com.dae.stems_campus.ui.screen.home.HomeScreen
 import com.dae.stems_campus.ui.screen.pay.walletScreen
 import com.dae.stems_campus.ui.screen.setting.settingScreen
@@ -148,7 +149,7 @@ private fun Navigation(bottomBarNavHostController: NavHostController,mainNavCont
             walletScreen(mainNavController = mainNavController, onShowTabBarChange = {})
         }
         composable(NavigationItem.History.route) {
-
+            historyScreen(mainNavController = mainNavController, onShowTabBarChange = {})
         }
         composable(NavigationItem.Setting.route) {
             settingScreen(mainNavController = mainNavController, onShowTabBarChange = {})
