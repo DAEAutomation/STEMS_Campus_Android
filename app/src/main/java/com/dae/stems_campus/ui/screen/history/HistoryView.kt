@@ -254,6 +254,7 @@ private fun historyContent(
     val endDateTitle = stringResource(id = R.string.select_end_date)
     var beginDate by remember { mutableStateOf(beginDateTitle) }
     var endDate by remember { mutableStateOf(endDateTitle) }
+    var selectedRange by remember { mutableStateOf<String?>(null) }
 
     var showHistoryTypeBottomSheet by remember { mutableStateOf(false) }
     val historyTypeSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -394,9 +395,10 @@ private fun historyContent(
                             .clickable {
                                 beginDate = lastSevenDaysClick().first
                                 endDate = lastSevenDaysClick().second
+                                selectedRange = "seven"
                             },
                             shape = RoundedCornerShape(16.dp),
-                            color = Color.Black){
+                            color = if (selectedRange == "seven") Color(0xFF2D859D) else Color.Black){
                             Text(text = stringResource(id = R.string.last_seven_days), style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center,modifier = Modifier.wrapContentHeight(), color = Color.White)
                         }
                         Spacer(modifier = Modifier.width(5.dp))
@@ -407,9 +409,10 @@ private fun historyContent(
                             .clickable {
                                 beginDate = lastMonthClick().first
                                 endDate = lastMonthClick().second
+                                selectedRange = "month"
                             },
                             shape = RoundedCornerShape(16.dp),
-                            color = Color.Black){
+                            color = if (selectedRange == "month") Color(0xFF2D859D) else Color.Black){
                             Text(text = stringResource(id = R.string.last_month), style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center,modifier = Modifier.wrapContentHeight(), color = Color.White)
                         }
                         Spacer(modifier = Modifier.width(5.dp))
@@ -420,9 +423,10 @@ private fun historyContent(
                             .clickable {
                                 beginDate = lastThreeMonthsClick().first
                                 endDate = lastThreeMonthsClick().second
+                                selectedRange = "three"
                             },
                             shape = RoundedCornerShape(16.dp),
-                            color = Color.Black){
+                            color = if (selectedRange == "three") Color(0xFF2D859D) else Color.Black){
                             Text(text = stringResource(id = R.string.last_three_months), style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center,modifier = Modifier.wrapContentHeight(), color = Color.White)
                         }
                         Surface (modifier = Modifier
@@ -459,6 +463,7 @@ private fun historyContent(
                                     .wrapContentHeight()
                                     .clickable {
                                         showBeginSelectDate = true
+                                        selectedRange = null
                                     })
                         }
                     }
@@ -486,6 +491,7 @@ private fun historyContent(
                                     .wrapContentHeight()
                                     .clickable {
                                         showEndSelectDate = true
+                                        selectedRange = null
                                     })
                         }
                     }
