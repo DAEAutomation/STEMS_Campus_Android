@@ -13,11 +13,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.dae.stems_campus"
+        applicationId = "com.dae.stemscampus"
         minSdk = 29
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
