@@ -132,4 +132,31 @@ interface ApiService {
     suspend fun walletHistory(
         @Body request: HistoryModel.HistoryRequest
     ): APIResponse.ApiResponse<List<HistoryModel.WalletHistory>>
+
+
+    /**
+     * 時數發給紀錄
+     */
+    @POST("api/app/records/hours")
+    suspend fun hoursHistory(
+        @Body request: HistoryModel.HistoryRequest
+    ): APIResponse.ApiResponse<List<HistoryModel.HoursHistory>>
+
+
+    /**
+     * 教室使用紀錄
+     */
+    @POST("api/app/records/classroom")
+    suspend fun classroomHistory(
+        @Body request: HistoryModel.HistoryRequest
+    ): APIResponse.ApiResponse<List<HistoryModel.ClassroomHistory>>
+
+
+    /**
+     * 宿舍使用紀錄
+     */
+    @POST("api/app/records/dormitory")
+    suspend fun dormitoryHistory(
+        @Body request: HistoryModel.HistoryRequest
+    ): APIResponse.ApiResponse<List<HistoryModel.DormitoryHistory>>
 }

@@ -24,17 +24,29 @@ class HistoryViewModel @Inject constructor(private var historyRepository: Histor
     private val _showLoadingView = MutableStateFlow(false)
     val showLoadingView: StateFlow<Boolean> get() = _showLoadingView
 
-    private val _resWalletHistorySuccessFlag = MutableStateFlow(false)
-    val resWalletHistorySuccessFlag: StateFlow<Boolean> get() = _resWalletHistorySuccessFlag
+    private val _resHistorySuccessFlag = MutableStateFlow(false)
+    val resHistorySuccessFlag: StateFlow<Boolean> get() = _resHistorySuccessFlag
+
+    private val _showHistoryFailDialogFlag = MutableStateFlow(false)
+    val showHistoryFailDialogFlag: StateFlow<Boolean> get() = _showHistoryFailDialogFlag
+
+    private val _showHistoryFailMsg = MutableStateFlow<String?>("")
+    val showHistoryFailMsg: StateFlow<String?> = _showHistoryFailMsg
 
     private val _walletHistoryList = MutableStateFlow<List<HistoryModel.WalletHistory>>(emptyList())
     val walletHistoryList: StateFlow<List<HistoryModel.WalletHistory>> = _walletHistoryList
+    var walletHistoryDetail: HistoryModel.WalletHistory? = null
 
-    private val _showWalletHistoryFailDialogFlag = MutableStateFlow(false)
-    val showWalletHistoryFailDialogFlag: StateFlow<Boolean> get() = _showWalletHistoryFailDialogFlag
+    private val _hoursHistoryList = MutableStateFlow<List<HistoryModel.HoursHistory>>(emptyList())
+    val hoursHistoryList: StateFlow<List<HistoryModel.HoursHistory>> = _hoursHistoryList
 
-    private val _showWalletHistoryFailMsg = MutableStateFlow<String?>("")
-    val showWalletHistoryFailMsg: StateFlow<String?> = _showWalletHistoryFailMsg
+    private val _classroomHistoryList = MutableStateFlow<List<HistoryModel.ClassroomHistory>>(emptyList())
+    val classroomHistoryList: StateFlow<List<HistoryModel.ClassroomHistory>> = _classroomHistoryList
+    var classroomHistoryDetail: HistoryModel.ClassroomHistory? = null
+
+    private val _dormitoryHistoryList = MutableStateFlow<List<HistoryModel.DormitoryHistory>>(emptyList())
+    val dormitoryHistoryList: StateFlow<List<HistoryModel.DormitoryHistory>> = _dormitoryHistoryList
+    var dormitoryHistoryDetail: HistoryModel.DormitoryHistory? = null
 
 
     // 查詢 錢包儲值紀錄
@@ -44,18 +56,90 @@ class HistoryViewModel @Inject constructor(private var historyRepository: Histor
             when (val result = historyRepository.getWalletHistory(startDate,endDate)) {
                 is BaseRepository.Result.Success -> {
                     _showLoadingView.value = false
-                    _resWalletHistorySuccessFlag.value = true
+                    _resHistorySuccessFlag.value = true
                     _walletHistoryList.value = result.data
                 }
                 is BaseRepository.Result.Error -> {
                     _showLoadingView.value = false
-                    _showWalletHistoryFailDialogFlag.value = true
-                    _showWalletHistoryFailMsg.value = result.message
+                    _showHistoryFailDialogFlag.value = true
+                    _showHistoryFailMsg.value = result.message
                 }
                 is BaseRepository.Result.Unauthorized -> {
                     _showLoadingView.value = false
-                    _showWalletHistoryFailDialogFlag.value = true
-                    _showWalletHistoryFailMsg.value = "PleaseReLogin"
+                    _showHistoryFailDialogFlag.value = true
+                    _showHistoryFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+    // 查詢 時數發給紀錄
+    fun getHoursHistoryAction(startDate: String, endDate: String) {
+        viewModelScope.launch {
+            _showLoadingView.value = true
+            when (val result = historyRepository.getHoursHistory(startDate,endDate)) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _resHistorySuccessFlag.value = true
+                    _hoursHistoryList.value = result.data
+                }
+                is BaseRepository.Result.Error -> {
+                    _showLoadingView.value = false
+                    _showHistoryFailDialogFlag.value = true
+                    _showHistoryFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showHistoryFailDialogFlag.value = true
+                    _showHistoryFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+    // 查詢 教室使用紀錄
+    fun getClassroomHistoryAction(startDate: String, endDate: String) {
+        viewModelScope.launch {
+            _showLoadingView.value = true
+            when (val result = historyRepository.getClassroomHistory(startDate,endDate)) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _resHistorySuccessFlag.value = true
+                    _classroomHistoryList.value = result.data
+                }
+                is BaseRepository.Result.Error -> {
+                    _showLoadingView.value = false
+                    _showHistoryFailDialogFlag.value = true
+                    _showHistoryFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showHistoryFailDialogFlag.value = true
+                    _showHistoryFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+    // 查詢 宿舍使用紀錄
+    fun getDormitoryHistoryAction(startDate: String, endDate: String) {
+        viewModelScope.launch {
+            _showLoadingView.value = true
+            when (val result = historyRepository.getDormitoryHistory(startDate,endDate)) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _resHistorySuccessFlag.value = true
+                    _dormitoryHistoryList.value = result.data
+                }
+                is BaseRepository.Result.Error -> {
+                    _showLoadingView.value = false
+                    _showHistoryFailDialogFlag.value = true
+                    _showHistoryFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showHistoryFailDialogFlag.value = true
+                    _showHistoryFailMsg.value = "PleaseReLogin"
                 }
             }
         }
@@ -109,12 +193,12 @@ class HistoryViewModel @Inject constructor(private var historyRepository: Histor
     }
 
 
-    fun resetResWalletHistorySuccessFailDialogFlag(value: Boolean) {
-        _resWalletHistorySuccessFlag.value = value
+    fun resetResHistorySuccessFailDialogFlag(value: Boolean) {
+        _resHistorySuccessFlag.value = value
     }
 
-    fun resetShowWalletHistoryFailDialogFlag(value: Boolean) {
-        _showWalletHistoryFailDialogFlag.value = value
+    fun resetShowHistoryFailDialogFlag(value: Boolean) {
+        _showHistoryFailDialogFlag.value = value
     }
 
 }

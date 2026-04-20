@@ -17,4 +17,34 @@ open class HistoryRepository @Inject constructor(apiService: ApiService, tokenMa
             ))
         }
     }
+
+    // 時數發給紀錄
+    suspend fun getHoursHistory(aStartDate: String, aEndDate: String): Result<List<HistoryModel.HoursHistory>> {
+        return executeAuthenticatedRequest {
+            apiService.hoursHistory(HistoryModel.HistoryRequest(
+                start_date = aStartDate,
+                end_date = aEndDate
+            ))
+        }
+    }
+
+    // 教室使用紀錄
+    suspend fun getClassroomHistory(aStartDate: String, aEndDate: String): Result<List<HistoryModel.ClassroomHistory>> {
+        return executeAuthenticatedRequest {
+            apiService.classroomHistory(HistoryModel.HistoryRequest(
+                start_date = aStartDate,
+                end_date = aEndDate
+            ))
+        }
+    }
+
+    // 宿舍使用紀錄
+    suspend fun getDormitoryHistory(aStartDate: String, aEndDate: String): Result<List<HistoryModel.DormitoryHistory>> {
+        return executeAuthenticatedRequest {
+            apiService.dormitoryHistory(HistoryModel.HistoryRequest(
+                start_date = aStartDate,
+                end_date = aEndDate
+            ))
+        }
+    }
 }

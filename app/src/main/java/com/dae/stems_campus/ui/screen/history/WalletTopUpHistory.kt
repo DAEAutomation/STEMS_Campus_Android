@@ -48,16 +48,16 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun walletTopUpHistoryScreen(navController: NavHostController, histories: List<HistoryModel.WalletHistory>, onShowTabBarChange: (Boolean) -> Unit) {
-
-    // TODO: 之後從 ViewModel 收 List<HistoryModel.WalletHistory>
-
+fun walletTopUpHistoryScreen(navController: NavHostController, histories: List<HistoryModel.WalletHistory>, historyViewModel: HistoryViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
 
     walletTopUpHistoryContent(
-        mainNavController = navController,
         navController = navController,
         onShowTabBarChange = onShowTabBarChange,
-        histories = histories
+        histories = histories,
+        rowClickHandled = { detail ->
+            historyViewModel.walletHistoryDetail = detail
+            navController.navigate("WalletDetailHistory")
+        }
     )
 }
 
@@ -65,10 +65,10 @@ fun walletTopUpHistoryScreen(navController: NavHostController, histories: List<H
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun walletTopUpHistoryContent(
-    mainNavController: NavController,
     navController: NavHostController,
     onShowTabBarChange: (Boolean) -> Unit,
-    histories: List<HistoryModel.WalletHistory> = emptyList()) {
+    histories: List<HistoryModel.WalletHistory> = emptyList(),
+    rowClickHandled:(HistoryModel.WalletHistory) -> Unit) {
 
     val grouped = remember(histories) {
         histories
@@ -132,7 +132,7 @@ private fun walletTopUpHistoryContent(
                                     )
                                     else -> RoundedCornerShape(0.dp)
                                 }
-                                walletHistoryRow(item = item, shape = shape)
+                                walletHistoryRow(item = item, shape = shape, rowClick = { detail -> rowClickHandled(detail) })
                                 if (index != items.lastIndex) {
                                     Spacer(modifier = Modifier.height(2.dp))
                                 }
@@ -155,18 +155,22 @@ private fun walletTopUpHistoryContent(
 @Composable
 private fun walletHistoryRow(
     item: HistoryModel.WalletHistory,
-    shape: RoundedCornerShape
+    shape: RoundedCornerShape,
+    rowClick:(HistoryModel.WalletHistory) -> Unit
 ) {
     val dateText = item.createdAt?.let {
         runCatching {
-            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))
+            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
         }.getOrDefault("")
     } ?: ""
 
     Row {
         Spacer(modifier = Modifier.width(20.dp))
         Surface(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f)
+                .clickable {
+                    rowClick(item)
+                },
             color = Color.White,
             shape = shape
         ) {
@@ -271,5 +275,5 @@ private fun walletTopUpHistoryPreview() {
 
 // 創建一個模擬的 NavController
     val navController = TestNavHostController(LocalContext.current)
-    walletTopUpHistoryContent (navController,navController,{})
+    walletTopUpHistoryContent (navController,{}, emptyList(),{})
 }

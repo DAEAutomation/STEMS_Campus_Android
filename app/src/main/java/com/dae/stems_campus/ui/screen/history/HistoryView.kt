@@ -58,9 +58,12 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.HistoryModel
+import com.dae.stems_campus.data.model.ProfileModel
+import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.ui.theme.STEMS_CampusTheme
 import com.dae.stems_campus.viewmodel.HistoryViewModel
+import com.dae.stems_campus.viewmodel.ProfileViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -68,7 +71,7 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun historyScreen(mainNavController: NavController, historyViewModel: HistoryViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
+fun historyScreen(mainNavController: NavController, historyViewModel: HistoryViewModel = hiltViewModel(), profileViewModel: ProfileViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
     val historyNavController = rememberNavController()
 
     NavHost(navController = historyNavController, startDestination = "History") {
@@ -76,11 +79,55 @@ fun historyScreen(mainNavController: NavController, historyViewModel: HistoryVie
             historyMainLoad(mainNavController = mainNavController,
                 navController = historyNavController,
                 historyViewModel = historyViewModel,
+                profileViewModel = profileViewModel,
                 onShowTabBarChange = {})
         }
         composable("WalletHistory") {
             val walletTopUpHistoryList = historyViewModel.walletHistoryList
-            walletTopUpHistoryScreen(navController = historyNavController, walletTopUpHistoryList.value ?: emptyList(), onShowTabBarChange = {})
+            walletTopUpHistoryScreen(
+                navController = historyNavController,
+                histories = walletTopUpHistoryList.value ?: emptyList(),
+                historyViewModel = historyViewModel,
+                onShowTabBarChange = {}
+            )
+        }
+        composable("WalletDetailHistory") {
+            val walletTopUpDetail = historyViewModel.walletHistoryDetail
+            walletTopUpDetailScreen(navController = historyNavController, walletTopUpDetail, onShowTabBarChange = {})
+        }
+        composable("HourHistory") {
+            val hoursHistoryList = historyViewModel.hoursHistoryList
+            hourHistoryScreen(navController = historyNavController, hoursHistoryList.value ?: emptyList(), onShowTabBarChange = {})
+        }
+        composable("ClassroomHistory/{role}") { backStackEntry ->
+            val role = backStackEntry.arguments?.getString("role")
+            val classroomHistoryList = historyViewModel.classroomHistoryList
+            classroomHistoryScreen(
+                navController = historyNavController,
+                histories = classroomHistoryList.value ?: emptyList(),
+                historyViewModel = historyViewModel,
+                role = role ?: "", onShowTabBarChange = {})
+        }
+        composable("ClassroomDetailHistory/{role}") { backStackEntry ->
+            val role = backStackEntry.arguments?.getString("role")
+            val classroomTopUpDetail = historyViewModel.classroomHistoryDetail
+            classroomDetailScreen(
+                navController = historyNavController,
+                classroomHistory = classroomTopUpDetail,
+                role = role ?: "",
+                onShowTabBarChange = {})
+        }
+        composable("DormitoryHistory") {
+            val dormitoryHistoryList = historyViewModel.dormitoryHistoryList
+            dormitoryHistoryScreen(
+                navController = historyNavController,
+                histories = dormitoryHistoryList.value ?: emptyList(),
+                historyViewModel = historyViewModel,
+                onShowTabBarChange = {})
+        }
+        composable("DormitoryDetailHistory") {
+            val dormitoryTopUpDetail = historyViewModel.dormitoryHistoryDetail
+            dormitoryDetailScreen(navController = historyNavController, dormitoryTopUpDetail, onShowTabBarChange = {})
         }
     }
 
@@ -88,38 +135,103 @@ fun historyScreen(mainNavController: NavController, historyViewModel: HistoryVie
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun historyMainLoad(mainNavController: NavController, navController: NavHostController, historyViewModel: HistoryViewModel,  onShowTabBarChange: (Boolean) -> Unit) {
+private fun historyMainLoad(mainNavController: NavController, navController: NavHostController, historyViewModel: HistoryViewModel, profileViewModel: ProfileViewModel,  onShowTabBarChange: (Boolean) -> Unit) {
 
-    val resWalletHistorySuccessFlag by historyViewModel.resWalletHistorySuccessFlag.collectAsState()
-    val showWalletHistoryFailDialogFlag by historyViewModel.showWalletHistoryFailDialogFlag.collectAsState()
-    val showWalletHistoryFailMsg by historyViewModel.showWalletHistoryFailMsg.collectAsState()
-    val walletHistoryList by historyViewModel.walletHistoryList.collectAsState()
+    val showLoadingView by historyViewModel.showLoadingView.collectAsState()
+    val resHistorySuccessFlag by historyViewModel.resHistorySuccessFlag.collectAsState()
+    val showHistoryFailDialogFlag by historyViewModel.showHistoryFailDialogFlag.collectAsState()
+    val showHistoryFailMsg by historyViewModel.showHistoryFailMsg.collectAsState()
+    var selectQueryType by remember { mutableStateOf("") }
+
+    val profileInfo by profileViewModel.profileInfo.collectAsState()
+    val resGetProfileInfoSuccessFlag by profileViewModel.resGetProfileInfoSuccessFlag.collectAsState()
+    val showGetProfileInfoFailDialogFlag by profileViewModel.showGetProfileInfoFailDialogFlag.collectAsState()
+    val showGetProfileInfoFailMsg by profileViewModel.showGetProfileInfoFailMsg.collectAsState()
+
+    LaunchedEffect(Unit) {
+        profileViewModel.getProfileInfoAction()
+    }
 
     historyContent(
         mainNavController = mainNavController,
         navController = navController,
-        queryHistoryHandle = { value ->
-            if (value == "WalletTopUpHistory") {
-                historyViewModel.getWalletHistoryAction("","")
+        profileData = profileInfo,
+        queryHistoryHandle = { value, dateValue ->
+            when (value) {
+                "WalletTopUpHistory" -> {
+                    selectQueryType = value
+                    historyViewModel.getWalletHistoryAction(dateValue.first, dateValue.second)
+                }
+                "HourAllocationHistory" -> {
+                    selectQueryType = value
+                    historyViewModel.getHoursHistoryAction(dateValue.first, dateValue.second)
+                }
+                "ClassroomUsageHistory" -> {
+                    selectQueryType = value
+                    historyViewModel.getClassroomHistoryAction(dateValue.first, dateValue.second)
+                }
+                "DormitoryUsageHistory" -> {
+                    selectQueryType = value
+                    historyViewModel.getDormitoryHistoryAction(dateValue.first, dateValue.second)
+                }
             }
+        },
+        lastSevenDaysClick = {
+            historyViewModel.lastSevenDays()
+        },
+        lastMonthClick = {
+            historyViewModel.lastMonth()
+        },
+        lastThreeMonthsClick = {
+            historyViewModel.lastThreeMonths()
         }
     )
 
-
-    if (resWalletHistorySuccessFlag) {
-        historyViewModel.resetResWalletHistorySuccessFailDialogFlag(false)
-        navController.navigate("WalletHistory")
+    if (showLoadingView) {
+        LoadingView() {}
     }
 
-    if (showWalletHistoryFailDialogFlag) {
+    if (resHistorySuccessFlag) {
+        historyViewModel.resetResHistorySuccessFailDialogFlag(false)
+
+        when (selectQueryType) {
+            "WalletTopUpHistory" -> {
+                navController.navigate("WalletHistory")
+            }
+            "HourAllocationHistory" -> {
+                navController.navigate("HourHistory")
+            }
+            "ClassroomUsageHistory" -> {
+                navController.navigate("ClassroomHistory/${profileInfo?.role}")
+            }
+            "DormitoryUsageHistory" -> {
+                navController.navigate("DormitoryHistory")
+            }
+        }
+    }
+
+    if (showHistoryFailDialogFlag) {
         textTNoButtonAlert(
             onDismissRequest = {},
-            dialogTitle = parseDialogMsg(showWalletHistoryFailMsg ?: "")
+            dialogTitle = parseDialogMsg(showHistoryFailMsg ?: "")
         )
         // 在 Dialog 顯示後啟動計時器
         LaunchedEffect(Unit) {
             delay(1500) // 延遲 1.5 秒
-            historyViewModel.resetShowWalletHistoryFailDialogFlag(false)
+            historyViewModel.resetShowHistoryFailDialogFlag(false)
+            navController.navigateUp()
+        }
+    }
+
+    if (showGetProfileInfoFailDialogFlag) {
+        textTNoButtonAlert(
+            onDismissRequest = {},
+            dialogTitle = parseDialogMsg(showGetProfileInfoFailMsg ?: "")
+        )
+        // 在 Dialog 顯示後啟動計時器
+        LaunchedEffect(Unit) {
+            delay(1500) // 延遲 1.5 秒
+            profileViewModel.resetShowGetProfileInfoFailDialogFlag(false)
             navController.navigateUp()
         }
     }
@@ -132,12 +244,11 @@ private fun historyMainLoad(mainNavController: NavController, navController: Nav
 private fun historyContent(
     mainNavController: NavController,
     navController: NavHostController,
-    queryHistoryHandle:(String) -> Unit) {
-
-    // 取得當前螢幕的寬度 (dp)
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val boxWith = (screenWidth * 0.8f)
-    val boxStart = (screenWidth * 0.2f / 2)
+    profileData: ProfileModel.ProfileData?,
+    queryHistoryHandle:(String,Pair<String, String>) -> Unit,
+    lastSevenDaysClick:() -> Pair<String, String>,
+    lastMonthClick:() -> Pair<String, String>,
+    lastThreeMonthsClick:() -> Pair<String, String>){
 
     val beginDateTitle = stringResource(id = R.string.select_start_date)
     val endDateTitle = stringResource(id = R.string.select_end_date)
@@ -146,7 +257,7 @@ private fun historyContent(
 
     var showHistoryTypeBottomSheet by remember { mutableStateOf(false) }
     val historyTypeSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var selectQueryType by remember { mutableStateOf("") }
+    var selectQueryType by remember { mutableStateOf("WalletTopUpHistory") }
     var selectQueryTitle by remember { mutableStateOf("") }
 
     var showBeginSelectDate by remember { mutableStateOf(false) }
@@ -227,14 +338,14 @@ private fun historyContent(
                                     color = Color.Unspecified
                                 ){
                                     Column {
-                                        Spacer(modifier = Modifier.height(20.dp))
+                                        Spacer(modifier = Modifier.height(10.dp))
                                         Text(when (selectQueryType) {
                                             "WalletTopUpHistory" -> stringResource(R.string.wallet_top_up_history)
                                             "HourAllocationHistory" -> stringResource(R.string.hour_allocation_history)
                                             "ClassroomUsageHistory" -> stringResource(R.string.classroom_usage_history)
                                             "DormitoryUsageHistory" -> stringResource(R.string.dormitory_usage_history)
                                             else -> ""}, color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                                        Spacer(modifier = Modifier.height(20.dp))
+                                        Spacer(modifier = Modifier.height(10.dp))
                                     }
                                 }
                                 Surface (
@@ -281,12 +392,8 @@ private fun historyContent(
                             .height(35.dp)
                             .align(Alignment.CenterVertically)
                             .clickable {
-//                                beginDate = reportViewModel.lastSevenDays().first
-//                                endDate = reportViewModel.lastSevenDays().second
-//                                reportViewModel.updateSelectDate(
-//                                    beginValue = beginDate,
-//                                    endValue = endDate
-//                                )
+                                beginDate = lastSevenDaysClick().first
+                                endDate = lastSevenDaysClick().second
                             },
                             shape = RoundedCornerShape(16.dp),
                             color = Color.Black){
@@ -298,12 +405,8 @@ private fun historyContent(
                             .height(35.dp)
                             .align(Alignment.CenterVertically)
                             .clickable {
-//                                beginDate = reportViewModel.lastMonth().first
-//                                endDate = reportViewModel.lastMonth().second
-//                                reportViewModel.updateSelectDate(
-//                                    beginValue = beginDate,
-//                                    endValue = endDate
-//                                )
+                                beginDate = lastMonthClick().first
+                                endDate = lastMonthClick().second
                             },
                             shape = RoundedCornerShape(16.dp),
                             color = Color.Black){
@@ -315,12 +418,8 @@ private fun historyContent(
                             .height(35.dp)
                             .align(Alignment.CenterVertically)
                             .clickable {
-//                                beginDate = reportViewModel.lastThreeMonths().first
-//                                endDate = reportViewModel.lastThreeMonths().second
-//                                reportViewModel.updateSelectDate(
-//                                    beginValue = beginDate,
-//                                    endValue = endDate
-//                                )
+                                beginDate = lastThreeMonthsClick().first
+                                endDate = lastThreeMonthsClick().second
                             },
                             shape = RoundedCornerShape(16.dp),
                             color = Color.Black){
@@ -399,13 +498,11 @@ private fun historyContent(
                                 .height(45.dp)
                                 .align(Alignment.CenterVertically)
                                 .clickable {
-                                    queryHistoryHandle(selectQueryType)
                                     if (beginDate == beginDateTitle || endDate == endDateTitle) {
                                         showNotSelectDate = true
                                     } else {
                                         showNotSelectDate = false
-
-//                                        navController.navigate("ReportDetail/$aTitle/$aGatewayID/$aRoomID/$aTypeTitleID/$selectChannelID/$selectChannelName/$selectChannelType/$beginDate/$endDate")
+                                        queryHistoryHandle(selectQueryType,Pair(beginDate,endDate))
                                     }
                                 },
                             shape = RoundedCornerShape(10.dp),
@@ -430,7 +527,7 @@ private fun historyContent(
                             sheetState = historyTypeSheetState,
                             containerColor = Color.White
                         ) {
-                            historyTypeListView { value ->
+                            historyTypeListView(role = profileData?.role ?: "") { value ->
                                 showHistoryTypeBottomSheet = false
                                 selectQueryType = value
 
@@ -510,13 +607,22 @@ private fun historyContent(
 
 
 @Composable
-private fun historyTypeListView(onItemClick: (String) -> Unit = {}) {
-    val items = listOf(
-        HistoryModel.HistoryTypeItem(R.string.wallet_top_up_history, "WalletTopUpHistory"),
-        HistoryModel.HistoryTypeItem(R.string.hour_allocation_history, "HourAllocationHistory"),
-        HistoryModel.HistoryTypeItem(R.string.classroom_usage_history, "ClassroomUsageHistory"),
-        HistoryModel.HistoryTypeItem(R.string.dormitory_usage_history, "DormitoryUsageHistory"),
-    )
+private fun historyTypeListView(role: String, onItemClick: (String) -> Unit = {}) {
+
+    val items = when (role) {
+        "staff" -> listOf(
+            HistoryModel.HistoryTypeItem(R.string.wallet_top_up_history, "WalletTopUpHistory"),
+            HistoryModel.HistoryTypeItem(R.string.hour_allocation_history, "HourAllocationHistory"),
+            HistoryModel.HistoryTypeItem(R.string.classroom_usage_history, "ClassroomUsageHistory"),
+            HistoryModel.HistoryTypeItem(R.string.dormitory_usage_history, "DormitoryUsageHistory"),
+        )
+        "student" -> listOf(
+            HistoryModel.HistoryTypeItem(R.string.wallet_top_up_history, "WalletTopUpHistory"),
+            HistoryModel.HistoryTypeItem(R.string.classroom_usage_history, "ClassroomUsageHistory"),
+            HistoryModel.HistoryTypeItem(R.string.dormitory_usage_history, "DormitoryUsageHistory"),
+        )
+        else -> emptyList()
+    }
 
     LazyColumn() {
         items(items) { item ->
@@ -584,14 +690,14 @@ private fun historyPreview() {
 
 // 創建一個模擬的 NavController
     val navController = TestNavHostController(LocalContext.current)
-    historyContent (navController,navController,{})
+    historyContent (navController,navController,null,{ a,b -> },{ Pair("","")},{ Pair("","")},{ Pair("","")})
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun BottomSheetViewPreview() {
     STEMS_CampusTheme {
-        historyTypeListView {  }
+        historyTypeListView("",{})
     }
 
 }
