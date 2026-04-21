@@ -20,6 +20,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.dae.stems_campus.ui.screen.login.login
+import com.dae.stems_campus.ui.screen.initialize.selectSchoolScreen
 import com.dae.stems_campus.ui.theme.STEMS_CampusTheme
 import com.dae.stems_campus.viewmodel.AuthState
 import com.dae.stems_campus.viewmodel.AuthViewModel
@@ -56,6 +57,19 @@ fun AppContent () {
     when (authState) {
         is AuthState.Loading -> {
 
+        }
+        is AuthState.NeedSchoolSelection -> {
+            NavHost(navController = navController, startDestination = "selectSchool") {
+                composable("selectSchool") {
+                    selectSchoolScreen(
+                        navController = navController,
+                        onConfirmed = {
+                            // 選完學校後重新檢查（會走到 Unauthenticated）
+                            viewModel.checkToken()
+                        }
+                    )
+                }
+            }
         }
         is AuthState.Authenticated -> {
             NavHost(navController = navController, startDestination = "first") {
