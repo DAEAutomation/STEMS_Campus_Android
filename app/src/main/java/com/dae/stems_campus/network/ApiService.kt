@@ -2,6 +2,7 @@ package com.dae.stems_campus.network
 import com.dae.stems_campus.data.model.APIResponse
 import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.data.model.LoginModel
+import com.dae.stems_campus.data.model.NotificationsModel
 import com.dae.stems_campus.data.model.ProfileModel
 import com.dae.stems_campus.data.model.RefundModel
 import com.dae.stems_campus.data.model.ScanModel
@@ -195,4 +196,12 @@ interface ApiService {
     @POST("api/app/refund/status")
     suspend fun refundStatus(
     ): APIResponse.ApiResponse<RefundModel.RefundStatusData>
+
+
+    /**
+     * 通知
+     */
+    @POST("api/app/notifications")
+    suspend fun getNotifications(
+    ): APIResponse.ApiResponse<List<NotificationsModel.NotificationsData>>
 }

@@ -87,11 +87,14 @@ import com.dae.stems_campus.data.model.ScanModel
 import com.dae.stems_campus.ui.components.BiometricHelper
 import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
+import com.dae.stems_campus.ui.screen.notifications.notificationDetailScreen
+import com.dae.stems_campus.ui.screen.notifications.notificationsScreen
 import com.dae.stems_campus.ui.theme.STEMS_CampusTheme
 import com.dae.stems_campus.utils.calculateDuration
 import com.dae.stems_campus.utils.toAmountString
 import com.dae.stems_campus.viewmodel.HomeInfoViewModel
 import com.dae.stems_campus.viewmodel.LoginViewModel
+import com.dae.stems_campus.viewmodel.NotificationViewModel
 import com.dae.stems_campus.viewmodel.ProfileViewModel
 import com.dae.stems_campus.viewmodel.SettingViewModel
 import com.google.mlkit.vision.barcode.BarcodeScanning
@@ -104,7 +107,7 @@ import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
 @Composable
-fun HomeScreen(mainNavController: NavController, onNavigateToSetting: () -> Unit = {}, profileViewModel: ProfileViewModel = hiltViewModel(), homeInfoViewModel: HomeInfoViewModel = hiltViewModel(), loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel()) {
+fun HomeScreen(mainNavController: NavController, onNavigateToSetting: () -> Unit = {}, profileViewModel: ProfileViewModel = hiltViewModel(), homeInfoViewModel: HomeInfoViewModel = hiltViewModel(), loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), notificationViewModel: NotificationViewModel = hiltViewModel()) {
     val homeNavController = rememberNavController()
 
     NavHost(navController = homeNavController, startDestination = "Home") {
@@ -118,6 +121,13 @@ fun HomeScreen(mainNavController: NavController, onNavigateToSetting: () -> Unit
         composable("DormitoryDetail/{deviceCode}") { backStackEntry ->
             val deviceCode = backStackEntry.arguments?.getString("deviceCode")
             dormitoryDetailScreen(navController = homeNavController, selectDeviceCode = deviceCode ?: "", onShowTabBarChange = {})
+        }
+        composable("Notifications") {
+            notificationsScreen(navController = homeNavController, notificationViewModel = notificationViewModel, onShowTabBarChange = {})
+        }
+        composable("NotificationDetail") {
+            val notificationDetail = notificationViewModel.notificationDetail
+            notificationDetailScreen (navController = homeNavController,  notificationDetail, onShowTabBarChange = {})
         }
     }
 }
@@ -337,14 +347,17 @@ private fun homeContent(mainNavController: NavController,
                                 Image(painter = painterResource(id = R.drawable.qrcode), contentDescription = "")
                             }
                         }
-//                        Spacer(modifier = Modifier.width(20.dp))
-//                        Surface (modifier = Modifier, color = Color.Unspecified){
-//                            Surface (modifier = Modifier
-//                                , color = Color.Unspecified)
-//                            {
-//                                Image(painter = painterResource(id = R.drawable.bell), contentDescription = "")
-//                            }
-//                        }
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Surface (modifier = Modifier, color = Color.Unspecified){
+                            Surface (modifier = Modifier
+                                .clickable {
+                                    navHostController.navigate("Notifications")
+                                }
+                                , color = Color.Unspecified)
+                            {
+                                Image(painter = painterResource(id = R.drawable.bell), contentDescription = "")
+                            }
+                        }
                         Spacer(modifier = Modifier.width(20.dp))
                     }
                 }
@@ -648,7 +661,7 @@ private fun infoViewByTeacher(hasDevice: Boolean, aData: ProfileModel.ProfileDat
         ) {
             Row {
                 Icon(
-                    painter = painterResource(id = R.drawable.stopcircle),
+                    painter = painterResource(id = R.drawable.stopcircle_b),
                     contentDescription = "",
                     tint = Color.Unspecified
                 )
