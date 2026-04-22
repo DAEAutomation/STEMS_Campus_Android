@@ -63,6 +63,7 @@ class ProfileModel {
     data class SessionDetail(
         val sessionId: Int? = null,
         val state: String? = null,
+        val source: String? = null,
         val createdAt: String? = null
     )
 

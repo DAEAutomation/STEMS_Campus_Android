@@ -873,8 +873,8 @@ private fun classroomView(aData: ProfileModel.UsingDeviceData?, onDetailClick: (
         ) {
             Row (verticalAlignment = Alignment.CenterVertically){
                 Surface (modifier = Modifier
-                    .weight(0.9f)
-                    .height(170.dp), color = Color(0xFFD08024)){
+                    .weight(1f)
+                    , color = Color(0xFFD08024)){
                     Column (){
                         Spacer(modifier = Modifier.height(20.dp))
                         Row {
@@ -940,8 +940,8 @@ private fun dormitoryView(aData: ProfileModel.UsingDeviceData?, onDetailClick: (
         ) {
             Row (verticalAlignment = Alignment.CenterVertically){
                 Surface (modifier = Modifier
-                    .weight(0.9f)
-                    .height(170.dp), color = Color(0xFF2D859D)){
+                    .weight(1f)
+                    , color = Color(0xFF2D859D)){
                     Column (){
                         Spacer(modifier = Modifier.height(20.dp))
                         Row {

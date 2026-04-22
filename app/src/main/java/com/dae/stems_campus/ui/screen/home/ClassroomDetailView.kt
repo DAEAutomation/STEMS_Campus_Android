@@ -109,6 +109,7 @@ fun classroomDetailScreen(navController: NavHostController, selectDeviceCode: St
         aBillingDetail = firstSession?.billing,
         aDeviceDetail = firstSession?.device,
         aControlDetail = firstSession?.control,
+        aSessionDetail = firstSession?.session,
         onStopPowerHandled = { value -> homeInfoViewModel.stopPowerAction(selectDeviceCode,uuid,value)},
         resStopPowerSuccessFlag = resStopPowerSuccessFlag,
         onResStopPowerSuccessDismissed = { homeInfoViewModel.resetStopPowerSuccessFlag(false)},
@@ -190,6 +191,7 @@ private fun classroomDetailContent(navController: NavHostController,
                                    aControlDetail: ControlDetail?,
                                    aBillingDetail: BillingDetail?,
                                    aDeviceDetail: DeviceDetail?,
+                                   aSessionDetail : ProfileModel.SessionDetail?,
                                    onStopPowerHandled:(String) -> Unit,
                                    resStopPowerSuccessFlag: Boolean = false,
                                    onResStopPowerSuccessDismissed: () -> Unit = {},
@@ -233,9 +235,9 @@ private fun classroomDetailContent(navController: NavHostController,
                     Column (modifier = Modifier.verticalScroll(rememberScrollState())){
                         Spacer(modifier = Modifier.height(30.dp))
                         if (aRole.equals("staff")) {
-                            contentViewByTeacher(aControlDetail = aControlDetail, aDeviceDetail = aDeviceDetail, aBillingDetail = aBillingDetail, aSpaceDetail = aSpaceDetail, onStopPowerClick = { showingStopPowerBottomSheet = true})
+                            contentViewByTeacher(aControlDetail = aControlDetail, aDeviceDetail = aDeviceDetail, aBillingDetail = aBillingDetail, aSpaceDetail = aSpaceDetail, aSessionDetail = aSessionDetail, onStopPowerClick = { showingStopPowerBottomSheet = true})
                         }else if (aRole.equals("student")){
-                            contentViewByStudent(aControlDetail = aControlDetail, aDeviceDetail = aDeviceDetail, aBillingDetail = aBillingDetail, aSpaceDetail = aSpaceDetail, onStopPowerClick = { showingStopPowerBottomSheet = true}, onControlAcClick = { value -> onControlAcHandled(value)})
+                            contentViewByStudent(aControlDetail = aControlDetail, aDeviceDetail = aDeviceDetail, aBillingDetail = aBillingDetail, aSpaceDetail = aSpaceDetail, aSessionDetail = aSessionDetail, onStopPowerClick = { showingStopPowerBottomSheet = true}, onControlAcClick = { value -> onControlAcHandled(value)})
                         }
 
                         //停止供電頁面
@@ -315,6 +317,7 @@ private fun contentViewByTeacher(aSpaceDetail: ProfileModel.SpaceDetail?,
                                  aControlDetail: ControlDetail?,
                                  aBillingDetail: BillingDetail?,
                                  aDeviceDetail: DeviceDetail?,
+                                 aSessionDetail : ProfileModel.SessionDetail?,
                                  onStopPowerClick:() -> Unit
                                 ) {
     var currentElapsed by remember {
@@ -383,43 +386,51 @@ private fun contentViewByTeacher(aSpaceDetail: ProfileModel.SpaceDetail?,
                     Text(currentElapsed ?: "", color = Color.Black,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.height(40.dp))
-                Row {
-                    Spacer(modifier = Modifier.width(20.dp))
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(40.dp)
-                            .align(Alignment.CenterVertically)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(Color.Unspecified
-                            ),
-                        color = Color.Transparent
-                    ) {
-
+                if (aSessionDetail?.source.equals("card_reader")) {
+                    Row {
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Text("欲操作或停止供電，請至卡機操作", color = Color(0xFFE54343), style = MaterialTheme.typography.bodyLarge)
                     }
-                    Spacer(modifier = Modifier.width(20.dp))
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(45.dp)
-                            .align(Alignment.CenterVertically)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(Color(0xFFE54343))
+                }else{
+                    Row {
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(40.dp)
+                                .align(Alignment.CenterVertically)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(Color.Unspecified
+                                ),
+                            color = Color.Transparent
+                        ) {
+
+                        }
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(45.dp)
+                                .align(Alignment.CenterVertically)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(Color(0xFFE54343))
                                 .clickable {
                                     onStopPowerClick()
                                 },
-                        color = Color.Transparent
-                    ) {
-                        Text(
-                            text = stringResource(R.string.stop_power_supply),
-                            style = MaterialTheme.typography.titleMedium,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.wrapContentHeight(),
-                            color = Color.White
-                        )
+                            color = Color.Transparent
+                        ) {
+                            Text(
+                                text = stringResource(R.string.stop_power_supply),
+                                style = MaterialTheme.typography.titleMedium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.wrapContentHeight(),
+                                color = Color.White
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(20.dp))
                     }
-                    Spacer(modifier = Modifier.width(20.dp))
                 }
+
                 Spacer(modifier = Modifier.height(40.dp))
             }
         }
@@ -432,6 +443,7 @@ private fun contentViewByStudent(aSpaceDetail: ProfileModel.SpaceDetail?,
                                  aControlDetail: ControlDetail?,
                                  aBillingDetail: BillingDetail?,
                                  aDeviceDetail: DeviceDetail?,
+                                 aSessionDetail : ProfileModel.SessionDetail?,
                                  onStopPowerClick:() -> Unit,
                                  onControlAcClick:(String) -> Unit) {
 
@@ -526,55 +538,63 @@ private fun contentViewByStudent(aSpaceDetail: ProfileModel.SpaceDetail?,
                     Text("${stringResource(R.string.currency_unit)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                 }
                 Spacer(modifier = Modifier.height(40.dp))
-                Row {
-                    Spacer(modifier = Modifier.width(20.dp))
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(45.dp)
-                            .align(Alignment.CenterVertically)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(acButtonColor)
-                            .clickable {
-                                if (isAcOn) {
-                                    onControlAcClick("ac_off")
-                                }else{
-                                    onControlAcClick("ac_on")
-                                }
-                            },
-                        color = Color.Transparent
-                    ) {
-                        Text(
-                            text = acButtonText,
-                            style = MaterialTheme.typography.titleMedium,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.wrapContentHeight(),
-                            color = Color.White
-                        )
+                if (aSessionDetail?.source.equals("card_reader")) {
+                    Row {
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Text("欲操作或停止供電，請至卡機操作", color = Color(0xFFE54343), style = MaterialTheme.typography.bodyLarge)
                     }
-                    Spacer(modifier = Modifier.width(20.dp))
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(45.dp)
-                            .align(Alignment.CenterVertically)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(Color(0xFFE54343))
+                }else{
+                    Row {
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(45.dp)
+                                .align(Alignment.CenterVertically)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(acButtonColor)
+                                .clickable {
+                                    if (isAcOn) {
+                                        onControlAcClick("ac_off")
+                                    }else{
+                                        onControlAcClick("ac_on")
+                                    }
+                                },
+                            color = Color.Transparent
+                        ) {
+                            Text(
+                                text = acButtonText,
+                                style = MaterialTheme.typography.titleMedium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.wrapContentHeight(),
+                                color = Color.White
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(45.dp)
+                                .align(Alignment.CenterVertically)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(Color(0xFFE54343))
                                 .clickable {
                                     onStopPowerClick()
                                 },
-                        color = Color.Transparent
-                    ) {
-                        Text(
-                            text = stringResource(R.string.stop_power_supply),
-                            style = MaterialTheme.typography.titleMedium,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.wrapContentHeight(),
-                            color = Color.White
-                        )
+                            color = Color.Transparent
+                        ) {
+                            Text(
+                                text = stringResource(R.string.stop_power_supply),
+                                style = MaterialTheme.typography.titleMedium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.wrapContentHeight(),
+                                color = Color.White
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(20.dp))
                     }
-                    Spacer(modifier = Modifier.width(20.dp))
                 }
+
                 Spacer(modifier = Modifier.height(40.dp))
             }
         }
@@ -985,7 +1005,7 @@ private fun formatIso8601(isoString: String, zoneOffset: ZoneOffset = ZoneOffset
 private fun classroomDetailPreview() {
     val navController = TestNavHostController(LocalContext.current)
 
-    classroomDetailContent(navController,"student",null,null,null,null,{},false,{},null, onShowTabBarChange = {}, onControlAcHandled = {})
+    classroomDetailContent(navController,"student",null,null,null,null,null,{},false,{},null, onShowTabBarChange = {}, onControlAcHandled = {})
 
 }
 
