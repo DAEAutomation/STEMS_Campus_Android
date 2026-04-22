@@ -70,6 +70,12 @@ fun walletScreen(mainNavController: NavController, profileViewModel: ProfileView
             val depositCode = backStackEntry.arguments?.getString("depositCode")
             topUpInfoScreen(navController = walletNavController, depositCode = depositCode ?: "", onShowTabBarChange = {})
         }
+        composable("Refund") {
+            refundInfoScreen(navController = walletNavController, onShowTabBarChange = {})
+        }
+        composable("RefundCash") {
+            refundCashDetailScreen(navController = walletNavController, onShowTabBarChange = {})
+        }
     }
 
 }
@@ -185,8 +191,8 @@ private fun walletContent(
                             shape = RoundedCornerShape(
                                 topStart = 9.dp,
                                 topEnd = 9.dp,
-                                bottomStart = 9.dp,
-                                bottomEnd = 9.dp)){
+                                bottomStart = 0.dp,
+                                bottomEnd = 0.dp)){
 
                             Row (verticalAlignment = Alignment.CenterVertically){
                                 Spacer(modifier = Modifier.width(20.dp))
@@ -268,53 +274,53 @@ private fun walletContent(
 
 
                     // <-----申請退款----->
-//                    Row {
-//                        Spacer(modifier = Modifier.width(20.dp))
-//                        Surface (modifier = Modifier
-//                            .weight(1f)
-//                            .clickable {
-////                                    navController.navigate("changeName/${accountName}")
-//                            },
-//
-//                            color = Color.White,
-//                            shape = RoundedCornerShape(
-//                                topStart = 0.dp,
-//                                topEnd = 0.dp,
-//                                bottomStart = 9.dp,
-//                                bottomEnd = 9.dp)){
-//
-//                            Row (verticalAlignment = Alignment.CenterVertically){
-//                                Spacer(modifier = Modifier.width(20.dp))
-//
-//                                Surface (
-//                                    modifier = Modifier
-//                                        .align(Alignment.CenterVertically)
-//                                        .weight(0.9f),
-//                                    color = Color.Unspecified
-//                                ){
-//                                    Column {
-//                                        Spacer(modifier = Modifier.height(20.dp))
-//                                        Text(stringResource(R.string.apply_for_refund), color = Color(0xFFC82C2C), style = MaterialTheme.typography.titleMedium)
-//                                        Spacer(modifier = Modifier.height(20.dp))
-//                                    }
-//                                }
-//                                Surface (
-//                                    modifier = Modifier
-//                                        .align(Alignment.CenterVertically)
-//                                        .weight(0.1f),
-//                                    color = Color.Unspecified
-//                                ){
-//                                    Icon(
-//                                        painter = painterResource(id = R.drawable.caretright_b),
-//                                        tint = Color.Unspecified,
-//                                        contentDescription = "Localized description"
-//                                    )
-//                                }
-//                                Spacer(modifier = Modifier.width(20.dp))
-//                            }
-//                        }
-//                        Spacer(modifier = Modifier.width(20.dp))
-//                    }
+                    Row {
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Surface (modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                navController.navigate("Refund")
+                            },
+
+                            color = Color.White,
+                            shape = RoundedCornerShape(
+                                topStart = 0.dp,
+                                topEnd = 0.dp,
+                                bottomStart = 9.dp,
+                                bottomEnd = 9.dp)){
+
+                            Row (verticalAlignment = Alignment.CenterVertically){
+                                Spacer(modifier = Modifier.width(20.dp))
+
+                                Surface (
+                                    modifier = Modifier
+                                        .align(Alignment.CenterVertically)
+                                        .weight(0.9f),
+                                    color = Color.Unspecified
+                                ){
+                                    Column {
+                                        Spacer(modifier = Modifier.height(20.dp))
+                                        Text(stringResource(R.string.apply_for_refund), color = Color(0xFFC82C2C), style = MaterialTheme.typography.titleMedium)
+                                        Spacer(modifier = Modifier.height(20.dp))
+                                    }
+                                }
+                                Surface (
+                                    modifier = Modifier
+                                        .align(Alignment.CenterVertically)
+                                        .weight(0.1f),
+                                    color = Color.Unspecified
+                                ){
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.caretright_b),
+                                        tint = Color.Unspecified,
+                                        contentDescription = "Localized description"
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(20.dp))
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(20.dp))
+                    }
                     Spacer(modifier = Modifier.height(10.dp))
                 }
             }

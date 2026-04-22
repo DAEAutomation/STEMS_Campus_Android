@@ -25,7 +25,7 @@ class LoginModel {
         val hoursBalance: Int? = null,
         val canUse: Boolean? = null,
         val inDebt: Boolean? = null,
-        val debtAmount: Int? = null
+        val debtAmount: Double? = null
     )
 
     data class MqttData(

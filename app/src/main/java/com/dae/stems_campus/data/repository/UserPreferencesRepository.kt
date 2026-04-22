@@ -14,6 +14,18 @@ private val Context.dataStore by preferencesDataStore(name = "user_preferences")
 
 open class UserPreferencesRepository @Inject constructor (@ApplicationContext private val context: Context){
 
+    // 讀取 API base URL
+    val getApiDomainValue: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesStrings.API_DOMAIN] ?: ""
+    }
+
+    // 儲存 API base URL
+    suspend fun setApiDomainValue(value: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesStrings.API_DOMAIN] = value
+        }
+    }
+
     // 讀取 Name
     var getNameValue: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[PreferencesStrings.NAME] ?: ""

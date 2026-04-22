@@ -170,20 +170,20 @@ private fun LoginContent(navController: NavHostController,
             .weight(1f)
             .fillMaxWidth(),
             color = Color(0xFFF4F4F4)){
-            Row {
-                Spacer(modifier = Modifier.width(250.dp))
-                Surface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(40.dp)
-                        .align(Alignment.CenterVertically)
-                        .clip(RoundedCornerShape(20.dp))
-                        .clickable {
-                            loginOrRegister = !loginOrRegister
-                        },
-
-                    color = Color.Transparent
-                ) {
+//            Row {
+//                Spacer(modifier = Modifier.width(250.dp))
+//                Surface(
+//                    modifier = Modifier
+//                        .weight(1f)
+//                        .height(40.dp)
+//                        .align(Alignment.CenterVertically)
+//                        .clip(RoundedCornerShape(20.dp))
+//                        .clickable {
+//                            loginOrRegister = !loginOrRegister
+//                        },
+//
+//                    color = Color.Transparent
+//                ) {
 //                    if (loginOrRegister) {
 //                        Surface (modifier = Modifier,
 //                            color = Color.Unspecified){
@@ -195,9 +195,9 @@ private fun LoginContent(navController: NavHostController,
 //                            Image(painter = painterResource(id = R.drawable.loginswitch_1), contentDescription = "")
 //                        }
 //                    }
-                }
-                Spacer(modifier = Modifier.width(30.dp))
-            }
+//                }
+//                Spacer(modifier = Modifier.width(30.dp))
+//            }
         }
 
         if (loginOrRegister) {
@@ -333,15 +333,15 @@ private fun LoginContent(navController: NavHostController,
                                         }
 
                                     }
-                                    Surface (modifier = Modifier.weight(0.4f), color = Color.Unspecified){
-                                        TextButton(
-                                            onClick = {
-                                                navController.navigate("ForgotPw")
-                                            }
-                                        ) {
-                                            Text(stringResource(id = R.string.forgot_password),style = TextStyle(textDecoration = TextDecoration.Underline), color = Color(0xFF303236),)
-                                        }
-                                    }
+//                                    Surface (modifier = Modifier.weight(0.4f), color = Color.Unspecified){
+//                                        TextButton(
+//                                            onClick = {
+//                                                navController.navigate("ForgotPw")
+//                                            }
+//                                        ) {
+//                                            Text(stringResource(id = R.string.forgot_password),style = TextStyle(textDecoration = TextDecoration.Underline), color = Color(0xFF303236),)
+//                                        }
+//                                    }
                                 }
 
                                 Spacer(modifier = Modifier.height(30.dp))

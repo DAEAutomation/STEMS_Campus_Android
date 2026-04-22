@@ -2,7 +2,9 @@ package com.dae.stems_campus.network
 import com.dae.stems_campus.data.model.APIResponse
 import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.data.model.LoginModel
+import com.dae.stems_campus.data.model.NotificationsModel
 import com.dae.stems_campus.data.model.ProfileModel
+import com.dae.stems_campus.data.model.RefundModel
 import com.dae.stems_campus.data.model.ScanModel
 import com.dae.stems_campus.data.model.TokenModel
 import com.dae.stems_campus.data.model.TopUpModel
@@ -132,4 +134,74 @@ interface ApiService {
     suspend fun walletHistory(
         @Body request: HistoryModel.HistoryRequest
     ): APIResponse.ApiResponse<List<HistoryModel.WalletHistory>>
+
+
+    /**
+     * 時數發給紀錄
+     */
+    @POST("api/app/records/hours")
+    suspend fun hoursHistory(
+        @Body request: HistoryModel.HistoryRequest
+    ): APIResponse.ApiResponse<List<HistoryModel.HoursHistory>>
+
+
+    /**
+     * 教室使用紀錄
+     */
+    @POST("api/app/records/classroom")
+    suspend fun classroomHistory(
+        @Body request: HistoryModel.HistoryRequest
+    ): APIResponse.ApiResponse<List<HistoryModel.ClassroomHistory>>
+
+
+    /**
+     * 宿舍使用紀錄
+     */
+    @POST("api/app/records/dormitory")
+    suspend fun dormitoryHistory(
+        @Body request: HistoryModel.HistoryRequest
+    ): APIResponse.ApiResponse<List<HistoryModel.DormitoryHistory>>
+
+
+    /**
+     * 申請退款
+     */
+    @POST("api/app/refund/request")
+    suspend fun refundRequest(
+        @Body request: RefundModel.RefundRequest
+    ): APIResponse.ApiResponse<RefundModel.RefundRequestData>
+
+
+    /**
+     * 進行退款-悠遊卡
+     */
+    @POST("api/app/refund/execute")
+    suspend fun startRefund(
+        @Body request: RefundModel.StartRefundRequest
+    ): APIResponse.ApiResponse<RefundModel.StartRefundData>
+
+
+    /**
+     * 退款取消
+     */
+    @POST("api/app/refund/cancel")
+    suspend fun cancelRefund(
+        @Body request: RefundModel.CancelRefundRequest
+    ): APIResponse.ApiResponse<RefundModel.CancelRefundData>
+
+
+    /**
+     * 退款狀態查詢
+     */
+    @POST("api/app/refund/status")
+    suspend fun refundStatus(
+    ): APIResponse.ApiResponse<RefundModel.RefundStatusData>
+
+
+    /**
+     * 通知
+     */
+    @POST("api/app/notifications")
+    suspend fun getNotifications(
+    ): APIResponse.ApiResponse<List<NotificationsModel.NotificationsData>>
 }

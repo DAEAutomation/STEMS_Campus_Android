@@ -73,7 +73,7 @@ private fun BottomNavigationBar(bottomBarNavController: NavController, onItemSel
     items = listOf(
         NavigationItem.Home,
         NavigationItem.Wallet,
-//        NavigationItem.History,
+        NavigationItem.History,
         NavigationItem.Setting,
     ).toMutableList()
 
@@ -143,14 +143,19 @@ private fun Navigation(bottomBarNavHostController: NavHostController,mainNavCont
                     popUpTo(NavigationItem.Setting.route) { inclusive = true }
                     launchSingleTop = true
                 }
+            }, onNavigateToWallet = {
+                bottomBarNavHostController.navigate(NavigationItem.Wallet.route) {
+                    popUpTo(NavigationItem.Wallet.route) { inclusive = true }
+                    launchSingleTop = true
+                }
             })
         }
         composable(NavigationItem.Wallet.route) {
             walletScreen(mainNavController = mainNavController, onShowTabBarChange = {})
         }
-//        composable(NavigationItem.History.route) {
-//            historyScreen(mainNavController = mainNavController, onShowTabBarChange = {})
-//        }
+        composable(NavigationItem.History.route) {
+            historyScreen(mainNavController = mainNavController, onShowTabBarChange = {})
+        }
         composable(NavigationItem.Setting.route) {
             settingScreen(mainNavController = mainNavController, onShowTabBarChange = {})
         }
