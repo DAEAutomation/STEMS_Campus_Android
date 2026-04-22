@@ -193,8 +193,8 @@ private fun refundInfoContent(
                                 shape = RoundedCornerShape(
                                     topStart = 9.dp,
                                     topEnd = 9.dp,
-                                    bottomStart = 0.dp,
-                                    bottomEnd = 0.dp)){
+                                    bottomStart = 9.dp,
+                                    bottomEnd = 9.dp)){
 
                                 Row (verticalAlignment = Alignment.CenterVertically){
                                     Spacer(modifier = Modifier.width(20.dp))
@@ -235,55 +235,55 @@ private fun refundInfoContent(
                         Spacer(modifier = Modifier.height(2.dp))
 
                         // <-----悠遊卡退款----->
-                        Row {
-                            Spacer(modifier = Modifier.width(20.dp))
-                            Surface (modifier = Modifier
-                                .weight(1f)
-                                .clickable {
-//                                    navController.navigate("changeName/${accountName}")
-                                },
-
-                                color = Color.White,
-                                shape = RoundedCornerShape(
-                                    topStart = 0.dp,
-                                    topEnd = 0.dp,
-                                    bottomStart = 9.dp,
-                                    bottomEnd = 9.dp)){
-
-                                Row (verticalAlignment = Alignment.CenterVertically){
-                                    Spacer(modifier = Modifier.width(20.dp))
-
-                                    Surface (
-                                        modifier = Modifier
-                                            .align(Alignment.CenterVertically)
-                                            .weight(0.9f),
-                                        color = Color.Unspecified
-                                    ){
-                                        Column {
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                            Text(stringResource(R.string.easy_card_refund), color = Color.Black, style = MaterialTheme.typography.titleLarge)
-                                            Spacer(modifier = Modifier.height(5.dp))
-                                            Text("請至校內自助儲值機操作", color = Color.Black, style = MaterialTheme.typography.bodySmall)
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                        }
-                                    }
-                                    Surface (
-                                        modifier = Modifier
-                                            .align(Alignment.CenterVertically)
-                                            .weight(0.1f),
-                                        color = Color.Unspecified
-                                    ){
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.caretright_b),
-                                            tint = Color.Unspecified,
-                                            contentDescription = "Localized description"
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(20.dp))
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(20.dp))
-                        }
+//                        Row {
+//                            Spacer(modifier = Modifier.width(20.dp))
+//                            Surface (modifier = Modifier
+//                                .weight(1f)
+//                                .clickable {
+////                                    navController.navigate("changeName/${accountName}")
+//                                },
+//
+//                                color = Color.White,
+//                                shape = RoundedCornerShape(
+//                                    topStart = 0.dp,
+//                                    topEnd = 0.dp,
+//                                    bottomStart = 9.dp,
+//                                    bottomEnd = 9.dp)){
+//
+//                                Row (verticalAlignment = Alignment.CenterVertically){
+//                                    Spacer(modifier = Modifier.width(20.dp))
+//
+//                                    Surface (
+//                                        modifier = Modifier
+//                                            .align(Alignment.CenterVertically)
+//                                            .weight(0.9f),
+//                                        color = Color.Unspecified
+//                                    ){
+//                                        Column {
+//                                            Spacer(modifier = Modifier.height(20.dp))
+//                                            Text(stringResource(R.string.easy_card_refund), color = Color.Black, style = MaterialTheme.typography.titleLarge)
+//                                            Spacer(modifier = Modifier.height(5.dp))
+//                                            Text("請至校內自助儲值機操作", color = Color.Black, style = MaterialTheme.typography.bodySmall)
+//                                            Spacer(modifier = Modifier.height(20.dp))
+//                                        }
+//                                    }
+//                                    Surface (
+//                                        modifier = Modifier
+//                                            .align(Alignment.CenterVertically)
+//                                            .weight(0.1f),
+//                                        color = Color.Unspecified
+//                                    ){
+//                                        Icon(
+//                                            painter = painterResource(id = R.drawable.caretright_b),
+//                                            tint = Color.Unspecified,
+//                                            contentDescription = "Localized description"
+//                                        )
+//                                    }
+//                                    Spacer(modifier = Modifier.width(20.dp))
+//                                }
+//                            }
+//                            Spacer(modifier = Modifier.width(20.dp))
+//                        }
 
 
                         if (showingRefundBottomSheet) {
