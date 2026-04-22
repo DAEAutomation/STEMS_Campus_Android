@@ -13,7 +13,7 @@ class RefundModel {
         val refundNo: String? = null,
         val refundCode: String? = null,
         val refundType: Int? = null,
-        val amount: Int? = null,
+        val amount: Double? = null,
         val status: String? = null,
         val createdAt: String? = null
     )
@@ -43,7 +43,7 @@ class RefundModel {
         val refundNo: String? = null,
         val refundCode: String? = null,
         val refundType: String? = null,
-        val amount: Int? = null,
+        val amount: Double? = null,
         val status: String? = null,
         val createdAt: String? = null,
         val completedAt: String? = null

@@ -49,6 +49,7 @@ import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
+import com.dae.stems_campus.utils.toAmountString
 import com.dae.stems_campus.viewmodel.RefundViewModel
 import kotlinx.coroutines.delay
 import java.time.OffsetDateTime
@@ -76,7 +77,7 @@ fun refundCashDetailScreen(navController: NavHostController, refundViewModel: Re
     var refundCode by remember { mutableStateOf("") }
     var refundCreatedAt by remember { mutableStateOf("") }
     var refundNo by remember { mutableStateOf("") }
-    var refundAmount by remember { mutableStateOf(0) }
+    var refundAmount by remember { mutableStateOf(0.0) }
     var refundStatus by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
@@ -106,7 +107,7 @@ fun refundCashDetailScreen(navController: NavHostController, refundViewModel: Re
         refundCode = refundRequestData?.refundCode ?: ""
         refundCreatedAt = refundRequestData?.createdAt ?: ""
         refundNo = refundRequestData?.refundNo ?: ""
-        refundAmount = refundRequestData?.amount ?: 0
+        refundAmount = refundRequestData?.amount ?: 0.0
         refundStatus = refundRequestData?.status ?: ""
     }
 
@@ -133,7 +134,7 @@ fun refundCashDetailScreen(navController: NavHostController, refundViewModel: Re
         refundCode = refundStatusData?.refundCode ?: ""
         refundCreatedAt = refundStatusData?.createdAt ?: ""
         refundNo = refundStatusData?.refundNo ?: ""
-        refundAmount = refundStatusData?.amount ?: 0
+        refundAmount = refundStatusData?.amount ?: 0.0
         refundStatus = refundStatusData?.status ?: ""
     }
 
@@ -186,7 +187,7 @@ private fun refundCashDetailContent(
     refundCode: String? = null,
     refundCreatedAt: String? = null,
     refundNo: String? = null,
-    refundAmount: Int? = null,
+    refundAmount: Double? = null,
     refundStatus: String? = null,
     cancelHandled:() -> Unit) {
 
@@ -388,7 +389,7 @@ private fun refundCashDetailContent(
                                             Spacer(modifier = Modifier.height(20.dp))
                                             Text(stringResource(R.string.refund_amount), color = Color(0xFF2D859D), style = MaterialTheme.typography.bodyMedium)
                                             Spacer(modifier = Modifier.height(5.dp))
-                                            Text("$refundAmount", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                                            Text("${refundAmount?.toAmountString()}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                                             Spacer(modifier = Modifier.height(20.dp))
                                         }
                                     }
@@ -548,5 +549,5 @@ private fun refundCashDetailPreview() {
 
 // 創建一個模擬的 NavController
     val navController = TestNavHostController(LocalContext.current)
-    refundCashDetailContent (navController,{},"","","",0,"",{})
+    refundCashDetailContent (navController,{},"","","",0.0,"",{})
 }

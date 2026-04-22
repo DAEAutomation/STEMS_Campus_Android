@@ -107,12 +107,12 @@ import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
 @Composable
-fun HomeScreen(mainNavController: NavController, onNavigateToSetting: () -> Unit = {}, profileViewModel: ProfileViewModel = hiltViewModel(), homeInfoViewModel: HomeInfoViewModel = hiltViewModel(), loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), notificationViewModel: NotificationViewModel = hiltViewModel()) {
+fun HomeScreen(mainNavController: NavController, onNavigateToSetting: () -> Unit = {}, onNavigateToWallet: () -> Unit = {}, profileViewModel: ProfileViewModel = hiltViewModel(), homeInfoViewModel: HomeInfoViewModel = hiltViewModel(), loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), notificationViewModel: NotificationViewModel = hiltViewModel()) {
     val homeNavController = rememberNavController()
 
     NavHost(navController = homeNavController, startDestination = "Home") {
         composable("Home") {
-            homeMainLoad(mainNavController = mainNavController,homeNavController, profileViewModel, homeInfoViewModel, loginViewModel, settingViewModel, onShowTabBarChange = {}, onNavigateToSetting = { onNavigateToSetting() })
+            homeMainLoad(mainNavController = mainNavController,homeNavController, profileViewModel, homeInfoViewModel, loginViewModel, settingViewModel, onShowTabBarChange = {}, onNavigateToSetting = { onNavigateToSetting() }, onNavigateToWallet = { onNavigateToWallet() })
         }
         composable("ClassroomDetail/{deviceCode}") { backStackEntry ->
             val deviceCode = backStackEntry.arguments?.getString("deviceCode")
@@ -134,7 +134,16 @@ fun HomeScreen(mainNavController: NavController, onNavigateToSetting: () -> Unit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun homeMainLoad(mainNavController: NavController, navHostController: NavHostController, profileViewModel: ProfileViewModel, homeInfoViewModel: HomeInfoViewModel, loginViewModel: LoginViewModel, settingViewModel: SettingViewModel, onShowTabBarChange: (Boolean) -> Unit, onNavigateToSetting: () -> Unit) {
+private fun homeMainLoad(
+    mainNavController: NavController,
+    navHostController: NavHostController,
+    profileViewModel: ProfileViewModel,
+    homeInfoViewModel: HomeInfoViewModel,
+    loginViewModel: LoginViewModel,
+    settingViewModel: SettingViewModel,
+    onShowTabBarChange: (Boolean) -> Unit,
+    onNavigateToSetting: () -> Unit,
+    onNavigateToWallet: () -> Unit) {
 
     val context = LocalContext.current
     val activity = context as? FragmentActivity
@@ -217,7 +226,8 @@ private fun homeMainLoad(mainNavController: NavController, navHostController: Na
         isBiometricFlag = isBiometricFlag,
         biometricHelper = biometricHelper,
         onBiometricsStartPowerSupplyHandled = { handleBiometricStartPower() },
-        onNavigateToSetting = { onNavigateToSetting() })
+        onNavigateToSetting = { onNavigateToSetting() },
+        onNavigateToWallet = { onNavigateToWallet() })
 
     //密碼驗證成功後
     if (resVerifyPasswordSuccessFlag) {
@@ -273,7 +283,8 @@ private fun homeContent(mainNavController: NavController,
                         isBiometricFlag: Boolean = false,
                         biometricHelper: BiometricHelper? = null,
                         onBiometricsStartPowerSupplyHandled: () -> Unit,
-                        onNavigateToSetting: () -> Unit = {}) {
+                        onNavigateToSetting: () -> Unit = {},
+                        onNavigateToWallet: () -> Unit = {}) {
 
     val classroomTeacherSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val dormitoryTeacherSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -379,9 +390,9 @@ private fun homeContent(mainNavController: NavController,
                 .verticalScroll(rememberScrollState()),  color = Color.Unspecified){
                 Column {
                     if (profileInfo?.role.equals("staff")) {
-                        infoViewByTeacher(profileInfo?.activeSession?.hasActive ?: false, profileInfo, onScanClick = { cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA) }, onGetUsingDeviceDetailByClassroomHandled = { value -> navHostController.navigate("ClassroomDetail/${value}")}, onGetUsingDeviceDetailByDormitoryHandled = { value -> navHostController.navigate("DormitoryDetail/${value}")})
+                        infoViewByTeacher(profileInfo?.activeSession?.hasActive ?: false, profileInfo, onScanClick = { cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA) }, onGetUsingDeviceDetailByClassroomHandled = { value -> navHostController.navigate("ClassroomDetail/${value}")}, onGetUsingDeviceDetailByDormitoryHandled = { value -> navHostController.navigate("DormitoryDetail/${value}")}, onNavigateToWalletClick = { onNavigateToWallet()})
                     }else if (profileInfo?.role.equals("student")){
-                        infoViewByStudent(profileInfo?.activeSession?.hasActive ?: false, profileInfo, onScanClick = { cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA) }, onGetUsingDeviceDetailByClassroomHandled = { value -> navHostController.navigate("ClassroomDetail/${value}")}, onGetUsingDeviceDetailByDormitoryHandled = { value -> navHostController.navigate("DormitoryDetail/${value}")})
+                        infoViewByStudent(profileInfo?.activeSession?.hasActive ?: false, profileInfo, onScanClick = { cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA) }, onGetUsingDeviceDetailByClassroomHandled = { value -> navHostController.navigate("ClassroomDetail/${value}")}, onGetUsingDeviceDetailByDormitoryHandled = { value -> navHostController.navigate("DormitoryDetail/${value}")}, onNavigateToWalletClick = { onNavigateToWallet()})
                     }
                 }
             }
@@ -627,7 +638,13 @@ private fun homeContent(mainNavController: NavController,
 }
 
 @Composable
-private fun infoViewByTeacher(hasDevice: Boolean, aData: ProfileModel.ProfileData?, onScanClick: () -> Unit, onGetUsingDeviceDetailByClassroomHandled: (String) -> Unit, onGetUsingDeviceDetailByDormitoryHandled: (String) -> Unit) {
+private fun infoViewByTeacher(
+    hasDevice: Boolean,
+    aData: ProfileModel.ProfileData?,
+    onScanClick: () -> Unit,
+    onGetUsingDeviceDetailByClassroomHandled: (String) -> Unit,
+    onGetUsingDeviceDetailByDormitoryHandled: (String) -> Unit,
+    onNavigateToWalletClick: () -> Unit = {}) {
 
     Row {
         Spacer(modifier = Modifier.width(25.dp))
@@ -669,6 +686,28 @@ private fun infoViewByTeacher(hasDevice: Boolean, aData: ProfileModel.ProfileDat
                 Text(text = stringResource(id = R.string.available_hours), color = Color.Black, style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.width(30.dp))
                 Text(text = "${aData?.hoursBalance?.calculateDuration()}", color = Color(0xFFD08024), style = MaterialTheme.typography.bodyLarge)
+            }
+        }
+    }
+    aData?.balance?.let {
+        if (it < 0 ) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Row {
+                Spacer(modifier = Modifier.width(25.dp))
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .wrapContentHeight()
+                        .clickable {
+                            onNavigateToWalletClick()
+                        },
+                    color = Color.Unspecified
+                ) {
+                    Row {
+                        Text(text = "無法使用計費設備，請 ", color = Color(0xFFE54343), style = MaterialTheme.typography.labelLarge)
+                        Text(text = "立即儲值", color = Color(0xFFE54343),style = TextStyle(textDecoration = TextDecoration.Underline))
+                    }
+                }
             }
         }
     }
@@ -751,7 +790,13 @@ private fun infoViewByTeacher(hasDevice: Boolean, aData: ProfileModel.ProfileDat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun infoViewByStudent(hasDevice: Boolean, aData: ProfileModel.ProfileData?, onScanClick: () -> Unit, onGetUsingDeviceDetailByClassroomHandled: (String) -> Unit, onGetUsingDeviceDetailByDormitoryHandled: (String) -> Unit) {
+private fun infoViewByStudent(
+    hasDevice: Boolean,
+    aData: ProfileModel.ProfileData?,
+    onScanClick: () -> Unit,
+    onGetUsingDeviceDetailByClassroomHandled: (String) -> Unit,
+    onGetUsingDeviceDetailByDormitoryHandled: (String) -> Unit,
+    onNavigateToWalletClick: () -> Unit = {}) {
     Row {
         Spacer(modifier = Modifier.width(25.dp))
         Surface(
@@ -773,6 +818,29 @@ private fun infoViewByStudent(hasDevice: Boolean, aData: ProfileModel.ProfileDat
             }
         }
     }
+    aData?.balance?.let {
+        if (it < 0 ) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Row {
+                Spacer(modifier = Modifier.width(25.dp))
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .wrapContentHeight()
+                        .clickable {
+                            onNavigateToWalletClick()
+                        },
+                    color = Color.Unspecified
+                ) {
+                    Row {
+                        Text(text = "無法使用計費設備，請 ", color = Color(0xFFE54343), style = MaterialTheme.typography.labelLarge)
+                        Text(text = "立即儲值", color = Color(0xFFE54343),style = TextStyle(textDecoration = TextDecoration.Underline))
+                    }
+                }
+            }
+        }
+    }
+
 
     Spacer(modifier = Modifier.height(20.dp))
     if (hasDevice) {

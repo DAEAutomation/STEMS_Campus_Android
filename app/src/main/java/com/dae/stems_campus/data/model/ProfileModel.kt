@@ -13,7 +13,7 @@ class ProfileModel {
         val canUse: Boolean? = null,
         val isSuspended: Boolean? = null,
         val inDebt: Boolean? = null,
-        val debtAmount: Int? = null,
+        val debtAmount: Double? = null,
         val registrationSource: String? = null,
         val createdAt: String? = null,
         val updatedAt: String? = null,
