@@ -54,6 +54,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
@@ -73,6 +74,12 @@ import java.util.Locale
 @Composable
 fun historyScreen(mainNavController: NavController, historyViewModel: HistoryViewModel = hiltViewModel(), profileViewModel: ProfileViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
     val historyNavController = rememberNavController()
+
+    val backStackEntry by historyNavController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+    LaunchedEffect(currentRoute) {
+        onShowTabBarChange(currentRoute == null || currentRoute == "History")
+    }
 
     NavHost(navController = historyNavController, startDestination = "History") {
         composable("History") {

@@ -44,20 +44,25 @@ fun mainTabScreen(mainNavController: NavController) {
     val bottomBarNavController = rememberNavController()
     // 創建一個狀態來保存當前頁面的標題
     val currentTitle = rememberSaveable { mutableStateOf(NavigationItem.Home.navTitle) }
+    // 控制 bottomBar 是否顯示（子頁進入時隱藏）
+    val showTabBar = rememberSaveable { mutableStateOf(true) }
 
     Scaffold(
         bottomBar = {
-            BottomNavigationBar(bottomBarNavController, onItemSelected = { title ->
-                // 更新標題
-                currentTitle.value = title
-            })
+            if (showTabBar.value) {
+                BottomNavigationBar(bottomBarNavController, onItemSelected = { title ->
+                    // 更新標題
+                    currentTitle.value = title
+                })
+            }
         },
         content = { padding ->
             Box(modifier = Modifier.padding(padding)) {
                 Navigation(
                     bottomBarNavHostController = bottomBarNavController,
                     mainNavController = mainNavController,
-                    startRote = NavigationItem.Home.route)
+                    startRote = NavigationItem.Home.route,
+                    onShowTabBarChange = { showTabBar.value = it })
             }
         },
         containerColor = Color(0xFFF4F4F4) // Set background color to avoid the white flashing when you switch between screens
@@ -135,29 +140,39 @@ private fun BottomNavigationBar(bottomBarNavController: NavController, onItemSel
 
 
 @Composable
-private fun Navigation(bottomBarNavHostController: NavHostController,mainNavController: NavController, startRote: String) {
+private fun Navigation(
+    bottomBarNavHostController: NavHostController,
+    mainNavController: NavController,
+    startRote: String,
+    onShowTabBarChange: (Boolean) -> Unit
+) {
     NavHost(bottomBarNavHostController, startDestination = startRote) {
         composable(NavigationItem.Home.route) {
-            HomeScreen(mainNavController = mainNavController, onNavigateToSetting = {
-                bottomBarNavHostController.navigate(NavigationItem.Setting.route) {
-                    popUpTo(NavigationItem.Setting.route) { inclusive = true }
-                    launchSingleTop = true
-                }
-            }, onNavigateToWallet = {
-                bottomBarNavHostController.navigate(NavigationItem.Wallet.route) {
-                    popUpTo(NavigationItem.Wallet.route) { inclusive = true }
-                    launchSingleTop = true
-                }
-            })
+            HomeScreen(
+                mainNavController = mainNavController,
+                onNavigateToSetting = {
+                    bottomBarNavHostController.navigate(NavigationItem.Setting.route) {
+                        popUpTo(NavigationItem.Setting.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToWallet = {
+                    bottomBarNavHostController.navigate(NavigationItem.Wallet.route) {
+                        popUpTo(NavigationItem.Wallet.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onShowTabBarChange = onShowTabBarChange
+            )
         }
         composable(NavigationItem.Wallet.route) {
-            walletScreen(mainNavController = mainNavController, onShowTabBarChange = {})
+            walletScreen(mainNavController = mainNavController, onShowTabBarChange = onShowTabBarChange)
         }
         composable(NavigationItem.History.route) {
-            historyScreen(mainNavController = mainNavController, onShowTabBarChange = {})
+            historyScreen(mainNavController = mainNavController, onShowTabBarChange = onShowTabBarChange)
         }
         composable(NavigationItem.Setting.route) {
-            settingScreen(mainNavController = mainNavController, onShowTabBarChange = {})
+            settingScreen(mainNavController = mainNavController, onShowTabBarChange = onShowTabBarChange)
         }
 
 

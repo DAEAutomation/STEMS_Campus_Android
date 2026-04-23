@@ -79,6 +79,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
@@ -107,8 +108,15 @@ import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
 @Composable
-fun HomeScreen(mainNavController: NavController, onNavigateToSetting: () -> Unit = {}, onNavigateToWallet: () -> Unit = {}, profileViewModel: ProfileViewModel = hiltViewModel(), homeInfoViewModel: HomeInfoViewModel = hiltViewModel(), loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), notificationViewModel: NotificationViewModel = hiltViewModel()) {
+fun HomeScreen(mainNavController: NavController, onNavigateToSetting: () -> Unit = {}, onNavigateToWallet: () -> Unit = {}, onShowTabBarChange: (Boolean) -> Unit = {}, profileViewModel: ProfileViewModel = hiltViewModel(), homeInfoViewModel: HomeInfoViewModel = hiltViewModel(), loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), notificationViewModel: NotificationViewModel = hiltViewModel()) {
     val homeNavController = rememberNavController()
+
+    // 監聽內層 navController route 變化，子頁進入時隱藏 tab bar
+    val backStackEntry by homeNavController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+    LaunchedEffect(currentRoute) {
+        onShowTabBarChange(currentRoute == null || currentRoute == "Home")
+    }
 
     NavHost(navController = homeNavController, startDestination = "Home") {
         composable("Home") {

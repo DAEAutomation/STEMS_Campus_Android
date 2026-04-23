@@ -43,6 +43,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
@@ -60,6 +61,12 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun walletScreen(mainNavController: NavController, profileViewModel: ProfileViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
     val walletNavController = rememberNavController()
+
+    val backStackEntry by walletNavController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+    LaunchedEffect(currentRoute) {
+        onShowTabBarChange(currentRoute == null || currentRoute == "Wallet")
+    }
 
     NavHost(navController = walletNavController, startDestination = "Wallet") {
         composable("Wallet") {
