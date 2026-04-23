@@ -162,6 +162,14 @@ interface ApiService {
         @Body request: HistoryModel.HistoryRequest
     ): APIResponse.ApiResponse<List<HistoryModel.DormitoryHistory>>
 
+    /**
+     * 退款紀錄
+     */
+    @POST("api/app/records/refunds")
+    suspend fun refundHistory(
+        @Body request: HistoryModel.HistoryRequest
+    ): APIResponse.ApiResponse<List<HistoryModel.RefundHistory>>
+
 
     /**
      * 申請退款
