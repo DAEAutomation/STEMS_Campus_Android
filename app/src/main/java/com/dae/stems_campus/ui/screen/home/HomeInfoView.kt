@@ -231,12 +231,26 @@ private fun homeMainLoad(
 
     //密碼驗證成功後
     if (resVerifyPasswordSuccessFlag) {
-        loginViewModel.resetResVerifyPasswordSuccessFlag(false)
-        if (profileInfo?.role.equals("staff")) {
-            homeInfoViewModel.startPowerAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "")
-        }else if (profileInfo?.role.equals("student")){
-            homeInfoViewModel.startPowerByStudentAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "", isAcControl)
+
+        if (scanInfo?.sessionToken ?: "" == "") {
+            textTNoButtonAlert(
+                onDismissRequest = {},
+                dialogTitle = parseDialogMsg(scanInfo?.canStartReason ?: "")
+            )
+            // 在 Dialog 顯示後啟動計時器
+            LaunchedEffect(Unit) {
+                delay(1500) // 延遲 1.5 秒
+                loginViewModel.resetResVerifyPasswordSuccessFlag(false)
+            }
+        }else{
+            loginViewModel.resetResVerifyPasswordSuccessFlag(false)
+            if (profileInfo?.role.equals("staff")) {
+                homeInfoViewModel.startPowerAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "")
+            }else if (profileInfo?.role.equals("student")){
+                homeInfoViewModel.startPowerByStudentAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "", isAcControl)
+            }
         }
+
     }
 
     if (resStartPowerSuccessFlag) {
