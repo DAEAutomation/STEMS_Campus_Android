@@ -53,6 +53,8 @@ import com.dae.stems_campus.utils.calculateDuration
 import com.dae.stems_campus.utils.toAmountString
 import com.dae.stems_campus.viewmodel.ProfileViewModel
 import kotlinx.coroutines.delay
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
 
 @Composable
@@ -357,9 +359,19 @@ private fun infoViewByTeacher(profileInfo: ProfileModel.ProfileData?) {
                             Text("${profileInfo?.hoursBalance?.calculateDuration()}", color = Color.White,style = MaterialTheme.typography.titleLarge,fontWeight = FontWeight.Bold)
                         }
                         Spacer(modifier = Modifier.height(5.dp))
-                        Row (verticalAlignment = Alignment.CenterVertically){
-                            Spacer(modifier = Modifier.width(30.dp))
-                            Text("13小時42分鐘 將於 2026-12-31 到期", color = Color.White,style = MaterialTheme.typography.bodySmall)
+                        val matched = getMatchingExpireDetail(
+                            hoursExpiresAt = profileInfo?.hoursExpiresAt ?: "",
+                            hoursExpireDetail = profileInfo?.hoursExpireDetail ?: emptyList()
+                        )
+                        if (matched != null) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Spacer(modifier = Modifier.width(30.dp))
+                                Text(
+                                    "${(matched.hours ?: 0).calculateDuration()} 將於 ${formatExpiresAt(matched.expiresAt ?: "")} 到期",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
                         }
 
                     }
@@ -414,6 +426,11 @@ private fun infoViewByTeacher(profileInfo: ProfileModel.ProfileData?) {
                                 Text(stringResource(R.string.currency_unit), color = Color.White, style = MaterialTheme.typography.bodyLarge)
                             }
                         }
+                        Spacer(modifier = Modifier.height(5.dp))
+                        Row (verticalAlignment = Alignment.CenterVertically){
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("自動四捨五入至整數", color = Color.White,style = MaterialTheme.typography.bodySmall)
+                        }
                         Spacer(modifier = Modifier.height(20.dp))
                     }
                 }
@@ -456,6 +473,11 @@ private fun infoViewByStudent(profileInfo: ProfileModel.ProfileData?) {
                                 Text(stringResource(R.string.currency_unit), color = Color.White, style = MaterialTheme.typography.bodyLarge)
                             }
                         }
+                        Spacer(modifier = Modifier.height(5.dp))
+                        Row (verticalAlignment = Alignment.CenterVertically){
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("自動四捨五入至整數", color = Color.White,style = MaterialTheme.typography.bodySmall)
+                        }
                         Spacer(modifier = Modifier.height(20.dp))
                     }
                 }
@@ -474,6 +496,21 @@ private fun parseDialogMsg(aMsg: String):(String){
         msg = aMsg
     }
     return msg
+}
+
+private fun getMatchingExpireDetail(
+    hoursExpiresAt: String,
+    hoursExpireDetail: List<ProfileModel.HoursExpireDetail>
+): ProfileModel.HoursExpireDetail? {
+    if (hoursExpiresAt.isEmpty()) return null
+    return hoursExpireDetail.firstOrNull { it.expiresAt == hoursExpiresAt }
+}
+
+private fun formatExpiresAt(expiresAt: String): String {
+    if (expiresAt.isEmpty()) return ""
+    return runCatching {
+        OffsetDateTime.parse(expiresAt).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+    }.getOrDefault(expiresAt)
 }
 
 // 預覽UI
