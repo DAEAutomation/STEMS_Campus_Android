@@ -47,4 +47,14 @@ open class HistoryRepository @Inject constructor(apiService: ApiService, tokenMa
             ))
         }
     }
+
+    // 退款紀錄
+    suspend fun getRefundHistory(aStartDate: String, aEndDate: String): Result<List<HistoryModel.RefundHistory>> {
+        return executeAuthenticatedRequest {
+            apiService.refundHistory(HistoryModel.HistoryRequest(
+                start_date = aStartDate,
+                end_date = aEndDate
+            ))
+        }
+    }
 }

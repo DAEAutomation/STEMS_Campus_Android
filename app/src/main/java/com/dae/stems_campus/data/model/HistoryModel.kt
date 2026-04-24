@@ -93,4 +93,27 @@ class HistoryModel {
         val buildingName: String? = null,
         val rate: Double? = null
     )
+
+    //退款紀錄
+    data class RefundHistory(
+        val id: Int? = null,
+        val refundNo: String? = null,
+        val refundType: Int? = null,
+        val refundTypeLabel: String? = null,
+        val amount: Double? = null,
+        val refundCode: String? = null,
+        val status: Int? = null,
+        val statusLabel: String? = null,
+        val kioskName: String? = null,
+        val balanceBefore: Double? = null,
+        val balanceAfter: Double? = null,
+        val transactionId: Int? = null,
+        val createdAt: String? = null,
+        val completedAt: String? = null,
+        val updatedAt: String? = null,
+        val applicantName: String? = null,
+        val applicantNo: String? = null,
+        val applicantRole: String? = null,
+        val applicationDate: String? = null
+    )
 }

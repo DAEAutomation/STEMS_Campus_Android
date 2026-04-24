@@ -284,7 +284,7 @@ private fun classroomDetailContent(navController: NavHostController,
                                 sheetState = stopPowerInfoByStudentSheetState,
                                 containerColor = Color.White
                             ) {
-                                stopPowerInfoByStudentBottomSheetView(aStopSessionDetail,{
+                                stopPowerInfoByStudentBottomSheetView(aBillingDetail,aStopSessionDetail,{
                                     showingStopPowerInfoByStudentBottomSheet = false
                                     navController.navigateUp()
                                 })
@@ -533,7 +533,7 @@ private fun contentViewByStudent(aSpaceDetail: ProfileModel.SpaceDetail?,
                     Spacer(modifier = Modifier.width(20.dp))
                     Text("${stringResource(R.string.cumulative_deduction_amount)}：", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(5.dp))
-                    Text("${aBillingDetail?.general?.totalAmount?.toAmountString()}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${aBillingDetail?.totalCharged?.toAmountString()}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(5.dp))
                     Text("${stringResource(R.string.currency_unit)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                 }
@@ -862,7 +862,7 @@ private fun stopPowerInfoBottomSheetView(aData: ScanModel.StopPowerData?, onBack
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun stopPowerInfoByStudentBottomSheetView(aData: ScanModel.StopPowerData?, onBackHomeHandled: () -> Unit) {
+private fun stopPowerInfoByStudentBottomSheetView(aBillingDetail : BillingDetail?, aStopPowerData: ScanModel.StopPowerData?, onBackHomeHandled: () -> Unit) {
     Column {
         Row (verticalAlignment = Alignment.CenterVertically){
             Surface (modifier = Modifier.weight(1f), color = Color.Unspecified){
@@ -885,21 +885,21 @@ private fun stopPowerInfoByStudentBottomSheetView(aData: ScanModel.StopPowerData
                     Spacer(modifier = Modifier.width(20.dp))
                     Text("${"開始時間："}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.weight(1f))
-                    Text("${formatIso8601(aData?.session?.startTime ?: "") }", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${formatIso8601(aStopPowerData?.session?.startTime ?: "") }", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(20.dp))
                 }
                 Row {
                     Spacer(modifier = Modifier.width(20.dp))
                     Text("${"結束時間："}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.weight(1f))
-                    Text("${formatIso8601(aData?.session?.endTime ?: "")}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${formatIso8601(aStopPowerData?.session?.endTime ?: "")}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(20.dp))
                 }
                 Row {
                     Spacer(modifier = Modifier.width(20.dp))
                     Text("${"使用時間："}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.weight(1f))
-                    Text(computeDurationAtLeastOneMinute(aData?.session?.startTime ?: "",aData?.session?.endTime ?: ""), color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text(computeDurationAtLeastOneMinute(aStopPowerData?.session?.startTime ?: "",aStopPowerData?.session?.endTime ?: ""), color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(20.dp))
                 }
                 Spacer(modifier = Modifier.height( 20.dp))
@@ -912,21 +912,21 @@ private fun stopPowerInfoByStudentBottomSheetView(aData: ScanModel.StopPowerData
                     Spacer(modifier = Modifier.width(20.dp))
                     Text("${"開始時間："}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.weight(1f))
-                    Text("${formatIso8601(aData?.session?.acStartTime ?: "--")}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${formatIso8601(aStopPowerData?.session?.acStartTime ?: "--")}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(20.dp))
                 }
                 Row {
                     Spacer(modifier = Modifier.width(20.dp))
                     Text("${"結束時間："}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.weight(1f))
-                    Text("${formatIso8601(aData?.session?.acEndTime ?: "--")}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${formatIso8601(aStopPowerData?.session?.acEndTime ?: "--")}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(20.dp))
                 }
                 Row {
                     Spacer(modifier = Modifier.width(20.dp))
                     Text("${"使用時間："}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.weight(1f))
-                    Text(computeDurationAtLeastOneMinute(aData?.session?.acStartTime ?: "--",aData?.session?.acEndTime ?: ""), color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text(computeDurationAtLeastOneMinute(aStopPowerData?.session?.acStartTime ?: "--",aStopPowerData?.session?.acEndTime ?: ""), color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(20.dp))
                 }
 
@@ -935,7 +935,7 @@ private fun stopPowerInfoByStudentBottomSheetView(aData: ScanModel.StopPowerData
                     Spacer(modifier = Modifier.width(20.dp))
                     Text("${"當次費率："}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.weight(1f))
-                    Text("", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${aBillingDetail?.rate}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(5.dp))
                     Text("${stringResource(R.string.currency_unit)}/${stringResource(R.string.minute)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(20.dp))
@@ -944,7 +944,7 @@ private fun stopPowerInfoByStudentBottomSheetView(aData: ScanModel.StopPowerData
                     Spacer(modifier = Modifier.width(20.dp))
                     Text("${"預估扣款："}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.weight(1f))
-                    Text("${aData?.session?.totalAmount?.toAmountString()}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${aStopPowerData?.totalCharged?.toAmountString()}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(5.dp))
                     Text("${stringResource(R.string.currency_unit)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(20.dp))

@@ -54,6 +54,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
@@ -73,6 +74,12 @@ import java.util.Locale
 @Composable
 fun historyScreen(mainNavController: NavController, historyViewModel: HistoryViewModel = hiltViewModel(), profileViewModel: ProfileViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
     val historyNavController = rememberNavController()
+
+    val backStackEntry by historyNavController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+    LaunchedEffect(currentRoute) {
+        onShowTabBarChange(currentRoute == null || currentRoute == "History")
+    }
 
     NavHost(navController = historyNavController, startDestination = "History") {
         composable("History") {
@@ -126,8 +133,20 @@ fun historyScreen(mainNavController: NavController, historyViewModel: HistoryVie
                 onShowTabBarChange = {})
         }
         composable("DormitoryDetailHistory") {
-            val dormitoryTopUpDetail = historyViewModel.dormitoryHistoryDetail
-            dormitoryDetailScreen(navController = historyNavController, dormitoryTopUpDetail, onShowTabBarChange = {})
+            val dormitoryDetail = historyViewModel.dormitoryHistoryDetail
+            dormitoryDetailScreen(navController = historyNavController, dormitoryDetail, onShowTabBarChange = {})
+        }
+        composable("RefundHistory") {
+            val refundHistoryList = historyViewModel.refundHistoryList
+            refundHistoryScreen(
+                navController = historyNavController,
+                histories = refundHistoryList.value ?: emptyList(),
+                historyViewModel = historyViewModel,
+                onShowTabBarChange = {})
+        }
+        composable("RefundDetailHistory") {
+            val refundDetail = historyViewModel.refundHistoryDetail
+            refundDetailScreen(navController = historyNavController, refundDetail, onShowTabBarChange = {})
         }
     }
 
@@ -174,6 +193,10 @@ private fun historyMainLoad(mainNavController: NavController, navController: Nav
                     selectQueryType = value
                     historyViewModel.getDormitoryHistoryAction(dateValue.first, dateValue.second)
                 }
+                "RefundHistory" -> {
+                    selectQueryType = value
+                    historyViewModel.getRefundHistoryAction(dateValue.first, dateValue.second)
+                }
             }
         },
         lastSevenDaysClick = {
@@ -206,6 +229,9 @@ private fun historyMainLoad(mainNavController: NavController, navController: Nav
             }
             "DormitoryUsageHistory" -> {
                 navController.navigate("DormitoryHistory")
+            }
+            "RefundHistory" -> {
+                navController.navigate("RefundHistory")
             }
         }
     }
@@ -345,6 +371,7 @@ private fun historyContent(
                                             "HourAllocationHistory" -> stringResource(R.string.hour_allocation_history)
                                             "ClassroomUsageHistory" -> stringResource(R.string.classroom_usage_history)
                                             "DormitoryUsageHistory" -> stringResource(R.string.dormitory_usage_history)
+                                            "RefundHistory" -> stringResource(R.string.refund_history)
                                             else -> ""}, color = Color.Black, style = MaterialTheme.typography.titleMedium)
                                         Spacer(modifier = Modifier.height(10.dp))
                                     }
@@ -621,11 +648,13 @@ private fun historyTypeListView(role: String, onItemClick: (String) -> Unit = {}
             HistoryModel.HistoryTypeItem(R.string.hour_allocation_history, "HourAllocationHistory"),
             HistoryModel.HistoryTypeItem(R.string.classroom_usage_history, "ClassroomUsageHistory"),
             HistoryModel.HistoryTypeItem(R.string.dormitory_usage_history, "DormitoryUsageHistory"),
+            HistoryModel.HistoryTypeItem(R.string.refund_history, "RefundHistory"),
         )
         "student" -> listOf(
             HistoryModel.HistoryTypeItem(R.string.wallet_top_up_history, "WalletTopUpHistory"),
             HistoryModel.HistoryTypeItem(R.string.classroom_usage_history, "ClassroomUsageHistory"),
             HistoryModel.HistoryTypeItem(R.string.dormitory_usage_history, "DormitoryUsageHistory"),
+            HistoryModel.HistoryTypeItem(R.string.refund_history, "RefundHistory"),
         )
         else -> emptyList()
     }

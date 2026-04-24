@@ -171,6 +171,11 @@ private fun refundInfoContent(
                                                     Text(stringResource(R.string.currency_unit), color = Color.White, style = MaterialTheme.typography.bodyLarge)
                                                 }
                                             }
+                                            Spacer(modifier = Modifier.height(5.dp))
+                                            Row (verticalAlignment = Alignment.CenterVertically){
+                                                Spacer(modifier = Modifier.width(20.dp))
+                                                Text("自動四捨五入至整數", color = Color.White,style = MaterialTheme.typography.bodySmall)
+                                            }
                                             Spacer(modifier = Modifier.height(20.dp))
                                         }
                                     }

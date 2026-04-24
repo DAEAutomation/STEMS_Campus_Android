@@ -261,7 +261,7 @@ private fun classroomHistoryRowByTeacher(
 ) {
     val dateText = item.startTime?.let {
         runCatching {
-            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
         }.getOrDefault("")
     } ?: ""
 
@@ -325,12 +325,11 @@ private fun classroomHistoryRowByStudent(
     shape: RoundedCornerShape,
     rowClick:(HistoryModel.ClassroomHistory) -> Unit
 ) {
-    val dateText = item.startTime?.let {
+    val dateText = item.general?.startTime?.let {
         runCatching {
-            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
         }.getOrDefault("")
     } ?: ""
-
     Row {
         Spacer(modifier = Modifier.width(20.dp))
         Surface(

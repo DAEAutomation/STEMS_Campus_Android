@@ -79,6 +79,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
@@ -107,8 +108,15 @@ import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
 @Composable
-fun HomeScreen(mainNavController: NavController, onNavigateToSetting: () -> Unit = {}, onNavigateToWallet: () -> Unit = {}, profileViewModel: ProfileViewModel = hiltViewModel(), homeInfoViewModel: HomeInfoViewModel = hiltViewModel(), loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), notificationViewModel: NotificationViewModel = hiltViewModel()) {
+fun HomeScreen(mainNavController: NavController, onNavigateToSetting: () -> Unit = {}, onNavigateToWallet: () -> Unit = {}, onShowTabBarChange: (Boolean) -> Unit = {}, profileViewModel: ProfileViewModel = hiltViewModel(), homeInfoViewModel: HomeInfoViewModel = hiltViewModel(), loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), notificationViewModel: NotificationViewModel = hiltViewModel()) {
     val homeNavController = rememberNavController()
+
+    // 監聽內層 navController route 變化，子頁進入時隱藏 tab bar
+    val backStackEntry by homeNavController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+    LaunchedEffect(currentRoute) {
+        onShowTabBarChange(currentRoute == null || currentRoute == "Home")
+    }
 
     NavHost(navController = homeNavController, startDestination = "Home") {
         composable("Home") {
@@ -231,12 +239,26 @@ private fun homeMainLoad(
 
     //密碼驗證成功後
     if (resVerifyPasswordSuccessFlag) {
-        loginViewModel.resetResVerifyPasswordSuccessFlag(false)
-        if (profileInfo?.role.equals("staff")) {
-            homeInfoViewModel.startPowerAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "")
-        }else if (profileInfo?.role.equals("student")){
-            homeInfoViewModel.startPowerByStudentAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "", isAcControl)
+
+        if (scanInfo?.sessionToken ?: "" == "") {
+            textTNoButtonAlert(
+                onDismissRequest = {},
+                dialogTitle = parseDialogMsg(scanInfo?.canStartReason ?: "")
+            )
+            // 在 Dialog 顯示後啟動計時器
+            LaunchedEffect(Unit) {
+                delay(1500) // 延遲 1.5 秒
+                loginViewModel.resetResVerifyPasswordSuccessFlag(false)
+            }
+        }else{
+            loginViewModel.resetResVerifyPasswordSuccessFlag(false)
+            if (profileInfo?.role.equals("staff")) {
+                homeInfoViewModel.startPowerAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "")
+            }else if (profileInfo?.role.equals("student")){
+                homeInfoViewModel.startPowerByStudentAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "", isAcControl)
+            }
         }
+
     }
 
     if (resStartPowerSuccessFlag) {

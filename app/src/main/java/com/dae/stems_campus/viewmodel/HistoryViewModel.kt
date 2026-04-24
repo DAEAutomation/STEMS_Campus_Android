@@ -48,6 +48,10 @@ class HistoryViewModel @Inject constructor(private var historyRepository: Histor
     val dormitoryHistoryList: StateFlow<List<HistoryModel.DormitoryHistory>> = _dormitoryHistoryList
     var dormitoryHistoryDetail: HistoryModel.DormitoryHistory? = null
 
+    private val _refundHistoryList = MutableStateFlow<List<HistoryModel.RefundHistory>>(emptyList())
+    val refundHistoryList: StateFlow<List<HistoryModel.RefundHistory>> = _refundHistoryList
+    var refundHistoryDetail: HistoryModel.RefundHistory? = null
+
 
     // 查詢 錢包儲值紀錄
     fun getWalletHistoryAction(startDate: String, endDate: String) {
@@ -130,6 +134,30 @@ class HistoryViewModel @Inject constructor(private var historyRepository: Histor
                     _showLoadingView.value = false
                     _resHistorySuccessFlag.value = true
                     _dormitoryHistoryList.value = result.data
+                }
+                is BaseRepository.Result.Error -> {
+                    _showLoadingView.value = false
+                    _showHistoryFailDialogFlag.value = true
+                    _showHistoryFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showHistoryFailDialogFlag.value = true
+                    _showHistoryFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+    // 查詢 退款紀錄
+    fun getRefundHistoryAction(startDate: String, endDate: String) {
+        viewModelScope.launch {
+            _showLoadingView.value = true
+            when (val result = historyRepository.getRefundHistory(startDate,endDate)) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _resHistorySuccessFlag.value = true
+                    _refundHistoryList.value = result.data
                 }
                 is BaseRepository.Result.Error -> {
                     _showLoadingView.value = false

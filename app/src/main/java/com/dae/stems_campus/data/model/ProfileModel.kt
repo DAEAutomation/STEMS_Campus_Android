@@ -103,7 +103,9 @@ class ProfileModel {
         val chargeUnit: String? = null,
         val userRole: String? = null,
         val general: GeneralDetail? = null,
-        val ac: AcDetail? = null
+        val ac: AcDetail? = null,
+        val totalCharged: Double? = null,
+        val totalKwh: Double? = null
     )
 
     data class GeneralDetail(
