@@ -45,6 +45,7 @@ import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.data.model.NotificationsModel
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
+import com.dae.stems_campus.utils.toLocalDateTimeText
 import com.dae.stems_campus.viewmodel.HistoryViewModel
 import com.dae.stems_campus.viewmodel.NotificationViewModel
 import kotlinx.coroutines.delay
@@ -187,11 +188,7 @@ private fun notificationsRow(
     shape: RoundedCornerShape,
     rowClick:(NotificationsModel.NotificationsData) -> Unit
 ) {
-    val dateText = item.createdAt?.let {
-        runCatching {
-            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-        }.getOrDefault("")
-    } ?: ""
+    val dateText = item.createdAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: ""
 
     Row {
         Spacer(modifier = Modifier.width(20.dp))

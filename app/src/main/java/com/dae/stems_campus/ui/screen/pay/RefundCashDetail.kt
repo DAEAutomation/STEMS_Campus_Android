@@ -50,6 +50,7 @@ import com.dae.stems_campus.R
 import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.utils.toAmountString
+import com.dae.stems_campus.utils.toLocalDateTimeText
 import com.dae.stems_campus.viewmodel.RefundViewModel
 import kotlinx.coroutines.delay
 import java.time.OffsetDateTime
@@ -285,11 +286,7 @@ private fun refundCashDetailContent(
                                         color = Color.Unspecified
                                     ){
                                         Column {
-                                            val dateText = refundCreatedAt?.let {
-                                                runCatching {
-                                                    OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                                                }.getOrDefault("")
-                                            } ?: ""
+                                            val dateText = refundCreatedAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm:ss") ?: ""
                                             Spacer(modifier = Modifier.height(20.dp))
                                             Text(stringResource(R.string.application_date), color = Color(0xFF2D859D), style = MaterialTheme.typography.bodyMedium)
                                             Spacer(modifier = Modifier.height(5.dp))

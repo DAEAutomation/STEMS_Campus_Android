@@ -39,6 +39,7 @@ import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.NotificationsModel
 import com.dae.stems_campus.utils.computeDurationAtLeastOneMinute
 import com.dae.stems_campus.utils.toAmountString
+import com.dae.stems_campus.utils.toLocalDateTimeText
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
@@ -98,11 +99,7 @@ private fun notificationDetailContent(
                             ){
                                 Column (horizontalAlignment = Alignment.CenterHorizontally) {
                                     Spacer(modifier = Modifier.height(20.dp))
-                                    val createdAtText = notificationData?.createdAt?.let {
-                                        runCatching {
-                                            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                                        }.getOrDefault("")
-                                    } ?: ""
+                                    val createdAtText = notificationData?.createdAt?.toLocalDateTimeText("yyyy-MM-dd") ?: ""
                                     Text(createdAtText, color = Color.White, style = MaterialTheme.typography.titleMedium)
                                     Spacer(modifier = Modifier.height(20.dp))
                                     Text("${notificationData?.title}", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)

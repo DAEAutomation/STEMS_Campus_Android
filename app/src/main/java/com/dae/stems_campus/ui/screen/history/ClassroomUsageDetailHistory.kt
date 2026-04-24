@@ -41,6 +41,7 @@ import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.utils.computeDuration
 import com.dae.stems_campus.utils.computeDurationAtLeastOneMinute
 import com.dae.stems_campus.utils.toAmountString
+import com.dae.stems_campus.utils.toLocalDateTimeText
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
@@ -102,11 +103,7 @@ private fun classroomDetailContent(
                             ){
                                 Column (horizontalAlignment = Alignment.CenterHorizontally) {
                                     Spacer(modifier = Modifier.height(20.dp))
-                                    val createdAtText = classroomHistory?.general?.startTime?.let {
-                                        runCatching {
-                                            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                                        }.getOrDefault("")
-                                    } ?: ""
+                                    val createdAtText = classroomHistory?.general?.startTime?.toLocalDateTimeText("yyyy-MM-dd") ?: ""
                                     Text(createdAtText, color = Color.White, style = MaterialTheme.typography.titleMedium)
                                     Spacer(modifier = Modifier.height(20.dp))
                                     Text("${classroomHistory?.spaceName}", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
@@ -164,22 +161,14 @@ private fun contentViewByTeacher(classroomHistory: HistoryModel.ClassroomHistory
                     Column {
                         Spacer(modifier = Modifier.height(20.dp))
                         Row {
-                            val startTimeText = classroomHistory?.startTime?.let {
-                                runCatching {
-                                    OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                                }.getOrDefault("")
-                            } ?: ""
+                            val startTimeText = classroomHistory?.startTime?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: ""
                             Text("${stringResource(R.string.start_time)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                             Spacer(modifier = Modifier.width(20.dp))
                             Text(startTimeText, color = Color.Black, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                         Row {
-                            val endTimeText = classroomHistory?.endTime?.let {
-                                runCatching {
-                                    OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                                }.getOrDefault("")
-                            } ?: ""
+                            val endTimeText = classroomHistory?.endTime?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: ""
                             Text("${stringResource(R.string.end_time)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                             Spacer(modifier = Modifier.width(20.dp))
                             Text(endTimeText, color = Color.Black, style = MaterialTheme.typography.titleMedium)
@@ -232,22 +221,14 @@ private fun contentViewByStudent(classroomHistory: HistoryModel.ClassroomHistory
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                         Row {
-                            val startTimeText = classroomHistory?.general?.startTime?.let {
-                                runCatching {
-                                    OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                                }.getOrDefault("")
-                            } ?: ""
+                            val startTimeText = classroomHistory?.general?.startTime?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: ""
                             Text("${stringResource(R.string.start_time)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                             Spacer(modifier = Modifier.width(20.dp))
                             Text(startTimeText, color = Color.Black, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                         Row {
-                            val endTimeText = classroomHistory?.general?.endTime?.let {
-                                runCatching {
-                                    OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                                }.getOrDefault("")
-                            } ?: ""
+                            val endTimeText = classroomHistory?.general?.endTime?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: ""
                             Text("${stringResource(R.string.end_time)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                             Spacer(modifier = Modifier.width(20.dp))
                             Text(endTimeText, color = Color.Black, style = MaterialTheme.typography.titleMedium)
@@ -305,22 +286,14 @@ private fun contentViewByStudent(classroomHistory: HistoryModel.ClassroomHistory
                             }
                             Spacer(modifier = Modifier.height(20.dp))
                             Row {
-                                val startTimeText = classroomHistory?.ac?.startTime?.let {
-                                    runCatching {
-                                        OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                                    }.getOrDefault("")
-                                } ?: ""
+                                val startTimeText = classroomHistory?.ac?.startTime?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: ""
                                 Text("${stringResource(R.string.start_time)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                                 Spacer(modifier = Modifier.width(20.dp))
                                 Text(startTimeText, color = Color.Black, style = MaterialTheme.typography.titleMedium)
                             }
                             Spacer(modifier = Modifier.height(20.dp))
                             Row {
-                                val endTimeText = classroomHistory?.ac?.endTime?.let {
-                                    runCatching {
-                                        OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                                    }.getOrDefault("")
-                                } ?: ""
+                                val endTimeText = classroomHistory?.ac?.endTime?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: ""
                                 Text("${stringResource(R.string.end_time)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                                 Spacer(modifier = Modifier.width(20.dp))
                                 Text(endTimeText, color = Color.Black, style = MaterialTheme.typography.titleMedium)

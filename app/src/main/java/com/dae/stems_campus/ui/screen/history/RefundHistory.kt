@@ -41,6 +41,7 @@ import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.utils.toAmountString
+import com.dae.stems_campus.utils.toLocalDateTimeText
 import com.dae.stems_campus.viewmodel.HistoryViewModel
 import java.time.OffsetDateTime
 import java.time.YearMonth
@@ -159,11 +160,7 @@ private fun refundHistoryRow(
     shape: RoundedCornerShape,
     rowClick:(HistoryModel.RefundHistory) -> Unit
 ) {
-    val dateText = item.createdAt?.let {
-        runCatching {
-            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-        }.getOrDefault("")
-    } ?: ""
+    val dateText = item.createdAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: ""
 
     Row {
         Spacer(modifier = Modifier.width(20.dp))

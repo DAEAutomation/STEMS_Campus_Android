@@ -3,9 +3,25 @@ package com.dae.stems_campus.utils
 import java.time.Duration
 import java.time.Instant
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+
+/**
+ * 把後端 ISO 8601（含 Z 或時區）字串轉成裝置本地時間，依 pattern 格式化
+ * 失敗回傳空字串
+ */
+fun String.toLocalDateTimeText(pattern: String = "yyyy-MM-dd HH:mm"): String {
+    if (isEmpty()) return ""
+    return try {
+        OffsetDateTime.parse(this)
+            .atZoneSameInstant(ZoneId.systemDefault())
+            .format(DateTimeFormatter.ofPattern(pattern))
+    } catch (e: Exception) {
+        ""
+    }
+}
 
 fun String.elapsedTime(): String {
     return try {

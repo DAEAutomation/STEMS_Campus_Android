@@ -42,6 +42,7 @@ import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.utils.calculateDuration
 import com.dae.stems_campus.utils.toAmountString
+import com.dae.stems_campus.utils.toLocalDateTimeText
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
@@ -101,11 +102,7 @@ private fun walletTopUpDetailContent(
                             ){
                                 Column (horizontalAlignment = Alignment.CenterHorizontally) {
                                     Spacer(modifier = Modifier.height(20.dp))
-                                    val createdAtText = walletHistory?.createdAt?.let {
-                                        runCatching {
-                                            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                                        }.getOrDefault("")
-                                    } ?: ""
+                                    val createdAtText = walletHistory?.createdAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm:ss") ?: ""
                                     Text(createdAtText, color = Color.White, style = MaterialTheme.typography.titleMedium)
                                     Spacer(modifier = Modifier.height(20.dp))
                                     Text("$${walletHistory?.amount}", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)

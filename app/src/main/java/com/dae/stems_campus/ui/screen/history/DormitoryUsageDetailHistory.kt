@@ -39,6 +39,7 @@ import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.utils.computeDurationAtLeastOneMinute
 import com.dae.stems_campus.utils.toAmountString
+import com.dae.stems_campus.utils.toLocalDateTimeText
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
@@ -98,16 +99,8 @@ private fun dormitoryDetailContent(
                             ){
                                 Column (horizontalAlignment = Alignment.CenterHorizontally) {
                                     Spacer(modifier = Modifier.height(20.dp))
-                                    val startText = dormitoryHistory?.startTime?.let {
-                                        runCatching {
-                                            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("MM/dd"))
-                                        }.getOrDefault("")
-                                    } ?: ""
-                                    val endText = dormitoryHistory?.endTime?.let {
-                                        runCatching {
-                                            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("MM/dd"))
-                                        }.getOrDefault("")
-                                    } ?: ""
+                                    val startText = dormitoryHistory?.startTime?.toLocalDateTimeText("MM/dd") ?: ""
+                                    val endText = dormitoryHistory?.endTime?.toLocalDateTimeText("MM/dd") ?: ""
                                     Text("${startText}-${endText}", color = Color.White, style = MaterialTheme.typography.titleMedium)
                                     Spacer(modifier = Modifier.height(20.dp))
                                     Text("${dormitoryHistory?.spaceName}", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
@@ -144,22 +137,14 @@ private fun dormitoryDetailContent(
                                         Column {
                                             Spacer(modifier = Modifier.height(20.dp))
                                             Row {
-                                                val startTimeText = dormitoryHistory?.startTime?.let {
-                                                    runCatching {
-                                                        OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                                                    }.getOrDefault("")
-                                                } ?: ""
+                                                val startTimeText = dormitoryHistory?.startTime?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: ""
                                                 Text("${stringResource(R.string.start_time)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                                                 Spacer(modifier = Modifier.width(20.dp))
                                                 Text(startTimeText, color = Color.Black, style = MaterialTheme.typography.titleMedium)
                                             }
                                             Spacer(modifier = Modifier.height(20.dp))
                                             Row {
-                                                val endTimeText = dormitoryHistory?.endTime?.let {
-                                                    runCatching {
-                                                        OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                                                    }.getOrDefault("")
-                                                } ?: ""
+                                                val endTimeText = dormitoryHistory?.endTime?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: ""
                                                 Text("${stringResource(R.string.end_time)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                                                 Spacer(modifier = Modifier.width(20.dp))
                                                 Text(endTimeText, color = Color.Black, style = MaterialTheme.typography.titleMedium)

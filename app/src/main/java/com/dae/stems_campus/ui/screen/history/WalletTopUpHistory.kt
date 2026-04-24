@@ -42,6 +42,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.HistoryModel
+import com.dae.stems_campus.utils.toLocalDateTimeText
 import com.dae.stems_campus.viewmodel.HistoryViewModel
 import java.time.OffsetDateTime
 import java.time.YearMonth
@@ -158,11 +159,7 @@ private fun walletHistoryRow(
     shape: RoundedCornerShape,
     rowClick:(HistoryModel.WalletHistory) -> Unit
 ) {
-    val dateText = item.createdAt?.let {
-        runCatching {
-            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-        }.getOrDefault("")
-    } ?: ""
+    val dateText = item.createdAt?.toLocalDateTimeText() ?: ""
 
     Row {
         Spacer(modifier = Modifier.width(20.dp))

@@ -40,6 +40,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.HistoryModel
+import com.dae.stems_campus.utils.toLocalDateTimeText
 import com.dae.stems_campus.viewmodel.HistoryViewModel
 import java.time.OffsetDateTime
 import java.time.YearMonth
@@ -259,11 +260,7 @@ private fun classroomHistoryRowByTeacher(
     shape: RoundedCornerShape,
     rowClick:(HistoryModel.ClassroomHistory) -> Unit
 ) {
-    val dateText = item.startTime?.let {
-        runCatching {
-            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-        }.getOrDefault("")
-    } ?: ""
+    val dateText = item.startTime?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: ""
 
     Row {
         Spacer(modifier = Modifier.width(20.dp))
@@ -325,11 +322,7 @@ private fun classroomHistoryRowByStudent(
     shape: RoundedCornerShape,
     rowClick:(HistoryModel.ClassroomHistory) -> Unit
 ) {
-    val dateText = item.general?.startTime?.let {
-        runCatching {
-            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-        }.getOrDefault("")
-    } ?: ""
+    val dateText = item.general?.startTime?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: ""
     Row {
         Spacer(modifier = Modifier.width(20.dp))
         Surface(

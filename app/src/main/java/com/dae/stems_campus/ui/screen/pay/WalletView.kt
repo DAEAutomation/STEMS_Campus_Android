@@ -51,6 +51,7 @@ import com.dae.stems_campus.data.model.ProfileModel
 import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.utils.calculateDuration
+import com.dae.stems_campus.utils.toLocalDateTimeText
 import com.dae.stems_campus.utils.toAmountString
 import com.dae.stems_campus.viewmodel.ProfileViewModel
 import kotlinx.coroutines.delay
@@ -515,9 +516,7 @@ private fun getMatchingExpireDetail(
 
 private fun formatExpiresAt(expiresAt: String): String {
     if (expiresAt.isEmpty()) return ""
-    return runCatching {
-        OffsetDateTime.parse(expiresAt).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-    }.getOrDefault(expiresAt)
+    return expiresAt.toLocalDateTimeText("yyyy-MM-dd").ifEmpty { expiresAt }
 }
 
 // 預覽UI

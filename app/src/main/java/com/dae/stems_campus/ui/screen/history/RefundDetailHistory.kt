@@ -39,6 +39,7 @@ import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.utils.toAmountString
+import com.dae.stems_campus.utils.toLocalDateTimeText
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
@@ -98,11 +99,7 @@ private fun refundDetailContent(
                             ){
                                 Column (horizontalAlignment = Alignment.CenterHorizontally) {
                                     Spacer(modifier = Modifier.height(20.dp))
-                                    val createdAtText = refundHistory?.createdAt?.let {
-                                        runCatching {
-                                            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                                        }.getOrDefault("")
-                                    } ?: ""
+                                    val createdAtText = refundHistory?.createdAt?.toLocalDateTimeText("yyyy-MM-dd") ?: ""
                                     Text(createdAtText, color = Color.White, style = MaterialTheme.typography.titleMedium)
                                     Spacer(modifier = Modifier.height(20.dp))
                                     Text("$${refundHistory?.amount?.toAmountString()}", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
@@ -147,22 +144,14 @@ private fun refundDetailContent(
                                                 Text("${refundHistory?.refundNo}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                                             }
                                             Spacer(modifier = Modifier.height(20.dp))
-                                            val createdAtText = refundHistory?.createdAt?.let {
-                                                runCatching {
-                                                    OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                                                }.getOrDefault("")
-                                            } ?: "--"
+                                            val createdAtText = refundHistory?.createdAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: "--"
                                             Row {
                                                 Text("${stringResource(R.string.application_time)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                                                 Spacer(modifier = Modifier.width(20.dp))
                                                 Text("${createdAtText}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                                             }
                                             Spacer(modifier = Modifier.height(20.dp))
-                                            val completedAtText = refundHistory?.completedAt?.let {
-                                                runCatching {
-                                                    OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                                                }.getOrDefault("")
-                                            } ?: "--"
+                                            val completedAtText = refundHistory?.completedAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: "--"
                                             Row {
                                                 Text("${stringResource(R.string.transaction_time)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                                                 Spacer(modifier = Modifier.width(20.dp))

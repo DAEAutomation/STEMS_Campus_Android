@@ -39,6 +39,7 @@ import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.utils.calculateDuration
+import com.dae.stems_campus.utils.toLocalDateTimeText
 import java.time.OffsetDateTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -150,11 +151,7 @@ private fun hourHistoryRow(
     item: HistoryModel.HoursHistory,
     shape: RoundedCornerShape
 ) {
-    val dateText = item.createdAt?.let {
-        runCatching {
-            OffsetDateTime.parse(it).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-        }.getOrDefault("")
-    } ?: ""
+    val dateText = item.createdAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: ""
 
     Row {
         Spacer(modifier = Modifier.width(20.dp))
