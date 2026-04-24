@@ -70,6 +70,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
+import com.dae.stems_campus.BuildConfig
 import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.ProfileModel
 import com.dae.stems_campus.ui.components.BiometricHelper
@@ -546,7 +547,7 @@ private fun settingContent(
                                         Spacer(modifier = Modifier.height(20.dp))
                                         Text(stringResource(R.string.version), color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                                         Spacer(modifier = Modifier.height(10.dp))
-//                                            Text("DAE ${getVersionName(context)} (${getVersionCode(context)})", color = Color.Black, style = MaterialTheme.typography.titleLarge)
+                                            Text("DAE ${getVersionName()}", color = Color.Black, style = MaterialTheme.typography.titleLarge)
                                         Spacer(modifier = Modifier.height(20.dp))
                                     }
                                 }
@@ -1359,10 +1360,10 @@ private fun parseDialogMsg(aMsg: String):(String){
     return msg
 }
 
-private fun getVersionName(context: Context): String {
+private fun getVersionName(): String {
     return try {
-        val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-        packageInfo.versionName ?: "未知版本"
+        val currentVersion = BuildConfig.VERSION_NAME
+        currentVersion ?: "未知版本"
     } catch (e: PackageManager.NameNotFoundException) {
         "未知版本"
     }
