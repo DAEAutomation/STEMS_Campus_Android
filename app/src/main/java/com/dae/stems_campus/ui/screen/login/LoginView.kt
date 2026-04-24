@@ -655,6 +655,8 @@ private fun parseDialogMsg(aMsg: String):(String){
         msg = stringResource(id = R.string.account_not_entered)
     }else if (aMsg == "PasswordNotEntered") {
         msg = stringResource(id = R.string.password_not_entered)
+    }else if (aMsg == "PasswordInvalidFormat") {
+        msg = "僅能輸入數字及英文字母"
     }else if (aMsg == "BiometricLoginNotEnabled") {
         msg = stringResource(R.string.biometric_login_not_enabled)
     }else if (aMsg == "BiometricNotSupportedOrDisabled") {
