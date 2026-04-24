@@ -64,7 +64,8 @@ class ScanModel {
     data class StopPowerData(
         val session: StopSessionData? = null,
         val state: String? = null,
-        val balance: Double? = null
+        val balance: Double? = null,
+        val totalCharged: Double? = null
     )
 
     data class StopSessionData(

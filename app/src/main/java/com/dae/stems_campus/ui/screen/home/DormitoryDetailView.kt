@@ -559,7 +559,7 @@ private fun stopPowerInfoBottomSheetView(aBillingDetail : BillingDetail?, aStopP
                     Spacer(modifier = Modifier.width(20.dp))
                     Text("${"預估扣款："}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.weight(1f))
-                    Text("${aStopPowerData?.session?.totalAmount?.toAmountString()}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${aStopPowerData?.totalCharged?.toAmountString()}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(5.dp))
                     Text("${stringResource(R.string.currency_unit)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(20.dp))

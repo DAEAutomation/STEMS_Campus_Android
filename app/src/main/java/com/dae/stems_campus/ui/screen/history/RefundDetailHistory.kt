@@ -210,13 +210,13 @@ private fun refundDetailContent(
                                             Row {
                                                 Text("${stringResource(R.string.applicant)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                                                 Spacer(modifier = Modifier.width(20.dp))
-                                                Text("${""}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                                                Text("${refundHistory?.applicantName}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                                             }
                                             Spacer(modifier = Modifier.height(20.dp))
                                             Row {
                                                 Text("${stringResource(R.string.applicant_account)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                                                 Spacer(modifier = Modifier.width(20.dp))
-                                                Text("${""}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                                                Text("${refundHistory?.applicantNo}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                                             }
                                             Spacer(modifier = Modifier.height(20.dp))
                                             Row {
