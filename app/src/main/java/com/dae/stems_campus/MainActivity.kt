@@ -21,6 +21,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.dae.stems_campus.ui.screen.login.login
 import com.dae.stems_campus.ui.screen.initialize.selectSchoolScreen
+import com.dae.stems_campus.ui.screen.initialize.serviceUnavailableScreen
+import com.dae.stems_campus.ui.screen.initialize.needUpdateScreen
 import com.dae.stems_campus.ui.theme.STEMS_CampusTheme
 import com.dae.stems_campus.viewmodel.AuthState
 import com.dae.stems_campus.viewmodel.AuthViewModel
@@ -70,6 +72,16 @@ fun AppContent () {
                     )
                 }
             }
+        }
+        is AuthState.ServiceUnavailable -> {
+            serviceUnavailableScreen(message = (authState as AuthState.ServiceUnavailable).message)
+        }
+        is AuthState.NeedAppUpdate -> {
+            val state = authState as AuthState.NeedAppUpdate
+            needUpdateScreen(
+                currentVersion = state.currentVersion,
+                requiredVersion = state.requiredVersion
+            )
         }
         is AuthState.Authenticated -> {
             NavHost(navController = navController, startDestination = "first") {

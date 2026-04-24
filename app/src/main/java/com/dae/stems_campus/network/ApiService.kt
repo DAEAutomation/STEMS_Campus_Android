@@ -6,12 +6,22 @@ import com.dae.stems_campus.data.model.NotificationsModel
 import com.dae.stems_campus.data.model.ProfileModel
 import com.dae.stems_campus.data.model.RefundModel
 import com.dae.stems_campus.data.model.ScanModel
+import com.dae.stems_campus.data.model.ServiceCheckModel
 import com.dae.stems_campus.data.model.TokenModel
 import com.dae.stems_campus.data.model.TopUpModel
 import retrofit2.http.Body
 import retrofit2.http.POST
 
 interface ApiService {
+
+    /**
+     * service-check
+     */
+    @POST("api/app/service-check")
+    suspend fun serviceCheck(
+        @Body request: ServiceCheckModel.ServiceCheckRequest
+    ): APIResponse.ApiResponse<ServiceCheckModel.ServiceCheckData>
+
 
     /**
      * 登入
