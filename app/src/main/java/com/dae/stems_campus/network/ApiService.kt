@@ -1,5 +1,6 @@
 package com.dae.stems_campus.network
 import com.dae.stems_campus.data.model.APIResponse
+import com.dae.stems_campus.data.model.AccountModel
 import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.data.model.LoginModel
 import com.dae.stems_campus.data.model.NotificationsModel
@@ -46,6 +47,42 @@ interface ApiService {
      */
     @POST("api/app/auth/logout")
     suspend fun logout(): APIResponse.ApiResponse<Unit>
+
+
+    /**
+     * 發送驗證碼
+     */
+    @POST("api/app/auth/send-code")
+    suspend fun registerSendEmail(
+        @Body request: AccountModel.SendEmailRequest
+    ): APIResponse.ApiResponse<Unit>
+
+
+    /**
+     * 驗證驗證碼
+     */
+    @POST("api/app/auth/verify-code")
+    suspend fun registerVerifyCode(
+        @Body request: AccountModel.VerifyCodeRequest
+    ): APIResponse.ApiResponse<AccountModel.VerifyCodeData>
+
+
+    /**
+     * 學號驗證
+     */
+    @POST("api/app/auth/lookup-student")
+    suspend fun getStudentInfo(
+        @Body request: AccountModel.GetStudentInfoRequest
+    ): APIResponse.ApiResponse<AccountModel.StudentData>
+
+
+    /**
+     * 註冊
+     */
+    @POST("api/app/auth/register-student")
+    suspend fun registerInfo(
+        @Body request: AccountModel.RegisterRequest
+    ): APIResponse.ApiResponse<Unit>
 
 
     /**

@@ -20,6 +20,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.dae.stems_campus.ui.screen.login.login
+import com.dae.stems_campus.ui.screen.login.registerVerificationCodeScreen
+import com.dae.stems_campus.ui.screen.login.setPasswordScreen
+import com.dae.stems_campus.ui.screen.login.setUserNameInfoScreen
 import com.dae.stems_campus.ui.screen.initialize.selectSchoolScreen
 import com.dae.stems_campus.ui.screen.initialize.serviceUnavailableScreen
 import com.dae.stems_campus.ui.screen.initialize.needUpdateScreen
@@ -88,25 +91,21 @@ fun AppContent () {
                 composable ("signIn"){
                     login(navController)
                 }
-//                composable("ForgotPw") {
-//                    forgotPwScreen(navController)
-//                }
-//                composable("ForgotPwVerificationCode/{email}") { backStackEntry ->
-//                    val email = backStackEntry.arguments?.getString("email")
-//                    forgotPwVerificationCodeScreen(navController, email = email ?: "")
-//                }
-//                composable ("ResetPw/{email}") { backStackEntry ->
-//                    val email = backStackEntry.arguments?.getString("email")
-//                    resetPwScreen(navController, email = email ?: "")
-//                }
-//                composable ("VerificationCode/{email}") { backStackEntry ->
-//                    val email = backStackEntry.arguments?.getString("email")
-//                    verificationCodeScreen(navController, email = email ?: "")
-//                }
-//                composable ("SetUsernamePassword/{email}") { backStackEntry ->
-//                    val email = backStackEntry.arguments?.getString("email")
-//                    setUsernamePasswordScreen(navController, email = email ?: "")
-//                }
+                composable ("VerificationCode/{email}") { backStackEntry ->
+                    val email = backStackEntry.arguments?.getString("email")
+                    registerVerificationCodeScreen(navController, email = email ?: "")
+                }
+                composable ("SetUserNameInfo/{email}/{verifiedToken}") { backStackEntry ->
+                    val email = backStackEntry.arguments?.getString("email")
+                    val verifiedToken = backStackEntry.arguments?.getString("verifiedToken")
+                    setUserNameInfoScreen(navController, email = email ?: "", verifiedToken = verifiedToken ?: "")
+                }
+                composable ("SetPassword/{email}/{verifiedToken}/{studentId}") { backStackEntry ->
+                    val email = backStackEntry.arguments?.getString("email")
+                    val verifiedToken = backStackEntry.arguments?.getString("verifiedToken")
+                    val studentId = backStackEntry.arguments?.getString("studentId")
+                    setPasswordScreen(navController, email = email ?: "", verifiedToken = verifiedToken ?: "", studentId = studentId ?: "")
+                }
                 composable ("first"){
                     mainTabScreen(navController)
                 }
@@ -118,25 +117,21 @@ fun AppContent () {
                 composable ("signIn"){
                     login(navController)
                 }
-//                composable("ForgotPw") {
-//                    forgotPwScreen(navController)
-//                }
-//                composable("ForgotPwVerificationCode/{email}") { backStackEntry ->
-//                    val email = backStackEntry.arguments?.getString("email")
-//                    forgotPwVerificationCodeScreen(navController, email = email ?: "")
-//                }
-//                composable ("ResetPw/{email}") { backStackEntry ->
-//                    val email = backStackEntry.arguments?.getString("email")
-//                    resetPwScreen(navController, email = email ?: "")
-//                }
-//                composable ("VerificationCode/{email}") { backStackEntry ->
-//                    val email = backStackEntry.arguments?.getString("email")
-//                    verificationCodeScreen(navController, email = email ?: "")
-//                }
-//                composable ("SetUsernamePassword/{email}") { backStackEntry ->
-//                    val email = backStackEntry.arguments?.getString("email")
-//                    setUsernamePasswordScreen(navController, email = email ?: "")
-//                }
+                composable ("VerificationCode/{email}") { backStackEntry ->
+                    val email = backStackEntry.arguments?.getString("email")
+                    registerVerificationCodeScreen(navController, email = email ?: "")
+                }
+                composable ("SetUserNameInfo/{email}/{verifiedToken}") { backStackEntry ->
+                    val email = backStackEntry.arguments?.getString("email")
+                    val verifiedToken = backStackEntry.arguments?.getString("verifiedToken")
+                    setUserNameInfoScreen(navController, email = email ?: "", verifiedToken = verifiedToken ?: "")
+                }
+                composable ("SetPassword/{email}/{verifiedToken}/{studentId}") { backStackEntry ->
+                    val email = backStackEntry.arguments?.getString("email")
+                    val verifiedToken = backStackEntry.arguments?.getString("verifiedToken")
+                    val studentId = backStackEntry.arguments?.getString("studentId")
+                    setPasswordScreen(navController, email = email ?: "", verifiedToken = verifiedToken ?: "", studentId = studentId ?: "")
+                }
                 composable ("first"){
                     mainTabScreen(navController)
                 }
