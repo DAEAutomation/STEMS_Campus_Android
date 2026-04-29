@@ -61,6 +61,7 @@ import com.dae.stems_campus.R
 import com.dae.stems_campus.ui.components.BiometricHelper
 import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
+import com.dae.stems_campus.viewmodel.AccountViewModel
 import com.dae.stems_campus.viewmodel.LoginViewModel
 import com.dae.stems_campus.viewmodel.SettingViewModel
 import kotlinx.coroutines.delay
@@ -68,20 +69,19 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun login(navController: NavHostController, loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel()) {
+fun login(navController: NavHostController, loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), accountViewModel: AccountViewModel = hiltViewModel()) {
 
     var loginOrRegister by remember { mutableStateOf(true) }
     var pwVisibility by remember { mutableStateOf(false) }
 
-    val focusRegisterEmail = remember { FocusRequester() }
-//    val registerEmail by accountViewModel.emailText.collectAsState()
-//    val resRegisterSuccessFlag by accountViewModel.resRegisterSuccessFlag.collectAsState()
-//    val showRegisterFailMsgDialogFlag by accountViewModel.showRegisterFailMsgDialogFlag.collectAsState()
-//    val showRegisterInputFailFlag by accountViewModel.showRegisterInputFailFlag.collectAsState()
-//    val showRegisterFailMsg by accountViewModel.showRegisterFailMsg.collectAsState()
-//    val showRegisterInputFailMsg by accountViewModel.showRegisterInputFailMsg.collectAsState()
-//    val showLoadingView by accountViewModel.showLoadingView.collectAsState()
-//
+    val registerEmail by accountViewModel.emailText.collectAsState()
+    val resRegisterSendEmailSuccessFlag by accountViewModel.resRegisterSendEmailSuccessFlag.collectAsState()
+    val showRegisterSendEmailFailDialogFlag by accountViewModel.showRegisterSendEmailFailDialogFlag.collectAsState()
+    val showRegisterSendEmailFailMsg by accountViewModel.showRegisterSendEmailFailMsg.collectAsState()
+    val showRegisterEmailInputFailFlag by accountViewModel.showRegisterEmailInputFailFlag.collectAsState()
+    val showRegisterEmailInputFailMsg by accountViewModel.showRegisterEmailInputFailMsg.collectAsState()
+    val accountShowLoadingView by accountViewModel.showLoadingView.collectAsState()
+
     val userNameText by loginViewModel.userNameText.collectAsState()
     val passwordText by loginViewModel.passwordText.collectAsState()
     val uuidText by loginViewModel.UUID.collectAsState()
@@ -105,7 +105,7 @@ fun login(navController: NavHostController, loginViewModel: LoginViewModel = hil
         userNameText = userNameText,
         passwordText = passwordText,
         rememberLoginInfoChecked = rememberLoginInfoChecked,
-        showLoadingView = showLoadingView,
+        showLoadingView = showLoadingView || accountShowLoadingView,
         resLoginSuccessFlag = resLoginSuccessFlag,
         showLoginFailMsgDialogFlag = showLoginFailMsgDialogFlag,
         showLoginFailMsg = showLoginFailMsg,
@@ -117,7 +117,21 @@ fun login(navController: NavHostController, loginViewModel: LoginViewModel = hil
         onLoginFailDismissed = { loginViewModel.resetShowLoginFailMsgDialogFlag(false)
         },
         isBiometricFlag = isBiometricFlag,
-        onBiometricLoginHandled = { loginViewModel.loginAction(userNameText, passwordText, uuidText)}
+        onBiometricLoginHandled = { loginViewModel.loginAction(userNameText, passwordText, uuidText)},
+        registerEmail = registerEmail,
+        showRegisterEmailInputFailFlag = showRegisterEmailInputFailFlag,
+        showRegisterEmailInputFailMsg = showRegisterEmailInputFailMsg,
+        resRegisterSendEmailSuccessFlag = resRegisterSendEmailSuccessFlag,
+        showRegisterSendEmailFailDialogFlag = showRegisterSendEmailFailDialogFlag,
+        showRegisterSendEmailFailMsg = showRegisterSendEmailFailMsg,
+        onRegisterEmailChange = { accountViewModel.updateInputEmail(it) },
+        onRegisterEmailFocused = { accountViewModel.resetShowRegisterEmailInputFailFlag(false) },
+        onRegisterSendEmailClick = { accountViewModel.registerSendEmailAction(registerEmail) },
+        onRegisterSendEmailSuccessHandled = { accountViewModel.resetResRegisterSendEmailSuccessFlag(false) },
+        onRegisterSendEmailFailDismissed = {
+            accountViewModel.resetShowRegisterSendEmailFailDialogFlag(false)
+            accountViewModel.resetShowRegisterEmailInputFailFlag(false)
+        }
     )
 }
 
@@ -137,10 +151,23 @@ private fun LoginContent(navController: NavHostController,
                          onLoginSuccessHandled: () -> Unit = {},
                          onLoginFailDismissed: () -> Unit = {},
                          isBiometricFlag: Boolean = false,
-                         onBiometricLoginHandled: () -> Unit) {
+                         onBiometricLoginHandled: () -> Unit = {},
+                         registerEmail: String = "",
+                         showRegisterEmailInputFailFlag: Boolean = false,
+                         showRegisterEmailInputFailMsg: String? = null,
+                         resRegisterSendEmailSuccessFlag: Boolean = false,
+                         showRegisterSendEmailFailDialogFlag: Boolean = false,
+                         showRegisterSendEmailFailMsg: String? = null,
+                         onRegisterEmailChange: (String) -> Unit = {},
+                         onRegisterEmailFocused: () -> Unit = {},
+                         onRegisterSendEmailClick: () -> Unit = {},
+                         onRegisterSendEmailSuccessHandled: () -> Unit = {},
+                         onRegisterSendEmailFailDismissed: () -> Unit = {}) {
 
     var loginOrRegister by remember { mutableStateOf(true) }
     var pwVisibility by remember { mutableStateOf(false) }
+
+    val focusRegisterEmail = remember { FocusRequester() }
 
     val context = LocalContext.current
     val activity = context as? FragmentActivity
@@ -170,34 +197,34 @@ private fun LoginContent(navController: NavHostController,
             .weight(1f)
             .fillMaxWidth(),
             color = Color(0xFFF4F4F4)){
-//            Row {
-//                Spacer(modifier = Modifier.width(250.dp))
-//                Surface(
-//                    modifier = Modifier
-//                        .weight(1f)
-//                        .height(40.dp)
-//                        .align(Alignment.CenterVertically)
-//                        .clip(RoundedCornerShape(20.dp))
-//                        .clickable {
-//                            loginOrRegister = !loginOrRegister
-//                        },
-//
-//                    color = Color.Transparent
-//                ) {
-//                    if (loginOrRegister) {
-//                        Surface (modifier = Modifier,
-//                            color = Color.Unspecified){
-//                            Image(painter = painterResource(id = R.drawable.loginswitch_2), contentDescription = "")
-//                        }
-//                    }else {
-//                        Surface (modifier = Modifier,
-//                            color = Color.Unspecified){
-//                            Image(painter = painterResource(id = R.drawable.loginswitch_1), contentDescription = "")
-//                        }
-//                    }
-//                }
-//                Spacer(modifier = Modifier.width(30.dp))
-//            }
+            Row {
+                Spacer(modifier = Modifier.width(250.dp))
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp)
+                        .align(Alignment.CenterVertically)
+                        .clip(RoundedCornerShape(20.dp))
+                        .clickable {
+                            loginOrRegister = !loginOrRegister
+                        },
+
+                    color = Color.Transparent
+                ) {
+                    if (loginOrRegister) {
+                        Surface (modifier = Modifier,
+                            color = Color.Unspecified){
+                            Image(painter = painterResource(id = R.drawable.loginswitch_2), contentDescription = "")
+                        }
+                    }else {
+                        Surface (modifier = Modifier,
+                            color = Color.Unspecified){
+                            Image(painter = painterResource(id = R.drawable.loginswitch_1), contentDescription = "")
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.width(30.dp))
+            }
         }
 
         if (loginOrRegister) {
@@ -474,158 +501,157 @@ private fun LoginContent(navController: NavHostController,
                 }
             }
         }else{
-//            Surface (modifier = Modifier
-//                .weight(5f)
-//                .fillMaxWidth(),
-//                color = Color.Black){
-//                Column {
-//                    Spacer(modifier = Modifier.width(30.dp))
-//                    Row {
-//                        Spacer(modifier = Modifier.width(30.dp))
-//                        Surface (modifier = Modifier
-//                            .height(230.dp)
-//                            .weight(1f), color = Color(0xFF2C2C2C),
-//                            shape = RoundedCornerShape(30.dp),
-//                        ){
-//                            Column {
-//                                Spacer(modifier = Modifier.height(40.dp))
-//                                Row {
-//                                    Spacer(modifier = Modifier.width(30.dp))
-//                                    TextField(
-//                                        value = registerEmail,  // 使用狀態作為輸入值
-//                                        onValueChange = {
-//                                            accountViewModel.updateInputEmail(it)
-//                                        },
-//                                        modifier = Modifier
-//                                            .weight(1f)
-//                                            .padding(0.dp)
-//                                            .focusRequester(focusRegisterEmail)
-//                                            .onFocusChanged { focusState ->
-//                                                if (focusState.isFocused) {
-//                                                    accountViewModel.resetShowRegisterInputFailFlag(false)
-//                                                }
-//                                            },
-//                                        colors = TextFieldDefaults.colors(
-//                                            focusedContainerColor = Color.Transparent,
-//                                            unfocusedContainerColor = Color.Transparent,
-//                                            focusedIndicatorColor = Color.Transparent,
-//                                            unfocusedIndicatorColor = Color.Transparent,
-//                                            disabledIndicatorColor = Color.Transparent,
-//                                        ),
-//                                        textStyle = MaterialTheme.typography.bodyLarge.copy(
-//                                            color = Color.White
-//                                        ),
-//                                        placeholder = {
-//                                            Text(stringResource(id = R.string.please_enter_email),
-//                                                color = Color(0xFF979797)
-//                                            )
-//                                        },
-//                                        singleLine = true,
-//                                    )
-//                                    Spacer(modifier = Modifier.width(30.dp))
-//                                }
-//                                if (showRegisterInputFailFlag) {
-//                                    Row {
-//                                        Spacer(modifier = Modifier.width(30.dp))
-//                                        Spacer(modifier = Modifier
-//                                            .height(1.dp)
-//                                            .weight(1f)
-//                                            .background(color = Color(0xFFF55454)))
-//                                        Spacer(modifier = Modifier.width(30.dp))
-//                                    }
-//                                    Spacer(modifier = Modifier.height(10.dp))
-//                                    Row {
-//                                        Spacer(modifier = Modifier.width(50.dp))
-//                                        Text(parseDialogMsg(showRegisterInputFailMsg ?: ""),
-//                                            color = Color(0xFFF55454),
-//                                            style = MaterialTheme.typography.titleSmall)
-//                                    }
-//                                }else{
-//                                    Row {
-//                                        Spacer(modifier = Modifier.width(30.dp))
-//                                        Spacer(modifier = Modifier
-//                                            .height(1.dp)
-//                                            .weight(1f)
-//                                            .background(color = Color.White))
-//                                        Spacer(modifier = Modifier.width(30.dp))
-//                                    }
-//                                }
-//                                Spacer(modifier = Modifier.height(30.dp))
-//                                Row {
-//                                    Spacer(modifier = Modifier.width(60.dp))
-//                                    Surface(
-//                                        modifier = Modifier
-//                                            .weight(1f)
-//                                            .height(40.dp)
-//                                            .align(Alignment.CenterVertically)
-//                                            .clip(RoundedCornerShape(20.dp))
-//                                            .background(
-//                                                brush = Brush.linearGradient(
-//                                                    colors = listOf(Color(0xFF7B58DB), Color(0xFF7B357F))
-//                                                )
-//                                            )
-//                                            .clickable {
-////                                                accountViewModel.registerAction(registerEmail)
-////                                                navController.navigate("VerificationCode")
-//                                            },
-//
-//                                        color = Color.Transparent
-//                                    ) {
-//                                        Text(
-//                                            text = stringResource(R.string.next_step),
-//                                            textAlign = TextAlign.Center,
-//                                            modifier = Modifier.wrapContentHeight(),
-//                                            color = Color.White
-//                                        )
-//                                    }
-//                                    Spacer(modifier = Modifier.width(60.dp))
-//                                }
-//
-//                            }
-//                        }
-//                        Spacer(modifier = Modifier.width(30.dp))
-//                    }
+            Surface (modifier = Modifier
+                .weight(7f)
+                .fillMaxWidth(),
+                color = Color(0xFFF4F4F4)){
+                Column {
+                    Spacer(modifier = Modifier.width(30.dp))
+                    Row {
+                        Spacer(modifier = Modifier.width(30.dp))
+                        Surface (modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(1f), color = Color(0xFFF4F4F4),
+                            shape = RoundedCornerShape(30.dp),
+                        ){
+                            Column {
+                                Spacer(modifier = Modifier.height(40.dp))
+                                Row {
+                                    Spacer(modifier = Modifier.width(30.dp))
+                                    TextField(
+                                        value = registerEmail,  // 使用狀態作為輸入值
+                                        onValueChange = {
+                                            onRegisterEmailChange(it)
+                                        },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(0.dp)
+                                            .focusRequester(focusRegisterEmail)
+                                            .onFocusChanged { focusState ->
+                                                if (focusState.isFocused) {
+                                                    onRegisterEmailFocused()
+                                                }
+                                            },
+                                        colors = TextFieldDefaults.colors(
+                                            focusedContainerColor = Color.Transparent,
+                                            unfocusedContainerColor = Color.Transparent,
+                                            focusedIndicatorColor = Color.Transparent,
+                                            unfocusedIndicatorColor = Color.Transparent,
+                                            disabledIndicatorColor = Color.Transparent,
+                                        ),
+                                        textStyle = MaterialTheme.typography.bodyLarge.copy(
+                                            color = Color.Black
+                                        ),
+                                        placeholder = {
+                                            Text(stringResource(id = R.string.please_enter_email),
+                                                color = Color(0xFF979797)
+                                            )
+                                        },
+                                        singleLine = true,
+                                    )
+                                    Spacer(modifier = Modifier.width(30.dp))
+                                }
+                                if (showRegisterEmailInputFailFlag) {
+                                    Row {
+                                        Spacer(modifier = Modifier.width(30.dp))
+                                        Spacer(modifier = Modifier
+                                            .height(1.dp)
+                                            .weight(1f)
+                                            .background(color = Color(0xFFF55454)))
+                                        Spacer(modifier = Modifier.width(30.dp))
+                                    }
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Row {
+                                        Spacer(modifier = Modifier.width(50.dp))
+                                        Text(parseDialogMsg(showRegisterEmailInputFailMsg ?: ""),
+                                            color = Color(0xFFF55454),
+                                            style = MaterialTheme.typography.titleSmall)
+                                    }
+                                }else{
+                                    Row {
+                                        Spacer(modifier = Modifier.width(30.dp))
+                                        Spacer(modifier = Modifier
+                                            .height(1.dp)
+                                            .weight(1f)
+                                            .background(color = Color(0xFF303236)))
+                                        Spacer(modifier = Modifier.width(30.dp))
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(30.dp))
+                                Row {
+                                    Spacer(modifier = Modifier.width(30.dp))
+                                    Surface(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(40.dp)
+                                            .align(Alignment.CenterVertically)
+                                            .clip(RoundedCornerShape(2.dp))
+                                            .background(Color(0xFF2D859D))
+                                            .clickable {
+                                                onRegisterSendEmailClick()
+                                            },
 
-//                    if (showLoadingView) {
-//                        LoadingView() {
-//
-//                        }
-//                    }
-//                    if (showRegisterFailMsgDialogFlag) {
-//                        textTNoButtonAlert(
-//                            onDismissRequest = {},
-//                            dialogTitle = parseDialogMsg(showRegisterFailMsg ?: "")
-//                        )
-//                        // 在 Dialog 顯示後啟動計時器
-//                        LaunchedEffect(Unit) {
-//                            delay(1500) // 延遲 1.5 秒
-//                            accountViewModel.resetShowRegisterFailMsgDialogFlag(false) // 自動關閉 Dialog
-//                            accountViewModel.resetShowRegisterInputFailFlag(false)
-//                        }
-//                    }
-//                    if (resRegisterSuccessFlag) {
-//                        accountViewModel.resetResRegisterSuccessFlag(false) // 自動關閉 Dialog
-//                        navController.navigate("VerificationCode/${registerEmail}")
-//                    }
-//                }
-//            }
+                                        color = Color.Transparent
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.next_step),
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.wrapContentHeight(),
+                                            color = Color.White
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(30.dp))
+                                }
+
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(30.dp))
+                    }
+
+                    if (showLoadingView) {
+                        LoadingView() {}
+                    }
+                    if (showRegisterSendEmailFailDialogFlag) {
+                        textTNoButtonAlert(
+                            onDismissRequest = {},
+                            dialogTitle = parseDialogMsg(showRegisterSendEmailFailMsg ?: "")
+                        )
+                        // 在 Dialog 顯示後啟動計時器
+                        LaunchedEffect(Unit) {
+                            delay(1500) // 延遲 1.5 秒
+                            onRegisterSendEmailFailDismissed()
+                        }
+                    }
+                    if (resRegisterSendEmailSuccessFlag) {
+                        onRegisterSendEmailSuccessHandled()
+                        navController.navigate("VerificationCode/${registerEmail}")
+                    }
+                }
+            }
             Surface (modifier = Modifier
                 .weight(3f)
                 .navigationBarsPadding()
                 .fillMaxWidth(),
-                color = Color.Black){
+                color = Color(0xFFF4F4F4)){
                 Column (modifier = Modifier
                     .fillMaxSize(),
                     verticalArrangement = Arrangement.Bottom,
                     horizontalAlignment = Alignment.CenterHorizontally){
-                    Row (){
-                        MyCircle(selectColor = Color(0xFF4E35A9))
-                        Spacer(modifier = Modifier.width(5.dp))
-                        MyCircle(selectColor = Color(0xFFB6B6B6))
-                        Spacer(modifier = Modifier.width(5.dp))
-                        MyCircle(selectColor = Color(0xFFB6B6B6))
-                    }
+                   
                     Spacer(modifier = Modifier.height(30.dp))
+                    Surface (modifier = Modifier,
+                        color = Color.Unspecified){
+                        Image(painter = painterResource(id = R.drawable.dae_logo_logo_3_1), contentDescription = "")
+                    }
+                    Spacer(modifier = Modifier.height(15.dp))
+                    Text(
+                        text = "Copyright © "+ getCurrentYear() +" DAE instrument CO., Ltd. All rights reserved",
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier,
+                        color = Color(0xFF000000),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(15.dp))
                 }
             }
         }
@@ -664,7 +690,9 @@ private fun parseDialogMsg(aMsg: String):(String){
     }else if (aMsg == "BiometricNotSupported") {
         msg = stringResource(id = R.string.biometric_not_supported)
     }else if (aMsg == "EmailNotEntered") {
-
+        msg = "請輸入 E-mail"
+    }else if (aMsg == "EmailFormatInvalid") {
+        msg = "E-mail 格式錯誤"
     }else {
         msg = aMsg
     }
