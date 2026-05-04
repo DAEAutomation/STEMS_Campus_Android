@@ -88,6 +88,10 @@ fun registerVerificationCodeScreen(
     val showVerifyCodeFailMsg by accountViewModel.showVerifyCodeFailMsg.collectAsState()
     val showVerifyCodeInputFailFlag by accountViewModel.showVerifyCodeInputFailFlag.collectAsState()
     val showVerifyCodeInputFailMsg by accountViewModel.showVerifyCodeInputFailMsg.collectAsState()
+    val remainingTime by accountViewModel.remainingTime.collectAsState()
+    val resReSendSuccessFlag by accountViewModel.resReSendSuccessFlag.collectAsState()
+    val showReSendFailDialogFlag by accountViewModel.showReSendFailDialogFlag.collectAsState()
+    val showReSendFailMsg by accountViewModel.showReSendFailMsg.collectAsState()
 
     registerVerificationCodeContent(
         navController = navController,
@@ -113,7 +117,17 @@ fun registerVerificationCodeScreen(
         onVerifyFailDismissed = {
             accountViewModel.resetShowVerifyCodeFailDialogFlag(false)
             accountViewModel.resetShowVerifyCodeInputFailFlag(false)
-        }
+        },
+        remainingTime = remainingTime,
+        resReSendSuccessFlag = resReSendSuccessFlag,
+        showReSendFailDialogFlag = showReSendFailDialogFlag,
+        showReSendFailMsg = showReSendFailMsg,
+        onResendClick = {
+            accountViewModel.reSendVerificationAction(email)
+            accountViewModel.startCountdown(30)
+        },
+        onResendSuccessHandled = { accountViewModel.resetResReSendSuccessFlag(false) },
+        onResendFailDismissed = { accountViewModel.resetShowReSendFailDialogFlag(false) }
     )
 }
 
@@ -140,6 +154,13 @@ private fun registerVerificationCodeContent(
     onVerifyClick: () -> Unit = {},
     onVerifySuccessHandled: () -> Unit = {},
     onVerifyFailDismissed: () -> Unit = {},
+    remainingTime: Int = 0,
+    resReSendSuccessFlag: Boolean = false,
+    showReSendFailDialogFlag: Boolean = false,
+    showReSendFailMsg: String? = null,
+    onResendClick: () -> Unit = {},
+    onResendSuccessHandled: () -> Unit = {},
+    onResendFailDismissed: () -> Unit = {},
     ) {
 
     val focusRequester1 = remember { FocusRequester() }
@@ -548,21 +569,23 @@ private fun registerVerificationCodeContent(
                         }
                         Surface (modifier = Modifier.weight(4f).fillMaxWidth(), color = Color(0xFFF4F4F4)){
                             Column (modifier = Modifier,horizontalAlignment = Alignment.CenterHorizontally){
-//                                TextButton(
-//                                    onClick = {
-//                                        if (remainingTime == 0) {
-//                                            viewModel.reSendVerificationAction("register",email)
-//                                            viewModel.startCountdown(30)
-//                                        }
-//
-//                                    }
-//                                ) {
-//                                    if (remainingTime > 0) {
-//                                        Text("${remainingTime}${stringResource(id = R.string.second)}", color = Color.White)
-//                                    }else{
-//                                        Text(stringResource(id = R.string.resend_verification_code),style = TextStyle(textDecoration = TextDecoration.Underline), color = Color.White)
-//                                    }
-//                                }
+                                TextButton(
+                                    onClick = {
+                                        if (remainingTime == 0) {
+                                            onResendClick()
+                                        }
+                                    }
+                                ) {
+                                    if (remainingTime > 0) {
+                                        Text("${remainingTime}秒", color = Color(0xFF303236))
+                                    }else{
+                                        Text(
+                                            stringResource(id = R.string.resend_verification_code),
+                                            style = TextStyle(textDecoration = TextDecoration.Underline),
+                                            color = Color(0xFF303236)
+                                        )
+                                    }
+                                }
                             }
                             Column (modifier = Modifier
                                 .fillMaxSize(),
@@ -612,30 +635,27 @@ private fun registerVerificationCodeContent(
                                 navController.navigate("SetUserNameInfo/${email}/${verifiedToken}")
                             }
                         }
-//
-//                        if (resReSendSuccessFlag) {
-//                            textTNoButtonAlert(
-//                                onDismissRequest = {},
-//                                dialogTitle = stringResource(id = R.string.verification_code_sent)
-//                            )
-//                            // 在 Dialog 顯示後啟動計時器
-//                            LaunchedEffect(Unit) {
-//                                delay(1500) // 延遲 1.5 秒
-//                                viewModel.resetReSendSuccessFlag(false) // 自動關閉 Dialog
-//                            }
-//                        }
-//
-//                        if (showReSendFailMsgDialogFlag) {
-//                            textTNoButtonAlert(
-//                                onDismissRequest = {},
-//                                dialogTitle = showReSendFailMsg ?: ""
-//                            )
-//                            // 在 Dialog 顯示後啟動計時器
-//                            LaunchedEffect(Unit) {
-//                                delay(1500) // 延遲 1.5 秒
-//                                viewModel.resetShowReSendFailMsgDialogFlag(false) // 自動關閉 Dialog
-//                            }
-//                        }
+                        if (resReSendSuccessFlag) {
+                            textTNoButtonAlert(
+                                onDismissRequest = {},
+                                dialogTitle = stringResource(id = R.string.verification_code_sent)
+                            )
+                            LaunchedEffect(Unit) {
+                                delay(1500)
+                                onResendSuccessHandled()
+                            }
+                        }
+
+                        if (showReSendFailDialogFlag) {
+                            textTNoButtonAlert(
+                                onDismissRequest = {},
+                                dialogTitle = parseDialogMsg(showReSendFailMsg ?: "")
+                            )
+                            LaunchedEffect(Unit) {
+                                delay(1500)
+                                onResendFailDismissed()
+                            }
+                        }
                     }
                 }
             }
