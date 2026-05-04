@@ -16,12 +16,31 @@ open class AccountRepository @Inject constructor(apiService: ApiService, tokenMa
         }
     }
 
+    suspend fun forgotPwSendEmail(aEmail: String): Result<Unit> {
+        return executeAuthenticatedRequestNoData {
+            apiService.registerSendEmail(AccountModel.SendEmailRequest(
+                email = aEmail,
+                purpose = "reset_password"
+            ))
+        }
+    }
+
     suspend fun registerVerifyCode(aEmail: String, aCode: String): Result<AccountModel.VerifyCodeData> {
         return executeAuthenticatedRequest {
             apiService.registerVerifyCode(AccountModel.VerifyCodeRequest(
                 email = aEmail,
                 code = aCode,
                 purpose = "register"
+            ))
+        }
+    }
+
+    suspend fun forgotPwVerifyCode(aEmail: String, aCode: String): Result<AccountModel.VerifyCodeData> {
+        return executeAuthenticatedRequest {
+            apiService.registerVerifyCode(AccountModel.VerifyCodeRequest(
+                email = aEmail,
+                code = aCode,
+                purpose = "reset_password"
             ))
         }
     }
@@ -41,6 +60,16 @@ open class AccountRepository @Inject constructor(apiService: ApiService, tokenMa
             apiService.registerInfo(AccountModel.RegisterRequest(
                 email = aEmail,
                 student_id = aStudentID,
+                password = aPassword,
+                verified_token = aToken
+            ))
+        }
+    }
+
+    suspend fun resetPassword(aEmail: String, aPassword: String, aToken: String): Result<Unit> {
+        return executeAuthenticatedRequestNoData {
+            apiService.resetPassword(AccountModel.ResetPasswordRequest(
+                email = aEmail,
                 password = aPassword,
                 verified_token = aToken
             ))
