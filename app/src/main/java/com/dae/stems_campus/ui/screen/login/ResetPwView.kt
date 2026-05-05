@@ -1,6 +1,5 @@
 package com.dae.stems_campus.ui.screen.login
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,6 +30,8 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,8 +39,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -49,11 +48,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.testing.TestNavHostController
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.dae.stems_campus.R
 import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
@@ -63,74 +60,69 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun setPasswordScreen(
+fun resetPwScreen(
     navController: NavHostController,
     email: String,
     verifiedToken: String,
-    studentId: String,
     accountViewModel: AccountViewModel = hiltViewModel()
 ) {
     val pw by accountViewModel.passwordText.collectAsState()
     val confirmPw by accountViewModel.confirmPasswordText.collectAsState()
     val showLoadingView by accountViewModel.showLoadingView.collectAsState()
-    val resRegisterInfoSuccessFlag by accountViewModel.resRegisterInfoSuccessFlag.collectAsState()
-    val showRegisterInfoFailDialogFlag by accountViewModel.showRegisterInfoFailDialogFlag.collectAsState()
-    val showRegisterInfoFailMsg by accountViewModel.showRegisterInfoFailMsg.collectAsState()
-    val showRegisterInfoInputFailTag by accountViewModel.showRegisterInfoInputFailTag.collectAsState()
-    val showRegisterInfoInputFailMsg by accountViewModel.showRegisterInfoInputFailMsg.collectAsState()
+    val resResetPasswordSuccessFlag by accountViewModel.resResetPasswordSuccessFlag.collectAsState()
+    val showResetPasswordFailDialogFlag by accountViewModel.showResetPasswordFailDialogFlag.collectAsState()
+    val showResetPasswordFailMsg by accountViewModel.showResetPasswordFailMsg.collectAsState()
+    val showResetPasswordInputFailTag by accountViewModel.showResetPasswordInputFailTag.collectAsState()
+    val showResetPasswordInputFailMsg by accountViewModel.showResetPasswordInputFailMsg.collectAsState()
 
-    setPasswordContent(
+    resetPwContent(
         navController = navController,
         email = email,
         pw = pw,
         confirmPasswordText = confirmPw,
         showLoadingView = showLoadingView,
-        resRegisterInfoSuccessFlag = resRegisterInfoSuccessFlag,
-        showRegisterInfoFailDialogFlag = showRegisterInfoFailDialogFlag,
-        showRegisterInfoFailMsg = showRegisterInfoFailMsg,
-        showSignUpInputFailTag = showRegisterInfoInputFailTag,
-        showSignUpFailMsg = showRegisterInfoInputFailMsg ?: "",
+        resResetPasswordSuccessFlag = resResetPasswordSuccessFlag,
+        showResetPasswordFailDialogFlag = showResetPasswordFailDialogFlag,
+        showResetPasswordFailMsg = showResetPasswordFailMsg,
+        showInputFailTag = showResetPasswordInputFailTag,
+        showInputFailMsg = showResetPasswordInputFailMsg ?: "",
         onPasswordChange = { accountViewModel.updateInputPassword(it) },
         onConfirmPasswordChange = { accountViewModel.updateInputConfirmPassword(it) },
         onSubmitClick = {
-            accountViewModel.registerInfoAction(email, studentId, pw, confirmPw, verifiedToken)
+            accountViewModel.resetPasswordAction(email, pw, confirmPw, verifiedToken)
         },
-        onRegisterInfoSuccessHandled = { accountViewModel.resetResRegisterInfoSuccessFlag(false) },
-        onRegisterInfoFailDismissed = {
-            accountViewModel.resetShowRegisterInfoFailDialogFlag(false)
-            accountViewModel.resetShowRegisterInfoInputFailTag(0)
+        onResetPasswordSuccessHandled = { accountViewModel.resetResResetPasswordSuccessFlag(false) },
+        onResetPasswordFailDismissed = {
+            accountViewModel.resetShowResetPasswordFailDialogFlag(false)
+            accountViewModel.resetShowResetPasswordInputFailTag(0)
         }
     )
 }
 
 @Composable
-private fun setPasswordContent(
+private fun resetPwContent(
     navController: NavHostController,
     email: String,
     pw: String = "",
     confirmPasswordText: String = "",
     showLoadingView: Boolean = false,
-    resRegisterInfoSuccessFlag: Boolean = false,
-    showRegisterInfoFailDialogFlag: Boolean = false,
-    showRegisterInfoFailMsg: String? = null,
-    showSignUpFailMsg: String = "",
-    showSignUpInputFailTag: Int = 0,
+    resResetPasswordSuccessFlag: Boolean = false,
+    showResetPasswordFailDialogFlag: Boolean = false,
+    showResetPasswordFailMsg: String? = null,
+    showInputFailMsg: String = "",
+    showInputFailTag: Int = 0,
     onPasswordChange: (String) -> Unit = {},
     onConfirmPasswordChange: (String) -> Unit = {},
     onSubmitClick: () -> Unit = {},
-    onRegisterInfoSuccessHandled: () -> Unit = {},
-    onRegisterInfoFailDismissed: () -> Unit = {},
+    onResetPasswordSuccessHandled: () -> Unit = {},
+    onResetPasswordFailDismissed: () -> Unit = {},
 ) {
-
-    val focusRequester1 = remember { FocusRequester() }
-    val focusRequester2 = remember { FocusRequester() }
-    val focusRequester3 = remember { FocusRequester() }
-    val focusRequester4 = remember { FocusRequester() }
-
     var pwVisibility by remember { mutableStateOf(false) }
     var confirmPwVisibility by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF4F4F4))) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(Color(0xFFF4F4F4))) {
         Scaffold(
             containerColor = Color.Unspecified,
             topBar = {
@@ -139,38 +131,39 @@ private fun setPasswordContent(
                     navController = navController
                 )
             },
-
-            bottomBar = {
-            },
+            bottomBar = {},
             content = { padding ->
                 Box(modifier = Modifier.padding(padding)) {
                     Column {
-                        Surface (modifier = Modifier.weight(1.5f).fillMaxWidth(), color = Color.Unspecified){}
-                        Surface (modifier = Modifier.weight(9f).fillMaxWidth(), color = Color.Unspecified){
+                        Surface(modifier = Modifier.weight(1.5f).fillMaxWidth(), color = Color.Unspecified) {}
+                        Surface(modifier = Modifier.weight(9f).fillMaxWidth(), color = Color.Unspecified) {
                             Column {
                                 Row {
                                     Spacer(modifier = Modifier.width(60.dp))
-                                    Text(stringResource(R.string.set_password),
+                                    Text(
+                                        stringResource(R.string.reset_password),
                                         color = Color.Black,
-                                        style = MaterialTheme.typography.headlineSmall)
+                                        style = MaterialTheme.typography.headlineSmall
+                                    )
                                 }
                                 Spacer(modifier = Modifier.height(20.dp))
                                 Row {
                                     Spacer(modifier = Modifier.width(30.dp))
-                                    Surface (modifier = Modifier
-                                        .fillMaxHeight()
-                                        .weight(1f), color = Color(0xFFF4F4F4),
+                                    Surface(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .weight(1f),
+                                        color = Color(0xFFF4F4F4),
                                         shape = RoundedCornerShape(30.dp),
-                                    ){
+                                    ) {
                                         Column {
                                             Spacer(modifier = Modifier.height(20.dp))
-                                            Row (verticalAlignment = Alignment.CenterVertically){
+                                            //新密碼
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Spacer(modifier = Modifier.width(30.dp))
                                                 TextField(
-                                                    value = pw,  // 使用狀態作為輸入值
-                                                    onValueChange = {
-                                                        onPasswordChange(it)
-                                                    },
+                                                    value = pw,
+                                                    onValueChange = { onPasswordChange(it) },
                                                     modifier = Modifier
                                                         .weight(1f)
                                                         .padding(0.dp),
@@ -185,14 +178,14 @@ private fun setPasswordContent(
                                                         color = Color(0xFF303236)
                                                     ),
                                                     placeholder = {
-                                                        Text(stringResource(id = R.string.password),
+                                                        Text(
+                                                            stringResource(id = R.string.new_password),
                                                             color = Color(0xFF979797)
                                                         )
                                                     },
                                                     singleLine = true,
                                                     visualTransformation = if (pwVisibility) VisualTransformation.None else PasswordVisualTransformation()
                                                 )
-
                                                 IconButton(
                                                     modifier = Modifier.size(24.dp),
                                                     onClick = { pwVisibility = !pwVisibility }
@@ -203,7 +196,7 @@ private fun setPasswordContent(
                                                             tint = Color(0xFF303236),
                                                             contentDescription = "Localized description"
                                                         )
-                                                    }else {
+                                                    } else {
                                                         Icon(
                                                             painter = painterResource(id = R.drawable.eyeclosed),
                                                             tint = Color(0xFF303236),
@@ -213,8 +206,8 @@ private fun setPasswordContent(
                                                 }
                                                 Spacer(modifier = Modifier.width(30.dp))
                                             }
-                                            //判斷密碼規則顯示部分
-                                            if (showSignUpInputFailTag == 1) {
+                                            //新密碼錯誤提示 / 規則提示
+                                            if (showInputFailTag == 1) {
                                                 Row {
                                                     Spacer(modifier = Modifier.width(30.dp))
                                                     Spacer(modifier = Modifier
@@ -227,11 +220,12 @@ private fun setPasswordContent(
                                                 Row {
                                                     Spacer(modifier = Modifier.width(30.dp))
                                                     Text(
-                                                        parseDialogMsg(showSignUpFailMsg),
+                                                        parseDialogMsg(showInputFailMsg),
                                                         color = Color(0xFFF55454),
-                                                        style = MaterialTheme.typography.titleSmall)
+                                                        style = MaterialTheme.typography.titleSmall
+                                                    )
                                                 }
-                                            }else{
+                                            } else {
                                                 Row {
                                                     Spacer(modifier = Modifier.width(30.dp))
                                                     Spacer(modifier = Modifier
@@ -243,22 +237,22 @@ private fun setPasswordContent(
                                                 Spacer(modifier = Modifier.height(10.dp))
                                                 Row {
                                                     Spacer(modifier = Modifier.width(50.dp))
-                                                    Text(stringResource(R.string.password_rule),
+                                                    Text(
+                                                        stringResource(R.string.password_rule),
                                                         color = Color(0xFF303236),
-                                                        style = MaterialTheme.typography.bodySmall)
+                                                        style = MaterialTheme.typography.bodySmall
+                                                    )
                                                 }
                                             }
 
-
                                             Spacer(modifier = Modifier.height(20.dp))
 
-                                            Row (verticalAlignment = Alignment.CenterVertically){
+                                            //再次輸入新密碼
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Spacer(modifier = Modifier.width(30.dp))
                                                 TextField(
-                                                    value = confirmPasswordText,  // 使用狀態作為輸入值
-                                                    onValueChange = {
-                                                        onConfirmPasswordChange(it)
-                                                    },
+                                                    value = confirmPasswordText,
+                                                    onValueChange = { onConfirmPasswordChange(it) },
                                                     modifier = Modifier
                                                         .weight(1f)
                                                         .padding(0.dp),
@@ -273,14 +267,14 @@ private fun setPasswordContent(
                                                         color = Color(0xFF303236)
                                                     ),
                                                     placeholder = {
-                                                        Text(stringResource(id = R.string.reenter_new_password),
+                                                        Text(
+                                                            stringResource(id = R.string.reenter_new_password),
                                                             color = Color(0xFF979797)
                                                         )
                                                     },
                                                     singleLine = true,
                                                     visualTransformation = if (confirmPwVisibility) VisualTransformation.None else PasswordVisualTransformation()
                                                 )
-
                                                 IconButton(
                                                     modifier = Modifier.size(24.dp),
                                                     onClick = { confirmPwVisibility = !confirmPwVisibility }
@@ -291,7 +285,7 @@ private fun setPasswordContent(
                                                             tint = Color(0xFF303236),
                                                             contentDescription = "Localized description"
                                                         )
-                                                    }else {
+                                                    } else {
                                                         Icon(
                                                             painter = painterResource(id = R.drawable.eyeclosed),
                                                             tint = Color(0xFF303236),
@@ -301,7 +295,7 @@ private fun setPasswordContent(
                                                 }
                                                 Spacer(modifier = Modifier.width(30.dp))
                                             }
-                                            if (showSignUpInputFailTag == 2) {
+                                            if (showInputFailTag == 2) {
                                                 Row {
                                                     Spacer(modifier = Modifier.width(30.dp))
                                                     Spacer(modifier = Modifier
@@ -314,11 +308,12 @@ private fun setPasswordContent(
                                                 Row {
                                                     Spacer(modifier = Modifier.width(30.dp))
                                                     Text(
-                                                        parseDialogMsg(showSignUpFailMsg),
+                                                        parseDialogMsg(showInputFailMsg),
                                                         color = Color(0xFFF55454),
-                                                        style = MaterialTheme.typography.titleSmall)
+                                                        style = MaterialTheme.typography.titleSmall
+                                                    )
                                                 }
-                                            }else{
+                                            } else {
                                                 Row {
                                                     Spacer(modifier = Modifier.width(30.dp))
                                                     Spacer(modifier = Modifier
@@ -330,8 +325,9 @@ private fun setPasswordContent(
                                             }
 
                                             Spacer(modifier = Modifier.height(20.dp))
-
                                             Spacer(modifier = Modifier.height(50.dp))
+
+                                            //送出
                                             Row {
                                                 Spacer(modifier = Modifier.width(30.dp))
                                                 Surface(
@@ -340,17 +336,14 @@ private fun setPasswordContent(
                                                         .height(40.dp)
                                                         .align(Alignment.CenterVertically)
                                                         .clip(RoundedCornerShape(2.dp))
-                                                        .background(
-                                                            Color(0xFF2D859D)
-                                                        )
+                                                        .background(Color(0xFF2D859D))
                                                         .clickable {
                                                             onSubmitClick()
                                                         },
-
                                                     color = Color.Transparent
                                                 ) {
                                                     Text(
-                                                        text = stringResource(R.string.register),
+                                                        text = stringResource(R.string.confirm),
                                                         textAlign = TextAlign.Center,
                                                         modifier = Modifier.wrapContentHeight(),
                                                         color = Color.White
@@ -359,44 +352,32 @@ private fun setPasswordContent(
                                                 Spacer(modifier = Modifier.width(30.dp))
                                             }
 
-
                                             Spacer(modifier = Modifier.height(30.dp))
-
                                         }
                                     }
                                     Spacer(modifier = Modifier.width(30.dp))
                                 }
                             }
                         }
-                        Surface (modifier = Modifier.weight(1f).fillMaxWidth(), color = Color(0xFFF4F4F4)){
-                            Column (modifier = Modifier,horizontalAlignment = Alignment.CenterHorizontally){
-//                                TextButton(
-//                                    onClick = {
-//                                        if (remainingTime == 0) {
-//                                            viewModel.reSendVerificationAction("register",email)
-//                                            viewModel.startCountdown(30)
-//                                        }
-//
-//                                    }
-//                                ) {
-//                                    if (remainingTime > 0) {
-//                                        Text("${remainingTime}${stringResource(id = R.string.second)}", color = Color.White)
-//                                    }else{
-//                                        Text(stringResource(id = R.string.resend_verification_code),style = TextStyle(textDecoration = TextDecoration.Underline), color = Color.White)
-//                                    }
-//                                }
-                            }
-                            Column (modifier = Modifier
-                                .fillMaxSize(),
+
+                        Surface(modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                            color = Color(0xFFF4F4F4)) {
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
                                 verticalArrangement = Arrangement.Bottom,
-                                horizontalAlignment = Alignment.CenterHorizontally){
-                                Surface (modifier = Modifier,
-                                    color = Color.Unspecified){
-                                    Image(painter = painterResource(id = R.drawable.dae_logo_logo_3_1), contentDescription = "")
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Surface(modifier = Modifier, color = Color.Unspecified) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.dae_logo_logo_3_1),
+                                        contentDescription = ""
+                                    )
                                 }
                                 Spacer(modifier = Modifier.height(15.dp))
                                 Text(
-                                    text = "Copyright © "+ getCurrentYear() +" DAE instrument CO., Ltd. All rights reserved",
+                                    text = "Copyright © " + getCurrentYear() + " DAE instrument CO., Ltd. All rights reserved",
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier,
                                     color = Color(0xFF000000),
@@ -404,31 +385,30 @@ private fun setPasswordContent(
                                 )
                                 Spacer(modifier = Modifier.height(15.dp))
                             }
-
                         }
 
                         if (showLoadingView) {
                             LoadingView() {}
                         }
 
-                        if (showRegisterInfoFailDialogFlag) {
+                        if (showResetPasswordFailDialogFlag) {
                             textTNoButtonAlert(
                                 onDismissRequest = {},
-                                dialogTitle = parseDialogMsg(showRegisterInfoFailMsg ?: "")
+                                dialogTitle = parseDialogMsg(showResetPasswordFailMsg ?: "")
                             )
                             LaunchedEffect(Unit) {
                                 delay(1500)
-                                onRegisterInfoFailDismissed()
+                                onResetPasswordFailDismissed()
                             }
                         }
-                        if (resRegisterInfoSuccessFlag) {
+                        if (resResetPasswordSuccessFlag) {
                             textTNoButtonAlert(
                                 onDismissRequest = {},
-                                dialogTitle = "註冊成功"
+                                dialogTitle = "密碼重設成功"
                             )
                             LaunchedEffect(Unit) {
                                 delay(1500)
-                                onRegisterInfoSuccessHandled()
+                                onResetPasswordSuccessHandled()
                                 navController.popBackStack("signIn", inclusive = false)
                             }
                         }
@@ -437,19 +417,13 @@ private fun setPasswordContent(
             }
         )
     }
-
-
 }
 
 private fun getCurrentYear(): String {
-    val formatter = DateTimeFormatter.ofPattern("yyyy") // 設定日期格式
-    val today = LocalDate.now() // 取得今天的日期
-    // 格式化輸出
-    val yearStr = today.format(formatter)
-    return yearStr
+    val formatter = DateTimeFormatter.ofPattern("yyyy")
+    val today = LocalDate.now()
+    return today.format(formatter)
 }
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -464,8 +438,7 @@ private fun TopTitleBar(navTitle: String, navController: NavHostController) {
             Text(
                 navTitle,
                 maxLines = 1,
-
-                )
+            )
         },
         navigationIcon = {
             IconButton(onClick = { navController.navigateUp() }) {
@@ -477,27 +450,19 @@ private fun TopTitleBar(navTitle: String, navController: NavHostController) {
             }
         },
         actions = {},
-
-        )
+    )
 }
 
 @Composable
-private fun MyCircle(selectColor: Color){
-    Canvas(modifier = Modifier.size(6.dp), onDraw = {
-        drawCircle(color = selectColor)
-    })
-}
-
-@Composable
-private fun parseDialogMsg(aMsg: String):(String){
+private fun parseDialogMsg(aMsg: String): (String) {
     var msg: String = ""
     if (aMsg == "PasswordNotEntered") {
         msg = stringResource(id = R.string.password_not_entered)
-    }else if (aMsg == "PasswordInvalidFormat") {
+    } else if (aMsg == "PasswordInvalidFormat") {
         msg = "僅能輸入英文、數字及特殊符號"
-    }else if (aMsg == "PasswordMismatch") {
+    } else if (aMsg == "PasswordMismatch") {
         msg = "兩次輸入密碼不一致"
-    }else {
+    } else {
         msg = aMsg
     }
     return msg
@@ -505,8 +470,7 @@ private fun parseDialogMsg(aMsg: String):(String){
 
 @Preview(showBackground = true)
 @Composable
-private fun setPasswordPreview() {
+private fun resetPwPreview() {
     val navController = TestNavHostController(LocalContext.current)
-
-    setPasswordContent(navController = navController, email = "")
+    resetPwContent(navController = navController, email = "")
 }

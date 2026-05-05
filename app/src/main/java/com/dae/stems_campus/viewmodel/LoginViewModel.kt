@@ -106,7 +106,7 @@ class LoginViewModel @Inject constructor(private var loginRepository: LoginRepos
             }else if (password.isEmpty()){
                 _showLoginFailMsgDialogFlag.value = true
                 _showLoginFailMsg.value = "PasswordNotEntered"
-            }else if (!password.matches(Regex("^[A-Za-z0-9]+$"))){
+            }else if (!password.matches(Regex("^[A-Za-z0-9\\p{Punct}]+$"))){
                 _showLoginFailMsgDialogFlag.value = true
                 _showLoginFailMsg.value = "PasswordInvalidFormat"
             }else{

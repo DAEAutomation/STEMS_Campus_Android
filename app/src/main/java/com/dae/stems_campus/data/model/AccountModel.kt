@@ -40,4 +40,10 @@ class AccountModel {
         val password: String,
         val verified_token: String
     )
+
+    data class ResetPasswordRequest(
+        val email: String,
+        val password: String,
+        val verified_token: String
+    )
 }

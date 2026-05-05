@@ -86,6 +86,15 @@ interface ApiService {
 
 
     /**
+     * 重設密碼
+     */
+    @POST("api/app/auth/reset-password")
+    suspend fun resetPassword(
+        @Body request: AccountModel.ResetPasswordRequest
+    ): APIResponse.ApiResponse<Unit>
+
+
+    /**
      * 刷新 Token
      */
     @POST("api/app/auth/refresh")

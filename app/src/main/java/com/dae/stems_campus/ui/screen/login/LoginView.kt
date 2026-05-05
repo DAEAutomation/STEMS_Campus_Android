@@ -127,7 +127,10 @@ fun login(navController: NavHostController, loginViewModel: LoginViewModel = hil
         onRegisterEmailChange = { accountViewModel.updateInputEmail(it) },
         onRegisterEmailFocused = { accountViewModel.resetShowRegisterEmailInputFailFlag(false) },
         onRegisterSendEmailClick = { accountViewModel.registerSendEmailAction(registerEmail) },
-        onRegisterSendEmailSuccessHandled = { accountViewModel.resetResRegisterSendEmailSuccessFlag(false) },
+        onRegisterSendEmailSuccessHandled = {
+            accountViewModel.resetResRegisterSendEmailSuccessFlag(false)
+            accountViewModel.updateInputEmail("")
+        },
         onRegisterSendEmailFailDismissed = {
             accountViewModel.resetShowRegisterSendEmailFailDialogFlag(false)
             accountViewModel.resetShowRegisterEmailInputFailFlag(false)
@@ -356,19 +359,20 @@ private fun LoginContent(navController: NavHostController,
                                                 }
                                             )
                                             Text(text = stringResource(id = R.string.remember),
+                                                style = MaterialTheme.typography.bodyMedium,
                                                 color = Color(0xFF303236))
                                         }
 
                                     }
-//                                    Surface (modifier = Modifier.weight(0.4f), color = Color.Unspecified){
-//                                        TextButton(
-//                                            onClick = {
-//                                                navController.navigate("ForgotPw")
-//                                            }
-//                                        ) {
-//                                            Text(stringResource(id = R.string.forgot_password),style = TextStyle(textDecoration = TextDecoration.Underline), color = Color(0xFF303236),)
-//                                        }
-//                                    }
+                                    Surface (modifier = Modifier.weight(0.4f), color = Color.Unspecified){
+                                        TextButton(
+                                            onClick = {
+                                                navController.navigate("ForgotPw")
+                                            }
+                                        ) {
+                                            Text(stringResource(id = R.string.forgot_password),style = MaterialTheme.typography.bodyMedium.copy(textDecoration = TextDecoration.Underline), color = Color(0xFF303236),)
+                                        }
+                                    }
                                 }
 
                                 Spacer(modifier = Modifier.height(30.dp))
@@ -594,7 +598,7 @@ private fun LoginContent(navController: NavHostController,
                                         color = Color.Transparent
                                     ) {
                                         Text(
-                                            text = stringResource(R.string.next_step),
+                                            text = stringResource(R.string.send_verification_code),
                                             textAlign = TextAlign.Center,
                                             modifier = Modifier.wrapContentHeight(),
                                             color = Color.White

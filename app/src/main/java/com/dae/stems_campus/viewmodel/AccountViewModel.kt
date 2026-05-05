@@ -38,6 +38,22 @@ class AccountViewModel @Inject constructor(private var accountRepository: Accoun
     private val _showRegisterEmailInputFailMsg = MutableStateFlow<String?>("")
     val showRegisterEmailInputFailMsg: StateFlow<String?> = _showRegisterEmailInputFailMsg
 
+    //忘記密碼Email
+    private val _resForgotPwSendEmailSuccessFlag = MutableStateFlow(false)
+    val resForgotPwSendEmailSuccessFlag: StateFlow<Boolean> get() = _resForgotPwSendEmailSuccessFlag
+
+    private val _showForgotPwSendEmailFailDialogFlag = MutableStateFlow(false)
+    val showForgotPwSendEmailFailDialogFlag: StateFlow<Boolean> get() = _showForgotPwSendEmailFailDialogFlag
+
+    private val _showForgotPwSendEmailFailMsg = MutableStateFlow<String?>("")
+    val showForgotPwSendEmailFailMsg: StateFlow<String?> = _showForgotPwSendEmailFailMsg
+
+    private val _showForgotPwEmailInputFailFlag = MutableStateFlow(false)
+    val showForgotPwEmailInputFailFlag: StateFlow<Boolean> get() = _showForgotPwEmailInputFailFlag
+
+    private val _showForgotPwEmailInputFailMsg = MutableStateFlow<String?>("")
+    val showForgotPwEmailInputFailMsg: StateFlow<String?> = _showForgotPwEmailInputFailMsg
+
     //註冊驗證碼
     private val _verificationCode1 = MutableStateFlow("")
     val verificationCode1: StateFlow<String> = _verificationCode1
@@ -137,6 +153,22 @@ class AccountViewModel @Inject constructor(private var accountRepository: Accoun
     private val _showRegisterInfoInputFailMsg = MutableStateFlow<String?>("")
     val showRegisterInfoInputFailMsg: StateFlow<String?> = _showRegisterInfoInputFailMsg
 
+    //重設密碼
+    private val _resResetPasswordSuccessFlag = MutableStateFlow(false)
+    val resResetPasswordSuccessFlag: StateFlow<Boolean> get() = _resResetPasswordSuccessFlag
+
+    private val _showResetPasswordFailDialogFlag = MutableStateFlow(false)
+    val showResetPasswordFailDialogFlag: StateFlow<Boolean> get() = _showResetPasswordFailDialogFlag
+
+    private val _showResetPasswordFailMsg = MutableStateFlow<String?>("")
+    val showResetPasswordFailMsg: StateFlow<String?> = _showResetPasswordFailMsg
+
+    private val _showResetPasswordInputFailTag = MutableStateFlow(0)
+    val showResetPasswordInputFailTag: StateFlow<Int> = _showResetPasswordInputFailTag
+
+    private val _showResetPasswordInputFailMsg = MutableStateFlow<String?>("")
+    val showResetPasswordInputFailMsg: StateFlow<String?> = _showResetPasswordInputFailMsg
+
 
     //註冊發送Email
     fun registerSendEmailAction(aEmail: String) {
@@ -167,6 +199,40 @@ class AccountViewModel @Inject constructor(private var accountRepository: Accoun
                     _showLoadingView.value = false
                     _showRegisterSendEmailFailDialogFlag.value = true
                     _showRegisterSendEmailFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+    //忘記密碼發送Email
+    fun forgotPwSendEmailAction(aEmail: String) {
+        viewModelScope.launch {
+            if (aEmail.isEmpty()) {
+                _showForgotPwEmailInputFailFlag.value = true
+                _showForgotPwEmailInputFailMsg.value = "EmailNotEntered"
+                return@launch
+            }
+            if (!isEmailValid(aEmail)) {
+                _showForgotPwEmailInputFailFlag.value = true
+                _showForgotPwEmailInputFailMsg.value = "EmailFormatInvalid"
+                return@launch
+            }
+            _showLoadingView.value = true
+            when (val result = accountRepository.forgotPwSendEmail(aEmail)) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _resForgotPwSendEmailSuccessFlag.value = true
+                }
+                is BaseRepository.Result.Error -> {
+                    Log.d("DAE_Develop", "forgotPwSendEmail Res ->${result.message}")
+                    _showLoadingView.value = false
+                    _showForgotPwSendEmailFailDialogFlag.value = true
+                    _showForgotPwSendEmailFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showForgotPwSendEmailFailDialogFlag.value = true
+                    _showForgotPwSendEmailFailMsg.value = "PleaseReLogin"
                 }
             }
         }
@@ -227,6 +293,61 @@ class AccountViewModel @Inject constructor(private var accountRepository: Accoun
         }
     }
 
+    //忘記密碼驗證碼
+    fun forgotPwVerifyCodeAction(aEmail: String) {
+        viewModelScope.launch {
+            val code = "${_verificationCode1.value}${_verificationCode2.value}${_verificationCode3.value}${_verificationCode4.value}"
+            if (code.length < 4) {
+                _showVerifyCodeInputFailFlag.value = true
+                _showVerifyCodeInputFailMsg.value = "VerificationCodeNotEntered"
+                return@launch
+            }
+            _showLoadingView.value = true
+            when (val result = accountRepository.forgotPwVerifyCode(aEmail, code)) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _verifiedToken.value = result.data.verifiedToken ?: ""
+                    _resVerifyCodeSuccessFlag.value = true
+                }
+                is BaseRepository.Result.Error -> {
+                    Log.d("DAE_Develop", "forgotPwVerifyCode Res ->${result.message}")
+                    _showLoadingView.value = false
+                    _showVerifyCodeFailDialogFlag.value = true
+                    _showVerifyCodeFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showVerifyCodeFailDialogFlag.value = true
+                    _showVerifyCodeFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+    //忘記密碼驗證碼重發
+    fun reSendForgotPwVerificationAction(aEmail: String) {
+        viewModelScope.launch {
+            _showLoadingView.value = true
+            when (val result = accountRepository.forgotPwSendEmail(aEmail)) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _resReSendSuccessFlag.value = true
+                }
+                is BaseRepository.Result.Error -> {
+                    Log.d("DAE_Develop", "reSendForgotPwVerification Res ->${result.message}")
+                    _showLoadingView.value = false
+                    _showReSendFailDialogFlag.value = true
+                    _showReSendFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showReSendFailDialogFlag.value = true
+                    _showReSendFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
     //取得學生資訊
     fun getStudentInfoAction(aEmail: String, aStudentID: String, aVerifiedToken: String) {
         viewModelScope.launch {
@@ -271,7 +392,7 @@ class AccountViewModel @Inject constructor(private var accountRepository: Accoun
                 _showRegisterInfoInputFailMsg.value = "PasswordNotEntered"
                 return@launch
             }
-            if (!aPassword.matches(Regex("^[A-Za-z0-9]+$"))) {
+            if (!aPassword.matches(Regex("^[A-Za-z0-9\\p{Punct}]+$"))) {
                 _showRegisterInfoInputFailTag.value = 1
                 _showRegisterInfoInputFailMsg.value = "PasswordInvalidFormat"
                 return@launch
@@ -297,6 +418,45 @@ class AccountViewModel @Inject constructor(private var accountRepository: Accoun
                     _showLoadingView.value = false
                     _showRegisterInfoFailDialogFlag.value = true
                     _showRegisterInfoFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+    //重設密碼送出
+    fun resetPasswordAction(aEmail: String, aPassword: String, aConfirmPassword: String, aVerifiedToken: String) {
+        viewModelScope.launch {
+            if (aPassword.isEmpty()) {
+                _showResetPasswordInputFailTag.value = 1
+                _showResetPasswordInputFailMsg.value = "PasswordNotEntered"
+                return@launch
+            }
+            if (!aPassword.matches(Regex("^[A-Za-z0-9\\p{Punct}]+$"))) {
+                _showResetPasswordInputFailTag.value = 1
+                _showResetPasswordInputFailMsg.value = "PasswordInvalidFormat"
+                return@launch
+            }
+            if (aPassword != aConfirmPassword) {
+                _showResetPasswordInputFailTag.value = 2
+                _showResetPasswordInputFailMsg.value = "PasswordMismatch"
+                return@launch
+            }
+            _showLoadingView.value = true
+            when (val result = accountRepository.resetPassword(aEmail, aPassword, aVerifiedToken)) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _resResetPasswordSuccessFlag.value = true
+                }
+                is BaseRepository.Result.Error -> {
+                    Log.d("DAE_Develop", "resetPassword Res ->${result.message}")
+                    _showLoadingView.value = false
+                    _showResetPasswordFailDialogFlag.value = true
+                    _showResetPasswordFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showResetPasswordFailDialogFlag.value = true
+                    _showResetPasswordFailMsg.value = "PleaseReLogin"
                 }
             }
         }
@@ -395,6 +555,18 @@ class AccountViewModel @Inject constructor(private var accountRepository: Accoun
         _showRegisterEmailInputFailFlag.value = value
     }
 
+    fun resetResForgotPwSendEmailSuccessFlag(value: Boolean) {
+        _resForgotPwSendEmailSuccessFlag.value = value
+    }
+
+    fun resetShowForgotPwSendEmailFailDialogFlag(value: Boolean) {
+        _showForgotPwSendEmailFailDialogFlag.value = value
+    }
+
+    fun resetShowForgotPwEmailInputFailFlag(value: Boolean) {
+        _showForgotPwEmailInputFailFlag.value = value
+    }
+
     fun resetResVerifyCodeSuccessFlag(value: Boolean) {
         _resVerifyCodeSuccessFlag.value = value
     }
@@ -433,5 +605,17 @@ class AccountViewModel @Inject constructor(private var accountRepository: Accoun
 
     fun resetShowRegisterInfoInputFailTag(value: Int) {
         _showRegisterInfoInputFailTag.value = value
+    }
+
+    fun resetResResetPasswordSuccessFlag(value: Boolean) {
+        _resResetPasswordSuccessFlag.value = value
+    }
+
+    fun resetShowResetPasswordFailDialogFlag(value: Boolean) {
+        _showResetPasswordFailDialogFlag.value = value
+    }
+
+    fun resetShowResetPasswordInputFailTag(value: Int) {
+        _showResetPasswordInputFailTag.value = value
     }
 }
