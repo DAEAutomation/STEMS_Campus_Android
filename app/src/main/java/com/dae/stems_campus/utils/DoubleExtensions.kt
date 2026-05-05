@@ -14,3 +14,15 @@ fun Double.toAmountString(): String {
     formatter.roundingMode = RoundingMode.HALF_UP
     return formatter.format(this)
 }
+
+/**
+ * 顯示到小數點兩位，超過則無條件捨去（truncate）。
+ * 0 時直接回傳 "0"。
+ */
+fun Double.toTwoDecimalString(): String {
+    if (this == 0.0) return "0"
+    val formatter = DecimalFormat("0.00").apply {
+        roundingMode = RoundingMode.DOWN
+    }
+    return formatter.format(this)
+}

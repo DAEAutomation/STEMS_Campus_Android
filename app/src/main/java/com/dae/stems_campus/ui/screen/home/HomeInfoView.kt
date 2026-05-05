@@ -93,6 +93,7 @@ import com.dae.stems_campus.ui.screen.notifications.notificationsScreen
 import com.dae.stems_campus.ui.theme.STEMS_CampusTheme
 import com.dae.stems_campus.utils.calculateDuration
 import com.dae.stems_campus.utils.toAmountString
+import com.dae.stems_campus.utils.toTwoDecimalString
 import com.dae.stems_campus.viewmodel.HomeInfoViewModel
 import com.dae.stems_campus.viewmodel.LoginViewModel
 import com.dae.stems_campus.viewmodel.NotificationViewModel
@@ -1056,7 +1057,7 @@ private fun dormitoryView(aData: ProfileModel.UsingDeviceData?, onDetailClick: (
                             Spacer(modifier = Modifier.width(10.dp))
                             Text("${stringResource(R.string.cumulative_deduction_amount)}  $", color = Color.White,style = MaterialTheme.typography.bodyLarge)
                             Spacer(modifier = Modifier.width(2.dp))
-                            Text("${aData?.billing?.general?.totalAmount?.toAmountString()}", color = Color.White,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
+                            Text("${aData?.billing?.general?.totalAmount?.toTwoDecimalString()}", color = Color.White,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
                         }
 
                     }

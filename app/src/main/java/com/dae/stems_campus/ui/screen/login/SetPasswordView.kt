@@ -494,7 +494,7 @@ private fun parseDialogMsg(aMsg: String):(String){
     if (aMsg == "PasswordNotEntered") {
         msg = stringResource(id = R.string.password_not_entered)
     }else if (aMsg == "PasswordInvalidFormat") {
-        msg = "僅能輸入數字及英文字母"
+        msg = "僅能輸入英文、數字及特殊符號"
     }else if (aMsg == "PasswordMismatch") {
         msg = "兩次輸入密碼不一致"
     }else {
