@@ -111,6 +111,15 @@ fun settingScreen(mainNavController: NavController, loginViewModel: LoginViewMod
                 settingViewModel = settingViewModel
             )
         }
+        composable("UserCard") {
+            userCardInfoViewScreen(
+                mainNavController = mainNavController,
+                navController = settingNavController,
+                settingViewModel = settingViewModel,
+                profileViewModel = profileViewModel
+            )
+        }
+
     }
 
 }
@@ -310,7 +319,7 @@ private fun settingContent(
                     if (profileInfo?.role.equals("staff")) {
                         userInfoByTeacherView(profileInfo = profileInfo)
                     }else if (profileInfo?.role.equals("student")){
-                        userInfoByStudentView(profileInfo = profileInfo)
+                        userInfoByStudentView(profileInfo = profileInfo, onClick = { navController.navigate("UserCard")})
                     }
 
 
@@ -929,7 +938,11 @@ private fun userInfoByTeacherView(profileInfo: ProfileModel.ProfileData? = null)
                             Spacer(modifier = Modifier.height(20.dp))
                             Text(stringResource(R.string.physical_card_id), color = Color(0xFF303236), style = MaterialTheme.typography.bodyLarge)
                             Spacer(modifier = Modifier.height(10.dp))
-                            Text(profileInfo?.uid ?: "", color = Color.Black, style = MaterialTheme.typography.titleLarge)
+                            if (profileInfo?.uid.equals("")){
+                                Text("尚未綁定", color = Color(0xFFE54343), style = MaterialTheme.typography.titleLarge)
+                            }else{
+                                Text(profileInfo?.uid ?: "", color = Color.Black, style = MaterialTheme.typography.titleLarge)
+                            }
                             Spacer(modifier = Modifier.height(20.dp))
                         }
                     }
@@ -995,7 +1008,7 @@ private fun userInfoByTeacherView(profileInfo: ProfileModel.ProfileData? = null)
 }
 
 @Composable
-private fun userInfoByStudentView(profileInfo: ProfileModel.ProfileData? = null) {
+private fun userInfoByStudentView(profileInfo: ProfileModel.ProfileData? = null, onClick:() -> Unit ) {
     Column{
         // <-----姓名----->
         Row {
@@ -1104,7 +1117,7 @@ private fun userInfoByStudentView(profileInfo: ProfileModel.ProfileData? = null)
             Surface (modifier = Modifier
                 .weight(1f)
                 .clickable {
-//                                    navController.navigate("changeName/${accountName}")
+                    onClick()
                 },
 
                 color = Color.White,
@@ -1123,7 +1136,11 @@ private fun userInfoByStudentView(profileInfo: ProfileModel.ProfileData? = null)
                             Spacer(modifier = Modifier.height(20.dp))
                             Text(stringResource(R.string.physical_card_id), color = Color(0xFF303236), style = MaterialTheme.typography.bodyLarge)
                             Spacer(modifier = Modifier.height(10.dp))
-                            Text(profileInfo?.uid ?: "", color = Color.Black, style = MaterialTheme.typography.titleLarge)
+                            if (profileInfo?.uid.equals("")){
+                                Text("尚未綁定", color = Color(0xFFE54343), style = MaterialTheme.typography.titleLarge)
+                            }else{
+                                Text(profileInfo?.uid ?: "", color = Color.Black, style = MaterialTheme.typography.titleLarge)
+                            }
                             Spacer(modifier = Modifier.height(20.dp))
                         }
                     }
@@ -1133,11 +1150,11 @@ private fun userInfoByStudentView(profileInfo: ProfileModel.ProfileData? = null)
                             .weight(0.1f),
                         color = Color.Unspecified
                     ){
-//                        Icon(
-//                            painter = painterResource(id = R.drawable.caretright),
-//                            tint = Color.Unspecified,
-//                            contentDescription = "Localized description"
-//                        )
+                        Icon(
+                            painter = painterResource(id = R.drawable.caretright),
+                            tint = Color.Black,
+                            contentDescription = "Localized description"
+                        )
                     }
 
                     Spacer(modifier = Modifier.width(20.dp))
