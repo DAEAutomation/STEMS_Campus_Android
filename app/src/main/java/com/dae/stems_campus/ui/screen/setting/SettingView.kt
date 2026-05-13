@@ -68,6 +68,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.BuildConfig
@@ -87,6 +88,13 @@ import kotlinx.coroutines.delay
 fun settingScreen(mainNavController: NavController, loginViewModel: LoginViewModel = hiltViewModel(), profileViewModel: ProfileViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
     val settingNavController = rememberNavController()
 
+    // 監聽內層 navController route 變化，子頁進入時隱藏 tab bar
+    val backStackEntry by settingNavController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+    LaunchedEffect(currentRoute) {
+        onShowTabBarChange(currentRoute == null || currentRoute == "Setting")
+    }
+
     NavHost(navController = settingNavController, startDestination = "Setting") {
         composable("Setting") {
             settingMainLoad(mainNavController = mainNavController,
@@ -95,6 +103,13 @@ fun settingScreen(mainNavController: NavController, loginViewModel: LoginViewMod
                 profileViewModel = profileViewModel,
                 settingViewModel = settingViewModel,
                 onShowTabBarChange = {})
+        }
+        composable("changePassword") {
+            changePasswordScreen(
+                mainNavController = mainNavController,
+                navController = settingNavController,
+                settingViewModel = settingViewModel
+            )
         }
     }
 
@@ -306,64 +321,72 @@ private fun settingContent(
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                     //<-----變更密碼----->
-//                        Row {
-//                            Spacer(modifier = Modifier.width(20.dp))
-//                            Surface (modifier = Modifier
-//                                .weight(1f)
-//                                .clickable {
-//                                    navController.navigate("pwAuthentication")
-//                                },
-//
-//                                color = Color.White,
-//                                shape = RoundedCornerShape(18.dp)){
-//
-//                                Row (verticalAlignment = Alignment.CenterVertically){
-//                                    Spacer(modifier = Modifier.width(20.dp))
-//
-//                                    Surface (
-//                                        modifier = Modifier
-//                                            .align(Alignment.CenterVertically)
-//                                            .weight(0.9f),
-//                                        color = Color.Unspecified
-//                                    ){
-//                                        Column {
-//                                            Spacer(modifier = Modifier.height(20.dp))
-//                                            Text(stringResource(R.string.change_password), color = Color(0xFFC4C4C4), style = MaterialTheme.typography.bodyLarge)
-//                                            Spacer(modifier = Modifier.height(10.dp))
-//                                            Icon(
-//                                                painter = painterResource(id = R.drawable.vector),
-//                                                tint = Color.White,
-//                                                contentDescription = "Localized description"
-//                                            )
-//                                            Spacer(modifier = Modifier.height(20.dp))
-//                                        }
-//                                    }
-//                                    Surface (
-//                                        modifier = Modifier
-//                                            .align(Alignment.CenterVertically)
-//                                            .weight(0.1f),
-//                                        color = Color.Unspecified
-//                                    ){
-//                                        Icon(
-//                                            painter = painterResource(id = R.drawable.caretright),
-//                                            tint = Color.Unspecified,
-//                                            contentDescription = "Localized description"
-//                                        )
-//                                    }
-//
-//                                    Spacer(modifier = Modifier.width(20.dp))
-//                                }
-//                            }
-//                            Spacer(modifier = Modifier.width(30.dp))
-//                        }
+                    Row {
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Surface (modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                navController.navigate("changePassword")
+                            },
 
+                            color = Color.White,
+                            shape = RoundedCornerShape(
+                                topStart = 9.dp,
+                                topEnd = 9.dp,
+                                bottomStart = 0.dp,
+                                bottomEnd = 0.dp)){
+
+                            Row (verticalAlignment = Alignment.CenterVertically){
+                                Spacer(modifier = Modifier.width(20.dp))
+
+                                Surface (
+                                    modifier = Modifier
+                                        .align(Alignment.CenterVertically)
+                                        .weight(0.9f),
+                                    color = Color.Unspecified
+                                ){
+                                    Column {
+                                        Spacer(modifier = Modifier.height(20.dp))
+                                        Text(stringResource(R.string.change_password), color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.vector),
+                                            tint = Color.Black,
+                                            contentDescription = "Localized description"
+                                        )
+                                        Spacer(modifier = Modifier.height(20.dp))
+                                    }
+                                }
+                                Surface (
+                                    modifier = Modifier
+                                        .align(Alignment.CenterVertically)
+                                        .weight(0.1f),
+                                    color = Color.Unspecified
+                                ){
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.caretright),
+                                        tint = Color.Black,
+                                        contentDescription = "Localized description"
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(20.dp))
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(20.dp))
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
                     //<-----Face ID----->
                     Row {
                         Spacer(modifier = Modifier.width(20.dp))
                         Surface (modifier = Modifier
                             .weight(1f),
                             color = Color.White,
-                            shape = RoundedCornerShape(9.dp)){
+                            shape = RoundedCornerShape(
+                                topStart = 0.dp,
+                                topEnd = 0.dp,
+                                bottomStart = 9.dp,
+                                bottomEnd = 9.dp)){
 
                             Row (verticalAlignment = Alignment.CenterVertically){
                                 Spacer(modifier = Modifier.width(20.dp))

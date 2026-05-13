@@ -1,7 +1,10 @@
 package com.dae.stems_campus.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dae.stems_campus.data.repository.AccountRepository
+import com.dae.stems_campus.data.repository.BaseRepository
 import com.dae.stems_campus.data.repository.CredentialRepository
 import com.dae.stems_campus.data.repository.ProfileRepository
 import com.dae.stems_campus.data.repository.UserPreferencesRepository
@@ -15,7 +18,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SettingViewModel @Inject constructor(private var profileRepository: ProfileRepository, private val userPreferences: UserPreferencesRepository, private val credentialRepository: CredentialRepository) : ViewModel() {
+class SettingViewModel @Inject constructor(private var profileRepository: ProfileRepository, private val userPreferences: UserPreferencesRepository, private val credentialRepository: CredentialRepository, private val accountRepository: AccountRepository) : ViewModel() {
 
 
     private val _UUID = MutableStateFlow("")
@@ -24,6 +27,35 @@ class SettingViewModel @Inject constructor(private var profileRepository: Profil
     //生物辨識
     private val _isBiometricEnabled = MutableStateFlow(false)
     val isBiometricEnabled: StateFlow<Boolean> = _isBiometricEnabled
+
+    //變更密碼
+    private val _showLoadingView = MutableStateFlow(false)
+    val showLoadingView: StateFlow<Boolean> = _showLoadingView
+
+    private val _oldPasswordText = MutableStateFlow("")
+    val oldPasswordText: StateFlow<String> = _oldPasswordText
+
+    private val _newPasswordText = MutableStateFlow("")
+    val newPasswordText: StateFlow<String> = _newPasswordText
+
+    private val _confirmNewPasswordText = MutableStateFlow("")
+    val confirmNewPasswordText: StateFlow<String> = _confirmNewPasswordText
+
+    private val _resChangePasswordSuccessFlag = MutableStateFlow(false)
+    val resChangePasswordSuccessFlag: StateFlow<Boolean> = _resChangePasswordSuccessFlag
+
+    private val _showChangePasswordFailDialogFlag = MutableStateFlow(false)
+    val showChangePasswordFailDialogFlag: StateFlow<Boolean> = _showChangePasswordFailDialogFlag
+
+    private val _showChangePasswordFailMsg = MutableStateFlow<String?>("")
+    val showChangePasswordFailMsg: StateFlow<String?> = _showChangePasswordFailMsg
+
+    // 1=舊密碼, 2=新密碼格式, 3=確認新密碼不一致
+    private val _showChangePasswordInputFailTag = MutableStateFlow(0)
+    val showChangePasswordInputFailTag: StateFlow<Int> = _showChangePasswordInputFailTag
+
+    private val _showChangePasswordInputFailMsg = MutableStateFlow<String?>("")
+    val showChangePasswordInputFailMsg: StateFlow<String?> = _showChangePasswordInputFailMsg
 
     init {
         loadLoginPreferences()
@@ -56,5 +88,81 @@ class SettingViewModel @Inject constructor(private var profileRepository: Profil
         viewModelScope.launch {
             userPreferences.setBiometricValue(value)
         }
+    }
+
+    fun updateInputOldPassword(value: String) {
+        _oldPasswordText.value = value
+    }
+
+    fun updateInputNewPassword(value: String) {
+        _newPasswordText.value = value
+    }
+
+    fun updateInputConfirmNewPassword(value: String) {
+        _confirmNewPasswordText.value = value
+    }
+
+    //變更密碼
+    fun changePasswordAction(aOldPassword: String, aNewPassword: String, aConfirmNewPassword: String) {
+        viewModelScope.launch {
+            if (aOldPassword.isEmpty()) {
+                _showChangePasswordInputFailTag.value = 1
+                _showChangePasswordInputFailMsg.value = "OldPasswordNotEntered"
+                return@launch
+            }
+            if (aNewPassword.isEmpty()) {
+                _showChangePasswordInputFailTag.value = 2
+                _showChangePasswordInputFailMsg.value = "NewPasswordNotEntered"
+                return@launch
+            }
+            // 10~20 位數，需同時含數字與英文字母
+            if (!aNewPassword.matches(Regex("^(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]{10,20}$"))) {
+                _showChangePasswordInputFailTag.value = 2
+                _showChangePasswordInputFailMsg.value = "NewPasswordInvalidFormat"
+                return@launch
+            }
+            if (aNewPassword != aConfirmNewPassword) {
+                _showChangePasswordInputFailTag.value = 3
+                _showChangePasswordInputFailMsg.value = "PasswordMismatch"
+                return@launch
+            }
+            _showLoadingView.value = true
+            when (val result = accountRepository.changePassword(aOldPassword, aNewPassword, aConfirmNewPassword)) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _resChangePasswordSuccessFlag.value = true
+                }
+                is BaseRepository.Result.Error -> {
+                    Log.d("DAE_Develop", "changePassword Res ->${result.message}")
+                    _showLoadingView.value = false
+                    _showChangePasswordFailDialogFlag.value = true
+                    _showChangePasswordFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showChangePasswordFailDialogFlag.value = true
+                    _showChangePasswordFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+    fun resetResChangePasswordSuccessFlag(value: Boolean) {
+        _resChangePasswordSuccessFlag.value = value
+    }
+
+    fun resetShowChangePasswordFailDialogFlag(value: Boolean) {
+        _showChangePasswordFailDialogFlag.value = value
+    }
+
+    fun resetShowChangePasswordInputFailTag(value: Int) {
+        _showChangePasswordInputFailTag.value = value
+    }
+
+    fun resetChangePasswordInputs() {
+        _oldPasswordText.value = ""
+        _newPasswordText.value = ""
+        _confirmNewPasswordText.value = ""
+        _showChangePasswordInputFailTag.value = 0
     }
 }

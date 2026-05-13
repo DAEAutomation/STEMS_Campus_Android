@@ -95,6 +95,15 @@ interface ApiService {
 
 
     /**
+     * 變更密碼
+     */
+    @POST("api/app/auth/change-password")
+    suspend fun changePassword(
+        @Body request: AccountModel.ChangePasswordRequest
+    ): APIResponse.ApiResponse<Unit>
+
+
+    /**
      * 刷新 Token
      */
     @POST("api/app/auth/refresh")
