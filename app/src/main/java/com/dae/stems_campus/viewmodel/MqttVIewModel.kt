@@ -65,6 +65,20 @@ class MqttVIewModel @Inject constructor(application: Application, private val cr
     private val _finalCreditAmount = MutableStateFlow(0)
     val finalCreditAmount: StateFlow<Int> = _finalCreditAmount
 
+    //Refund
+    private val _mqttRefundTransactionFinishSuccessFlag = MutableStateFlow(false)
+    val mqttRefundTransactionFinishSuccessFlag: StateFlow<Boolean> get() = _mqttRefundTransactionFinishSuccessFlag
+
+    private val _mqttRefundTransactionFinishSuccessMsg = MutableStateFlow("")
+    val mqttRefundTransactionFinishSuccessMsg: StateFlow<String> get() = _mqttRefundTransactionFinishSuccessMsg
+
+    private val _mqttRefundTransactionFinishFailFlag = MutableStateFlow(false)
+    val mqttRefundTransactionFinishFailFlag: StateFlow<Boolean> get() = _mqttRefundTransactionFinishFailFlag
+
+    private val _mqttRefundTransactionFinishFailMsg = MutableStateFlow("")
+    val mqttRefundTransactionFinishFailMsg: StateFlow<String> get() = _mqttRefundTransactionFinishFailMsg
+
+
     // Broadcast receiver for MQTT messages
     private val mqttReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -169,7 +183,7 @@ class MqttVIewModel @Inject constructor(application: Application, private val cr
             MqttHelper.REQUEST_TRANSACTION_FINISHED -> handleTransactionFinished(intent)
 //            MqttHelper.REFUND_TRANSACTION -> handleRefundResponse(intent)
 //            MqttHelper.REFUND_TRANSACTION_RECEIPTED -> handleRefundReceipted(intent)
-//            MqttHelper.REQUEST_REFUND_TRANSACTION_FINISHED -> handleRefundFinished(intent)
+            MqttHelper.REQUEST_REFUND_TRANSACTION_FINISHED -> handleRefundTransactionFinished(intent)
 //            MqttHelper.CHANNEL_BINDING -> handleChannelBinding()
         }
     }
@@ -245,6 +259,20 @@ class MqttVIewModel @Inject constructor(application: Application, private val cr
         }
     }
 
+    //Refund
+    private fun handleRefundTransactionFinished(intent: Intent) {
+        val userNameValue = intent.getStringExtra(MqttHelper.REQUEST_REFUND_TRANSACTION_FINISHED_USERNAME)
+        val deviceCodeValue = intent.getStringExtra(MqttHelper.REQUEST_REFUND_TRANSACTION_FINISHED_DEVICE_CODE)
+
+        if (!userNameValue.equals("") && !deviceCodeValue.equals("")) {
+            _mqttRefundTransactionFinishSuccessFlag.value = true
+            _mqttRefundTransactionFinishSuccessMsg.value = "RefundSuccess"
+        }else{
+            _mqttRefundTransactionFinishFailFlag.value = true
+            _mqttRefundTransactionFinishFailMsg.value = "TransactionCancellation"
+        }
+    }
+
 
     fun resetMqttTransactionReceiptedSuccessFlag(value: Boolean) {
         _mqttTransactionReceiptedSuccessFlag.value = value
@@ -260,5 +288,13 @@ class MqttVIewModel @Inject constructor(application: Application, private val cr
 
     fun resetMqttTransactionFinishFailFlag(value: Boolean) {
         _mqttTransactionFinishFailFlag.value = value
+    }
+
+    fun resetMqttRefundTransactionFinishSuccessFlag(value: Boolean) {
+        _mqttRefundTransactionFinishSuccessFlag.value = value
+    }
+
+    fun resetMqttRefundTransactionFinishFailFlag(value: Boolean) {
+        _mqttRefundTransactionFinishFailFlag.value = value
     }
 }

@@ -41,10 +41,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.ProfileModel
@@ -57,6 +59,7 @@ import com.dae.stems_campus.viewmodel.ProfileViewModel
 import kotlinx.coroutines.delay
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.collections.listOf
 
 
 @Composable
@@ -85,6 +88,27 @@ fun walletScreen(mainNavController: NavController, profileViewModel: ProfileView
         }
         composable("RefundCash") {
             refundCashDetailScreen(navController = walletNavController, onShowTabBarChange = {})
+        }
+        composable("RefundEasy") {
+            refundEasyDetailScreen(navController = walletNavController, onShowTabBarChange = {})
+        }
+        composable(
+            route = "RefundBinding/{refundID}",
+            arguments = listOf(
+                navArgument("refundID") { type = NavType.IntType },
+        )) { backStackEntry ->
+            val refundID = backStackEntry.arguments?.getInt("refundID")
+            refundBindingScreen(navController = walletNavController, refundID = refundID ?: 0, onShowTabBarChange = {})
+        }
+        composable(
+            route = "RefundDeposit/{depositCode}/{refundID}",
+            arguments = listOf(
+                navArgument("depositCode") { type = NavType.StringType },
+                navArgument("refundID") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val depositCode = backStackEntry.arguments?.getString("depositCode")
+            val refundID = backStackEntry.arguments?.getInt("refundID")
+            refundDepositScreen(navController = walletNavController, depositCode = depositCode ?: "", refundID = refundID ?: 0 , onShowTabBarChange = {})
         }
     }
 
