@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import com.dae.stems_campus.network.ApiService
+import com.dae.stems_campus.network.SessionEventBus
 import com.dae.stems_campus.viewmodel.TokenManager
 import retrofit2.HttpException
 
@@ -49,14 +50,20 @@ open class BaseRepository @Inject constructor(
                     // 處理 HTTP 401 Token 過期
                     if (e.code() == 401 && errorCode == "TOKEN_EXPIRED" && attempt == 0) {
                         Log.d("DAE_Develop", "Token 過期，嘗試刷新")
-                        if (tokenManager.refreshToken() != null) {
+                        if (tokenManager.refreshToken() == true) {
                             Log.d("DAE_Develop", "Token 刷新成功，重試請求")
                             return@repeat  // 繼續下一次迴圈重試
                         } else {
                             Log.e("DAE_Develop", "Token 刷新失敗")
                             tokenManager.clearTokens()
+                            SessionEventBus.notifyForceLogout()
                             return@withContext Result.Unauthorized
                         }
+                    } else if (e.code() == 401) {
+                        // 第二輪仍 401，或非 TOKEN_EXPIRED 的 401 → 視為未授權
+                        tokenManager.clearTokens()
+                        SessionEventBus.notifyForceLogout()
+                        return@withContext Result.Unauthorized
                     } else {
                         return@withContext Result.Error(errorMessage ?: "請求失敗 (${e.code()})")
                     }
@@ -96,14 +103,20 @@ open class BaseRepository @Inject constructor(
                     // 處理 HTTP 401 Token 過期
                     if (e.code() == 401 && errorCode == "TOKEN_EXPIRED" && attempt == 0) {
                         Log.d("DAE_Develop", "Token 過期，嘗試刷新")
-                        if (tokenManager.refreshToken() != null) {
+                        if (tokenManager.refreshToken() == true) {
                             Log.d("DAE_Develop", "Token 刷新成功，重試請求")
                             return@repeat
                         } else {
                             Log.e("DAE_Develop", "Token 刷新失敗")
                             tokenManager.clearTokens()
+                            SessionEventBus.notifyForceLogout()
                             return@withContext Result.Unauthorized
                         }
+                    } else if (e.code() == 401) {
+                        // 第二輪仍 401，或非 TOKEN_EXPIRED 的 401 → 視為未授權
+                        tokenManager.clearTokens()
+                        SessionEventBus.notifyForceLogout()
+                        return@withContext Result.Unauthorized
                     } else {
                         return@withContext Result.Error(errorMessage ?: "請求失敗 (${e.code()})")
                     }
