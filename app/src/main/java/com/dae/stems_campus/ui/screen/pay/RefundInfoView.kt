@@ -71,6 +71,19 @@ fun refundInfoScreen(navController: NavHostController, profileViewModel: Profile
     val showGetProfileInfoFailDialogFlag by profileViewModel.showGetProfileInfoFailDialogFlag.collectAsState()
     val showGetProfileInfoFailMsg by profileViewModel.showGetProfileInfoFailMsg.collectAsState()
 
+    val resRefundRequestSuccessFlag by refundViewModel.resRefundRequestSuccessFlag.collectAsState()
+    val showRefundRequestFailDialogFlag by refundViewModel.showRefundRequestFailDialogFlag.collectAsState()
+    val showRefundRequestFailMsg by refundViewModel.showRefundRequestFailMsg.collectAsState()
+    val refundRequestData by refundViewModel.refundRequestData.collectAsState()
+
+    val resFetchRefundStatusSuccessFlag by refundViewModel.resFetchRefundStatusSuccessFlag.collectAsState()
+    val showFetchRefundStatusFailDialogFlag by refundViewModel.showFetchRefundStatusFailDialogFlag.collectAsState()
+    val showFetchRefundStatusFailMsg by refundViewModel.showFetchRefundStatusFailMsg.collectAsState()
+    val refundStatusData by refundViewModel.refundStatusData.collectAsState()
+
+    var refundType by remember { mutableStateOf(0) }
+    var showingRefundBottomSheet by remember { mutableStateOf(false) }
+
 
 
     LaunchedEffect(Unit) {
@@ -81,6 +94,21 @@ fun refundInfoScreen(navController: NavHostController, profileViewModel: Profile
         navController = navController,
         onShowTabBarChange = {},
         profileInfo = profileInfo,
+        showingRefundBottomSheet = showingRefundBottomSheet,
+        onShowingRefundBottomSheetChange = { showingRefundBottomSheet = it },
+        onRefundCashClick = {
+            // 先查狀態，等 resFetchRefundStatusSuccessFlag 回來再決定要直接導頁還是跳 sheet
+            refundType = 1
+            refundViewModel.fetchRefundStatusAction()
+        },
+        onConfirmCashRefund = {
+            // sheet 按確認 → 真的發退款申請
+            refundViewModel.refundRequestAction(1)
+        },
+        onRefundEasyCardHandled = {
+            refundViewModel.refundRequestAction(2)
+            refundType = 2
+        },
     )
 
     if (showLoadingView) {
@@ -99,6 +127,89 @@ fun refundInfoScreen(navController: NavHostController, profileViewModel: Profile
             navController.navigateUp()
         }
     }
+
+    //申請退款成功
+    if (resRefundRequestSuccessFlag) {
+        refundViewModel.resetResRefundRequestSuccessFailDialogFlag(false)
+        if (refundRequestData?.refundType == 1) {
+            navController.navigate("RefundCash")
+        }else if (refundRequestData?.refundType == 2) {
+            navController.navigate("RefundEasy")
+        }
+    }
+
+    //申請退款失敗
+    if (showRefundRequestFailDialogFlag) {
+
+        if (showRefundRequestFailMsg == "已有待處理的退款申請") {
+            refundViewModel.resetShowRefundRequestFailDialogFlag(false)
+            refundViewModel.fetchRefundStatusAction()
+        }else{
+            textTNoButtonAlert(
+                onDismissRequest = {},
+                dialogTitle = parseDialogMsg(showRefundRequestFailMsg ?: "")
+            )
+            // 在 Dialog 顯示後啟動計時器
+            LaunchedEffect(Unit) {
+                delay(1500) // 延遲 1.5 秒
+                refundViewModel.resetShowRefundRequestFailDialogFlag(false)
+                navController.navigateUp()
+            }
+        }
+    }
+
+    //查詢退款狀態資訊成功
+    if (resFetchRefundStatusSuccessFlag) {
+        refundViewModel.resetShowFetchRefundStatusFailDialogFlag(false)
+        if (refundStatusData?.refundType.equals("easycard")) {
+            if (refundType == 1) {
+                textTNoButtonAlert(
+                    onDismissRequest = {},
+                    dialogTitle = "已有待處理的退款申請"
+                )
+                // 在 Dialog 顯示後啟動計時器
+                LaunchedEffect(Unit) {
+                    delay(1500) // 延遲 1.5 秒
+                    refundViewModel.resetFetchRefundStatusSuccessFailDialogFlag(false)
+                }
+            }else if (refundType == 2){
+                refundViewModel.resetFetchRefundStatusSuccessFailDialogFlag(false)
+                navController.navigate("RefundEasy")
+            }
+        }else if (refundStatusData?.refundType.equals("cash")) {
+            if (refundType == 2) {
+                textTNoButtonAlert(
+                    onDismissRequest = {},
+                    dialogTitle = "已有待處理的退款申請"
+                )
+                // 在 Dialog 顯示後啟動計時器
+                LaunchedEffect(Unit) {
+                    delay(1500) // 延遲 1.5 秒
+                    refundViewModel.resetFetchRefundStatusSuccessFailDialogFlag(false)
+                }
+            }else if (refundType == 1){
+                refundViewModel.resetFetchRefundStatusSuccessFailDialogFlag(false)
+                navController.navigate("RefundCash")
+            }
+
+        }else {
+            // 查到沒有任何進行中的退款（refundType 為 null 或其他值）→ 跳 bottom sheet 讓使用者確認
+            if (refundType == 1) {
+                refundViewModel.resetFetchRefundStatusSuccessFailDialogFlag(false)
+                showingRefundBottomSheet = true
+            }
+        }
+    }
+
+    if (showFetchRefundStatusFailDialogFlag) {
+
+        // 後端「沒進行中退款」會回 success=true / data=null，被 BaseRepository 當 Error
+        // 走到這條分支 → 視為沒進行中，使用者按現金時跳 bottom sheet
+        if (refundType == 1) {
+            refundViewModel.resetShowFetchRefundStatusFailDialogFlag(false)
+            showingRefundBottomSheet = true
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,9 +218,13 @@ private fun refundInfoContent(
     navController: NavHostController,
     onShowTabBarChange: (Boolean) -> Unit,
     profileInfo: ProfileModel.ProfileData? = null,
+    showingRefundBottomSheet: Boolean = false,
+    onShowingRefundBottomSheetChange: (Boolean) -> Unit = {},
+    onRefundCashClick: () -> Unit,            // 按下「現金退款」按鈕：交給 screen 決定後續（查狀態）
+    onConfirmCashRefund: () -> Unit,           // bottom sheet 按確認：實際發起退款申請
+    onRefundEasyCardHandled: () -> Unit
     ) {
 
-    var showingRefundBottomSheet by remember { mutableStateOf(false) }
     val refundSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF4F4F4))) {
@@ -191,7 +306,7 @@ private fun refundInfoContent(
                             Surface (modifier = Modifier
                                 .weight(1f)
                                 .clickable {
-                                    showingRefundBottomSheet = true
+                                    onRefundCashClick()
                                 },
 
                                 color = Color.White,
@@ -245,7 +360,7 @@ private fun refundInfoContent(
                             Surface (modifier = Modifier
                                 .weight(1f)
                                 .clickable {
-                                    navController.navigate("RefundEasy")
+                                    onRefundEasyCardHandled()
                                 },
 
                                 color = Color.White,
@@ -294,16 +409,16 @@ private fun refundInfoContent(
                         if (showingRefundBottomSheet) {
                             ModalBottomSheet(
                                 onDismissRequest = {
-                                    showingRefundBottomSheet = false
+                                    onShowingRefundBottomSheetChange(false)
                                 },
                                 sheetState = refundSheetState,
                                 containerColor = Color.White
                             ) {
                                 refundBottomSheetView(profileInfo, onRefundHandled = {
-                                    showingRefundBottomSheet = false
-                                    navController.navigate("RefundCash")
+                                    onShowingRefundBottomSheetChange(false)
+                                    onConfirmCashRefund()
                                 }, onCancelHandled = {
-                                    showingRefundBottomSheet = false
+                                    onShowingRefundBottomSheetChange(false)
                                 })
                             }
                         }
@@ -483,7 +598,14 @@ private fun refundInfoPreview() {
 
 // 創建一個模擬的 NavController
     val navController = TestNavHostController(LocalContext.current)
-    refundInfoContent (navController,{},null)
+    refundInfoContent(
+        navController = navController,
+        onShowTabBarChange = {},
+        profileInfo = null,
+        onRefundCashClick = {},
+        onConfirmCashRefund = {},
+        onRefundEasyCardHandled = {}
+    )
 }
 
 @Preview(showBackground = true)
