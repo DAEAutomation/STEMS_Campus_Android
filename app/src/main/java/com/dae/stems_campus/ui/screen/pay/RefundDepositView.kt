@@ -79,6 +79,8 @@ fun refundDepositScreen(navController: NavHostController, depositCode: String, r
     val showStartRefundFailMsg by refundViewModel.showStartRefundFailMsg.collectAsState()
     val startRefundData by refundViewModel.startRefundData.collectAsState()
 
+    val refundStatusData by refundViewModel.refundStatusData.collectAsState()
+
     val mqttRefundTransactionFinishSuccessFlag by mqttVIewModel.mqttRefundTransactionFinishSuccessFlag.collectAsState()
     val mqttRefundTransactionFinishSuccessMsg by mqttVIewModel.mqttRefundTransactionFinishSuccessMsg.collectAsState()
     val mqttRefundTransactionFinishFailFlag by mqttVIewModel.mqttRefundTransactionFinishFailFlag.collectAsState()
@@ -89,6 +91,7 @@ fun refundDepositScreen(navController: NavHostController, depositCode: String, r
 
     LaunchedEffect(Unit) {
         profileViewModel.getProfileInfoAction()
+        refundViewModel.fetchRefundStatusAction()
     }
 
     // 拿到 profile 後就連線
@@ -114,6 +117,7 @@ fun refundDepositScreen(navController: NavHostController, depositCode: String, r
         navController = navController,
         onShowTabBarChange = {},
         profileInfo = profileInfo,
+        refundStatusData = refundStatusData,
         depositName = "",
         depositCode = depositCode,
 
@@ -179,6 +183,7 @@ private fun refundDepositContent(
     navController: NavHostController,
     onShowTabBarChange: (Boolean) -> Unit,
     profileInfo: ProfileModel.ProfileData? = null,
+    refundStatusData: RefundModel.RefundStatusData? = null,
     depositName: String = "",
     depositCode: String = "",
     finalCreditAmount: Int = 0) {
@@ -258,119 +263,109 @@ private fun refundDepositContent(
                             Spacer(modifier = Modifier.width(40.dp))
                             Text("請靠卡退款", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                         }
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(30.dp))
                         Row {
                             Spacer(modifier = Modifier.width(20.dp))
                             Surface (modifier = Modifier
                                 .weight(1f),
-                                color = Color.White,
+                                color = Color.Unspecified,
                                 shape = RoundedCornerShape(9.dp)){
 
-                                Row (verticalAlignment = Alignment.CenterVertically){
-                                    Spacer(modifier = Modifier.width(20.dp))
-                                    Surface (modifier = Modifier.fillMaxWidth(), color = Color.Unspecified){
-                                        Column {
-                                            //<-----申請日期----->
-                                            Row {
-                                                Spacer(modifier = Modifier.width(20.dp))
-                                                Surface (modifier = Modifier
-                                                    .weight(1f)
-                                                    .clickable {
-                                                        navController.navigate("")
-                                                    },
+                                Surface (modifier = Modifier.fillMaxWidth(), color = Color.Unspecified){
+                                    Column {
+                                        //<-----申請日期----->
+                                        Row {
+                                            Surface (modifier = Modifier
+                                                .weight(1f)
+                                                .clickable {
+                                                    navController.navigate("")
+                                                },
 
-                                                    color = Color.White,
-                                                    shape = RoundedCornerShape(
-                                                        topStart = 9.dp,
-                                                        topEnd = 9.dp,
-                                                        bottomStart = 0.dp,
-                                                        bottomEnd = 0.dp)){
+                                                color = Color.White,
+                                                shape = RoundedCornerShape(
+                                                    topStart = 9.dp,
+                                                    topEnd = 9.dp,
+                                                    bottomStart = 0.dp,
+                                                    bottomEnd = 0.dp)){
 
-                                                    Row (verticalAlignment = Alignment.CenterVertically){
-                                                        Spacer(modifier = Modifier.width(20.dp))
+                                                Row (verticalAlignment = Alignment.CenterVertically){
+                                                    Spacer(modifier = Modifier.width(20.dp))
 
-                                                        Surface (
-                                                            modifier = Modifier
-                                                                .align(Alignment.CenterVertically)
-                                                                .weight(0.9f),
-                                                            color = Color.Unspecified
-                                                        ){
-                                                            Column {
-                                                                //val dateText = refundCreatedAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm:ss") ?: ""
-                                                                Spacer(modifier = Modifier.height(20.dp))
-                                                                Text(stringResource(R.string.application_date), color = Color(0xFF2D859D), style = MaterialTheme.typography.bodyMedium)
-                                                                Spacer(modifier = Modifier.height(5.dp))
-                                                                Text("fff", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
-                                                                Spacer(modifier = Modifier.height(20.dp))
-                                                            }
+                                                    Surface (
+                                                        modifier = Modifier
+                                                            .align(Alignment.CenterVertically)
+                                                            .weight(0.9f),
+                                                        color = Color.Unspecified
+                                                    ){
+                                                        Column {
+                                                            val dateText = refundStatusData?.createdAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm:ss") ?: ""
+                                                            Spacer(modifier = Modifier.height(20.dp))
+                                                            Text(stringResource(R.string.application_date), color = Color(0xFF2D859D), style = MaterialTheme.typography.bodyMedium)
+                                                            Spacer(modifier = Modifier.height(5.dp))
+                                                            Text(dateText, color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                                                            Spacer(modifier = Modifier.height(20.dp))
                                                         }
-                                                        Surface (
-                                                            modifier = Modifier
-                                                                .align(Alignment.CenterVertically)
-                                                                .weight(0.1f),
-                                                            color = Color.Unspecified
-                                                        ){
-
-                                                        }
-
-
-                                                        Spacer(modifier = Modifier.width(20.dp))
                                                     }
-                                                }
-                                                Spacer(modifier = Modifier.width(20.dp))
-                                            }
-                                            Spacer(modifier = Modifier.height(2.dp))
-                                            // <-----申請單號----->
-                                            Row {
-                                                Spacer(modifier = Modifier.width(20.dp))
-                                                Surface (modifier = Modifier
-                                                    .weight(1f)
-                                                    .clickable {
-//                                    navController.navigate("changeName/${accountName}")
-                                                    },
+                                                    Surface (
+                                                        modifier = Modifier
+                                                            .align(Alignment.CenterVertically)
+                                                            .weight(0.1f),
+                                                        color = Color.Unspecified
+                                                    ){
 
-                                                    color = Color.White,
-                                                    shape = RoundedCornerShape(
-                                                        topStart = 0.dp,
-                                                        topEnd = 0.dp,
-                                                        bottomStart = 0.dp,
-                                                        bottomEnd = 0.dp)){
-
-                                                    Row (verticalAlignment = Alignment.CenterVertically){
-                                                        Spacer(modifier = Modifier.width(20.dp))
-
-                                                        Surface (
-                                                            modifier = Modifier
-                                                                .align(Alignment.CenterVertically)
-                                                                .weight(0.9f),
-                                                            color = Color.Unspecified
-                                                        ){
-                                                            Column {
-                                                                Spacer(modifier = Modifier.height(20.dp))
-                                                                Text(stringResource(R.string.application_number), color = Color(0xFF2D859D), style = MaterialTheme.typography.bodyMedium)
-                                                                Spacer(modifier = Modifier.height(5.dp))
-                                                                Text("fffff", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
-                                                                Spacer(modifier = Modifier.height(20.dp))
-                                                            }
-                                                        }
-                                                        Surface (
-                                                            modifier = Modifier
-                                                                .align(Alignment.CenterVertically)
-                                                                .weight(0.1f),
-                                                            color = Color.Unspecified
-                                                        ){
-
-                                                        }
-                                                        Spacer(modifier = Modifier.width(20.dp))
                                                     }
+
+
+                                                    Spacer(modifier = Modifier.width(20.dp))
                                                 }
-                                                Spacer(modifier = Modifier.width(20.dp))
                                             }
                                         }
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        // <-----申請單號----->
+                                        Row {
+                                            Surface (modifier = Modifier
+                                                .weight(1f)
+                                                .clickable {
+                                                },
 
+                                                color = Color.White,
+                                                shape = RoundedCornerShape(
+                                                    topStart = 0.dp,
+                                                    topEnd = 0.dp,
+                                                    bottomStart = 0.dp,
+                                                    bottomEnd = 0.dp)){
+
+                                                Row (verticalAlignment = Alignment.CenterVertically){
+                                                    Spacer(modifier = Modifier.width(20.dp))
+
+                                                    Surface (
+                                                        modifier = Modifier
+                                                            .align(Alignment.CenterVertically)
+                                                            .weight(0.9f),
+                                                        color = Color.Unspecified
+                                                    ){
+                                                        Column {
+                                                            Spacer(modifier = Modifier.height(20.dp))
+                                                            Text(stringResource(R.string.application_number), color = Color(0xFF2D859D), style = MaterialTheme.typography.bodyMedium)
+                                                            Spacer(modifier = Modifier.height(5.dp))
+                                                            Text("${refundStatusData?.refundNo}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                                                            Spacer(modifier = Modifier.height(20.dp))
+                                                        }
+                                                    }
+                                                    Surface (
+                                                        modifier = Modifier
+                                                            .align(Alignment.CenterVertically)
+                                                            .weight(0.1f),
+                                                        color = Color.Unspecified
+                                                    ){
+
+                                                    }
+                                                    Spacer(modifier = Modifier.width(20.dp))
+                                                }
+                                            }
+                                        }
                                     }
-                                    Spacer(modifier = Modifier.width(20.dp))
-                                    Surface (modifier = Modifier.weight(1f),color = Color.Unspecified){}
+
                                 }
                             }
                             Spacer(modifier = Modifier.width(20.dp))
