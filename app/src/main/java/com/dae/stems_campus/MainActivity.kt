@@ -34,7 +34,9 @@ import com.dae.stems_campus.viewmodel.AuthState
 import com.dae.stems_campus.viewmodel.AuthViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.dae.stems_campus.network.SessionEventBus
 import com.dae.stems_campus.ui.screen.mainTabScreen
+import kotlinx.coroutines.delay
 
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
@@ -60,6 +62,20 @@ fun AppContent () {
     LaunchedEffect(Unit) {
 //        pushNotificationViewModel.fcm()
         viewModel.checkToken()
+    }
+
+    // BaseRepository 走到 Unauthorized 時會 emit forceLogout。
+    // 不能依賴 _authState 變化來驅動導航（登入流程沒有把它切到 Authenticated，
+    // 因此真的過期時 state 不會改變，LaunchedEffect(authState) 不會觸發）。
+    // 直接 collect event 自己 navigate，1.5 秒延遲跟畫面端 dialog 對齊。
+    LaunchedEffect(Unit) {
+        SessionEventBus.forceLogout.collect {
+            delay(1500)
+            navController.navigate("signIn") {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
     }
 
     when (authState) {

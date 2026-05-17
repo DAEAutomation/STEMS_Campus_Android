@@ -76,4 +76,15 @@ open class AccountRepository @Inject constructor(apiService: ApiService, tokenMa
         }
     }
 
+    suspend fun changePassword(aOldPw: String, aNewPw: String, aConfirmPw: String): Result<Unit> {
+        return executeAuthenticatedRequestNoData {
+            apiService.changePassword(AccountModel.ChangePasswordRequest(
+                old_password = aOldPw,
+                new_password = aNewPw,
+                confirm_password = aConfirmPw
+            ))
+        }
+    }
+
+
 }

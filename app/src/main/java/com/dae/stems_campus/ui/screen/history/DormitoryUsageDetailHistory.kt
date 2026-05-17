@@ -154,7 +154,7 @@ private fun dormitoryDetailContent(
                                             Row {
                                                 Text("${stringResource(R.string.usage_kwh)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                                                 Spacer(modifier = Modifier.width(20.dp))
-                                                Text("${dormitoryHistory?.totalAmount}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                                                Text("${dormitoryHistory?.totalKwh} ${stringResource(R.string.electricity_unit)}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                                             }
                                             Spacer(modifier = Modifier.height(20.dp))
                                             Row {

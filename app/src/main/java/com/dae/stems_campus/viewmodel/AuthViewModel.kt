@@ -7,9 +7,11 @@ import com.dae.stems_campus.data.repository.BaseRepository
 import com.dae.stems_campus.data.repository.ServiceCheckRepository
 import com.dae.stems_campus.data.repository.UserPreferencesRepository
 import com.dae.stems_campus.network.BaseUrlHolder
+import com.dae.stems_campus.network.SessionEventBus
 import com.dae.stems_campus.utils.isVersionOutdated
 import com.dae.stems_campus.BuildConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,6 +29,20 @@ class AuthViewModel @Inject constructor(
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
+
+    init {
+        // 任何 API 走到 Unauthorized 時 BaseRepository 會 emit；
+        // 延 1.5 秒讓畫面端「請重新登入」dialog 先顯示完，再清 token 並同步 state。
+        // 導航交由 MainActivity 的 AppContent 直接 collect 同一個 event 處理，
+        // 因為登入流程目前沒有把 _authState 切到 Authenticated，靠 state 變化驅動會失效。
+        viewModelScope.launch {
+            SessionEventBus.forceLogout.collect {
+                delay(1500)
+                tokenManager.clearTokens()
+                _authState.value = AuthState.Unauthenticated
+            }
+        }
+    }
 
     /**
      * 啟動流程：baseUrl → serviceCheck → token check

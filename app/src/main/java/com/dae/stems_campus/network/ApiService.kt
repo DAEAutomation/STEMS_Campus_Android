@@ -8,6 +8,7 @@ import com.dae.stems_campus.data.model.ProfileModel
 import com.dae.stems_campus.data.model.RefundModel
 import com.dae.stems_campus.data.model.ScanModel
 import com.dae.stems_campus.data.model.ServiceCheckModel
+import com.dae.stems_campus.data.model.SettingModel
 import com.dae.stems_campus.data.model.TokenModel
 import com.dae.stems_campus.data.model.TopUpModel
 import retrofit2.http.Body
@@ -91,6 +92,24 @@ interface ApiService {
     @POST("api/app/auth/reset-password")
     suspend fun resetPassword(
         @Body request: AccountModel.ResetPasswordRequest
+    ): APIResponse.ApiResponse<Unit>
+
+
+    /**
+     * 變更密碼
+     */
+    @POST("api/app/auth/change-password")
+    suspend fun changePassword(
+        @Body request: AccountModel.ChangePasswordRequest
+    ): APIResponse.ApiResponse<Unit>
+
+
+    /**
+     * 實體卡ID綁定
+     */
+    @POST("api/app/device/bind")
+    suspend fun cardBinding(
+        @Body request: SettingModel.CardBindingRequest
     ): APIResponse.ApiResponse<Unit>
 
 

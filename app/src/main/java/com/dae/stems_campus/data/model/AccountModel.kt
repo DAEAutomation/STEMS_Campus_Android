@@ -46,4 +46,10 @@ class AccountModel {
         val password: String,
         val verified_token: String
     )
+
+    data class ChangePasswordRequest(
+        val old_password: String,
+        val new_password: String,
+        val confirm_password: String
+    )
 }

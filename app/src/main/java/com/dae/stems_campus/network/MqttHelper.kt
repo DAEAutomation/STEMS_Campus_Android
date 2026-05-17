@@ -77,6 +77,8 @@ class MqttHelper private constructor(private val context: Context) {
         const val REFUND_TRANSACTION_RECEIPTED_AMT = "dae.tenant.public.REFUND_TRANSACTION_RECEIPTED_AMT"
         const val REFUND_TRANSACTION_RECEIPTED_PAYMENT_TYPE = "dae.tenant.public.REFUND_TRANSACTION_RECEIPTED_PAYMENT_TYPE"
         const val REQUEST_REFUND_TRANSACTION_FINISHED = "dae.tenant.public.REQUEST_REFUND_TRANSACTION_FINISHED"
+        const val REQUEST_REFUND_TRANSACTION_FINISHED_USERNAME = "dae.tenant.public.REQUEST_REFUND_TRANSACTION_FINISHED_USERNAME"
+        const val REQUEST_REFUND_TRANSACTION_FINISHED_DEVICE_CODE = "dae.tenant.public.REQUEST_REFUND_TRANSACTION_FINISHED_DEVICE_CODE"
         const val CHANNEL_BINDING = "dae.tenant.public.CHANNEL_BINDING"
 
         @Volatile
@@ -382,7 +384,7 @@ class MqttHelper private constructor(private val context: Context) {
             putExtra(REFUND_TRANSACTION_RECEIPTED_AMT, json.optInt("refund-amt"))
             putExtra(REFUND_TRANSACTION_RECEIPTED_STATE, json.optInt("refund-state"))
             putExtra(REFUND_TRANSACTION_RECEIPTED_RESPONSE_CODE, json.optString("refund-response-code"))
-            putExtra(REFUND_TRANSACTION_RECEIPTED_PAYMENT_TYPE, json.optInt("refund-payment-type"))
+            putExtra(REFUND_TRANSACTION_RECEIPTED_PAYMENT_TYPE, json.optInt("payment-type"))
         }
         context.sendBroadcast(intent)
     }
@@ -391,7 +393,8 @@ class MqttHelper private constructor(private val context: Context) {
         val json = JSONObject(content)
         intent.apply {
             action = REQUEST_REFUND_TRANSACTION_FINISHED
-            putExtra(TIMEOUT, json.optInt("timeout"))
+            putExtra(REQUEST_REFUND_TRANSACTION_FINISHED_USERNAME, json.optInt("username"))
+            putExtra(REQUEST_REFUND_TRANSACTION_FINISHED_DEVICE_CODE, json.optInt("device-code"))
         }
         context.sendBroadcast(intent)
     }

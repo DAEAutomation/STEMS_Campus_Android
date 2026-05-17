@@ -60,10 +60,7 @@ import java.time.format.DateTimeFormatter
 fun refundCashDetailScreen(navController: NavHostController, refundViewModel: RefundViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
 
     val showLoadingView by refundViewModel.showLoadingView.collectAsState()
-    val resRefundRequestSuccessFlag by refundViewModel.resRefundRequestSuccessFlag.collectAsState()
-    val showRefundRequestFailDialogFlag by refundViewModel.showRefundRequestFailDialogFlag.collectAsState()
-    val showRefundRequestFailMsg by refundViewModel.showRefundRequestFailMsg.collectAsState()
-    val refundRequestData by refundViewModel.refundRequestData.collectAsState()
+
 
     val resFetchRefundStatusSuccessFlag by refundViewModel.resFetchRefundStatusSuccessFlag.collectAsState()
     val showFetchRefundStatusFailDialogFlag by refundViewModel.showFetchRefundStatusFailDialogFlag.collectAsState()
@@ -82,7 +79,7 @@ fun refundCashDetailScreen(navController: NavHostController, refundViewModel: Re
     var refundStatus by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        refundViewModel.refundRequestAction(1)
+        refundViewModel.fetchRefundStatusAction()
     }
 
     refundCashDetailContent(
@@ -102,32 +99,6 @@ fun refundCashDetailScreen(navController: NavHostController, refundViewModel: Re
         LoadingView() {}
     }
 
-    if (resRefundRequestSuccessFlag) {
-        refundViewModel.resetResRefundRequestSuccessFailDialogFlag(false)
-        refundID = refundRequestData?.refundId ?: 0
-        refundCode = refundRequestData?.refundCode ?: ""
-        refundCreatedAt = refundRequestData?.createdAt ?: ""
-        refundNo = refundRequestData?.refundNo ?: ""
-        refundAmount = refundRequestData?.amount ?: 0.0
-        refundStatus = refundRequestData?.status ?: ""
-    }
-
-    if (showRefundRequestFailDialogFlag) {
-        if (showRefundRequestFailMsg == "已有待處理的退款申請") {
-            refundViewModel.fetchRefundStatusAction()
-        }else{
-            textTNoButtonAlert(
-                onDismissRequest = {},
-                dialogTitle = parseDialogMsg(showRefundRequestFailMsg ?: "")
-            )
-            // 在 Dialog 顯示後啟動計時器
-            LaunchedEffect(Unit) {
-                delay(1500) // 延遲 1.5 秒
-                refundViewModel.resetShowRefundRequestFailDialogFlag(false)
-                navController.navigateUp()
-            }
-        }
-    }
 
     if (resFetchRefundStatusSuccessFlag) {
         refundViewModel.resetShowFetchRefundStatusFailDialogFlag(false)
