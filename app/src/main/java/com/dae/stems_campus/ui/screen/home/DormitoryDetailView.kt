@@ -88,12 +88,20 @@ fun dormitoryDetailScreen(navController: NavHostController, selectDeviceCode: St
     val showStopPowerFailDialogFlag by homeInfoViewModel.showStopPowerFailDialogFlag.collectAsState()
     val showStopPowerFailMsg by homeInfoViewModel.showStopPowerFailMsg.collectAsState()
 
-    // 進入畫面時隱藏
+    var showingStopPowerInfoBottomSheet by remember { mutableStateOf(false) }
+
+    // 進入畫面時隱藏 tab bar
     LaunchedEffect(Unit) {
         onShowTabBarChange(false)
-        while (true) {
-            homeInfoViewModel.getUsingDeviceDetailAction(selectDeviceCode,uuid)
-            delay(30_000L)
+    }
+
+    // 30 秒輪詢使用中裝置；停止供電完成資訊 sheet 開啟時暫停輪詢，關閉後恢復
+    LaunchedEffect(showingStopPowerInfoBottomSheet) {
+        if (!showingStopPowerInfoBottomSheet) {
+            while (true) {
+                homeInfoViewModel.getUsingDeviceDetailAction(selectDeviceCode, uuid)
+                delay(30_000L)
+            }
         }
     }
 
@@ -107,6 +115,8 @@ fun dormitoryDetailScreen(navController: NavHostController, selectDeviceCode: St
         resStopPowerSuccessFlag = resStopPowerSuccessFlag,
         onResStopPowerSuccessDismissed = { homeInfoViewModel.resetStopPowerSuccessFlag(false)},
         aStopSessionDetail = stopPowerData,
+        showingStopPowerInfoBottomSheet = showingStopPowerInfoBottomSheet,
+        onShowingStopPowerInfoBottomSheetChange = { showingStopPowerInfoBottomSheet = it },
         onShowTabBarChange = onShowTabBarChange
     )
 
@@ -147,10 +157,11 @@ private fun dormitoryDetailContent(navController: NavHostController,
                                    resStopPowerSuccessFlag: Boolean = false,
                                    onResStopPowerSuccessDismissed: () -> Unit = {},
                                    aStopSessionDetail: ScanModel.StopPowerData?,
+                                   showingStopPowerInfoBottomSheet: Boolean = false,
+                                   onShowingStopPowerInfoBottomSheetChange: (Boolean) -> Unit = {},
                                    onShowTabBarChange: (Boolean) -> Unit) {
 
     var showingStopPowerBottomSheet by remember { mutableStateOf(false) }
-    var showingStopPowerInfoBottomSheet by remember { mutableStateOf(false) }
 
     val stopPowerSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val stopPowerInfoSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -321,7 +332,7 @@ private fun dormitoryDetailContent(navController: NavHostController,
                             showingStopPowerBottomSheet = false
                             ModalBottomSheet(
                                 onDismissRequest = {
-                                    showingStopPowerInfoBottomSheet = false
+                                    onShowingStopPowerInfoBottomSheetChange(false)
                                 },
                                 sheetState = stopPowerInfoSheetState,
                                 containerColor = Color.White
@@ -333,7 +344,7 @@ private fun dormitoryDetailContent(navController: NavHostController,
                         }
 
                         if (resStopPowerSuccessFlag) {
-                            showingStopPowerInfoBottomSheet = true
+                            onShowingStopPowerInfoBottomSheetChange(true)
                             onResStopPowerSuccessDismissed()
                         }
                     }
