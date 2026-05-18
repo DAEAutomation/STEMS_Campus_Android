@@ -247,6 +247,15 @@ interface ApiService {
 
 
     /**
+     * 退款紀錄明細下載
+     */
+    @POST("api/app/refund/receipt-token")
+    suspend fun refundHistoryDownload(
+        @Body request: HistoryModel.RefundHistoryDownloadRequest
+    ): APIResponse.ApiResponse<HistoryModel.RefundHistoryDownload>
+
+
+    /**
      * 申請退款
      */
     @POST("api/app/refund/request")
