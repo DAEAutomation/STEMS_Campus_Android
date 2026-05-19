@@ -63,13 +63,14 @@ import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.viewmodel.AccountViewModel
 import com.dae.stems_campus.viewmodel.LoginViewModel
+import com.dae.stems_campus.viewmodel.PushNotificationViewModel
 import com.dae.stems_campus.viewmodel.SettingViewModel
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun login(navController: NavHostController, loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), accountViewModel: AccountViewModel = hiltViewModel()) {
+fun login(navController: NavHostController, loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), accountViewModel: AccountViewModel = hiltViewModel(), pushNotificationViewModel: PushNotificationViewModel = hiltViewModel()) {
 
     var loginOrRegister by remember { mutableStateOf(true) }
     var pwVisibility by remember { mutableStateOf(false) }
@@ -113,7 +114,11 @@ fun login(navController: NavHostController, loginViewModel: LoginViewModel = hil
         onPasswordChange = { loginViewModel.updateInputPassword(it) },
         onLoginClick = { loginViewModel.loginAction(userNameText, passwordText, uuidText) },
         onRememberCheckedChange = { loginViewModel.updateRememberLoginInfoChecked(it)},
-        onLoginSuccessHandled = { loginViewModel.resetLoginSuccessFlag(false) },
+        onLoginSuccessHandled = {
+            loginViewModel.resetLoginSuccessFlag(false)
+            // 登入成功 → 補送 FCM token，覆蓋首次安裝/換帳號等 onNewToken 漏掉的情境
+            pushNotificationViewModel.fcm()
+        },
         onLoginFailDismissed = { loginViewModel.resetShowLoginFailMsgDialogFlag(false)
         },
         isBiometricFlag = isBiometricFlag,

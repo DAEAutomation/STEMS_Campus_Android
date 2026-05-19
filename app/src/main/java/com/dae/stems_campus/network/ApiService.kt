@@ -51,6 +51,16 @@ interface ApiService {
 
 
     /**
+     * 推播金鑰
+     */
+    @POST("api/app/device/push-token")
+    suspend fun sendFCMToken(
+        @Body request: TokenModel.PushNotificationTokenRequest
+    ): APIResponse.ApiResponse<Unit>
+
+
+
+    /**
      * 發送驗證碼
      */
     @POST("api/app/auth/send-code")

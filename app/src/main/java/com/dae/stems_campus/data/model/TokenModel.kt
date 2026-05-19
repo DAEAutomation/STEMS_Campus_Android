@@ -8,4 +8,9 @@ class TokenModel {
         val tokenExpiresAt: String? = null,
         val refreshExpiresAt: String? = null
     )
+
+    data class PushNotificationTokenRequest(
+        val push_token: String,
+        val platform: String
+    )
 }

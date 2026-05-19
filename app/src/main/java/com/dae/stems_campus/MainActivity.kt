@@ -36,6 +36,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dae.stems_campus.network.SessionEventBus
 import com.dae.stems_campus.ui.screen.mainTabScreen
+import com.dae.stems_campus.viewmodel.PushNotificationViewModel
 import kotlinx.coroutines.delay
 
 @AndroidEntryPoint
@@ -55,13 +56,19 @@ class MainActivity : FragmentActivity() {
 fun AppContent () {
     val navController = rememberNavController()
     val viewModel: AuthViewModel = hiltViewModel()
-//    val pushNotificationViewModel: PushNotificationViewModel = hiltViewModel()
+    val pushNotificationViewModel: PushNotificationViewModel = hiltViewModel()
     val authState by viewModel.authState.collectAsState()
 
     // 啟動時檢查 token
     LaunchedEffect(Unit) {
-//        pushNotificationViewModel.fcm()
         viewModel.checkToken()
+    }
+
+    // 已登入狀態下才主動同步 FCM token；避免未登入時送 token 觸發 401 / forceLogout flash
+    LaunchedEffect(authState) {
+        if (authState is AuthState.Authenticated) {
+            pushNotificationViewModel.fcm()
+        }
     }
 
     // BaseRepository 走到 Unauthorized 時會 emit forceLogout。
