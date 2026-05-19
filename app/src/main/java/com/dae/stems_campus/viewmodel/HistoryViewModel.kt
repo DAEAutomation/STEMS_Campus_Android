@@ -65,6 +65,19 @@ class HistoryViewModel @Inject constructor(private var historyRepository: Histor
     private val _showRefundHistoryDownloadFailMsg = MutableStateFlow<String?>("")
     val showRefundHistoryDownloadFailMsg: StateFlow<String?> = _showRefundHistoryDownloadFailMsg
 
+    // 儲值紀錄明細下載
+    private val _topUpHistoryDownload = MutableStateFlow<HistoryModel.TopUpHistoryDownload?>(null)
+    val topUpHistoryDownload: StateFlow<HistoryModel.TopUpHistoryDownload?> = _topUpHistoryDownload
+
+    private val _resTopUpHistoryDownloadSuccessFlag = MutableStateFlow(false)
+    val resTopUpHistoryDownloadSuccessFlag: StateFlow<Boolean> get() = _resTopUpHistoryDownloadSuccessFlag
+
+    private val _showTopUpHistoryDownloadFailDialogFlag = MutableStateFlow(false)
+    val showTopUpHistoryDownloadFailDialogFlag: StateFlow<Boolean> get() = _showTopUpHistoryDownloadFailDialogFlag
+
+    private val _showTopUpHistoryDownloadFailMsg = MutableStateFlow<String?>("")
+    val showTopUpHistoryDownloadFailMsg: StateFlow<String?> = _showTopUpHistoryDownloadFailMsg
+
 
     // 查詢 錢包儲值紀錄
     fun getWalletHistoryAction(startDate: String, endDate: String) {
@@ -210,6 +223,30 @@ class HistoryViewModel @Inject constructor(private var historyRepository: Histor
         }
     }
 
+    // 查詢 儲值紀錄明細下載
+    fun getTopUpHistoryDownloadAction(transactionID: Int) {
+        viewModelScope.launch {
+            _showLoadingView.value = true
+            when (val result = historyRepository.getTopUpHistoryDownload(transactionID)) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _topUpHistoryDownload.value = result.data
+                    _resTopUpHistoryDownloadSuccessFlag.value = true
+                }
+                is BaseRepository.Result.Error -> {
+                    _showLoadingView.value = false
+                    _showTopUpHistoryDownloadFailDialogFlag.value = true
+                    _showTopUpHistoryDownloadFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showTopUpHistoryDownloadFailDialogFlag.value = true
+                    _showTopUpHistoryDownloadFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
 
     // 7天前
     fun lastSevenDays(): Pair<String,String>{
@@ -272,6 +309,14 @@ class HistoryViewModel @Inject constructor(private var historyRepository: Histor
 
     fun resetShowRefundHistoryDownloadFailDialogFlag(value: Boolean) {
         _showRefundHistoryDownloadFailDialogFlag.value = value
+    }
+
+    fun resetResTopUpHistoryDownloadSuccessFlag(value: Boolean) {
+        _resTopUpHistoryDownloadSuccessFlag.value = value
+    }
+
+    fun resetShowTopUpHistoryDownloadFailDialogFlag(value: Boolean) {
+        _showTopUpHistoryDownloadFailDialogFlag.value = value
     }
 
 }

@@ -128,4 +128,16 @@ class HistoryModel {
         val download_name: String? = null,
         val expires_in: Double? = null
     )
+
+    data class TopUpHistoryDownloadRequest(
+        val transaction_id: Int
+    )
+
+    //儲值紀錄下載明細
+    data class TopUpHistoryDownload(
+        val token: String? = null,
+        val download_url: String? = null,
+        val download_name: String? = null,
+        val expires_in: Double? = null
+    )
 }

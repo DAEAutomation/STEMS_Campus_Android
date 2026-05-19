@@ -259,10 +259,19 @@ interface ApiService {
     /**
      * 退款紀錄明細下載
      */
-    @POST("api/app/refund/receipt-token")
+    @POST("api/app/refund/receipt")
     suspend fun refundHistoryDownload(
         @Body request: HistoryModel.RefundHistoryDownloadRequest
     ): APIResponse.ApiResponse<HistoryModel.RefundHistoryDownload>
+
+
+    /**
+     * 儲值紀錄下載明細
+     */
+    @POST("api/app/records/topup-receipt")
+    suspend fun topUpHistoryDownload(
+        @Body request: HistoryModel.TopUpHistoryDownloadRequest
+    ): APIResponse.ApiResponse<HistoryModel.TopUpHistoryDownload>
 
 
     /**
