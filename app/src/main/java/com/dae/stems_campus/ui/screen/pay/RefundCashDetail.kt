@@ -78,8 +78,12 @@ fun refundCashDetailScreen(navController: NavHostController, refundViewModel: Re
     var refundAmount by remember { mutableStateOf(0.0) }
     var refundStatus by remember { mutableStateOf("") }
 
+    // 30 秒輪詢退款狀態
     LaunchedEffect(Unit) {
-        refundViewModel.fetchRefundStatusAction()
+        while (true) {
+            refundViewModel.fetchRefundStatusAction()
+            delay(30_000L)
+        }
     }
 
     refundCashDetailContent(
@@ -101,13 +105,15 @@ fun refundCashDetailScreen(navController: NavHostController, refundViewModel: Re
 
 
     if (resFetchRefundStatusSuccessFlag) {
-        refundViewModel.resetShowFetchRefundStatusFailDialogFlag(false)
         refundID = refundStatusData?.refundId ?: 0
         refundCode = refundStatusData?.refundCode ?: ""
         refundCreatedAt = refundStatusData?.createdAt ?: ""
         refundNo = refundStatusData?.refundNo ?: ""
         refundAmount = refundStatusData?.amount ?: 0.0
         refundStatus = refundStatusData?.status ?: ""
+        // 處理完當次成功後立刻關掉旗標，避免下一輪 fetch 失敗時這個分支
+        // 仍因 flag 殘留為 true 而執行，把剛跳出的失敗 dialog 蓋掉
+        refundViewModel.resetFetchRefundStatusSuccessFailDialogFlag(false)
     }
 
     if (showFetchRefundStatusFailDialogFlag) {
