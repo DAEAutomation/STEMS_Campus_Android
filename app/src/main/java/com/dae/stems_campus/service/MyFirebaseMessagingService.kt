@@ -74,29 +74,21 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(remoteMessage)
 
         Log.d("DAE_FCM","Received message:${remoteMessage.from}")
-        Log.d("DAE_FCM","Received message:${remoteMessage.data}")
+        Log.d("DAE_FCM","Received message:${remoteMessage.notification?.title}")
 
         // 檢查是否有資料內容
         if (remoteMessage.data.isNotEmpty()) {
-            val data = remoteMessage.data
+            val data = remoteMessage.notification
 
-            if (data["title"] != null && data["body"] != null) {
+            if (data?.title != null && data.body != null) {
                 val title: String
                 val body: String
                 val subtitle: String
 
-                body = data["body"]?.replace("\\\\n", "\n") ?: ""
+                title = data.title?.replace("\\\\n", "\n") ?: ""
+                body = data.body?.replace("\\\\n", "\n") ?: ""
 
-                if (data["subtitle"] != null) {
-                    subtitle = data["subtitle"]?.replace("\\\\n", "\n") ?: ""
-                    println("Notification subtitle: ${data["subtitle"]}")
-                    title = "${data["title"]?.replace("\\\\n", "\n")}\n$subtitle"
-                } else {
-                    subtitle = ""
-                    title = data["title"]?.replace("\\\\n", "\n") ?: ""
-                }
-
-                makeNotification(title, subtitle, body)
+                makeNotification(title, "", body)
             }
         }
 
@@ -139,16 +131,16 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-//        val notification = NotificationCompat.Builder(this, channelId)
-//            .setContentTitle(title ?: "新訊息")
-//            .setContentText(content ?: "")
-//            .setSmallIcon(R.drawable.chargingstation_fun)
-//            .setAutoCancel(true)
-//            .setContentIntent(pendingIntent)
-//            .setPriority(NotificationCompat.PRIORITY_HIGH)
-//            .build()
-//
-//        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle(title)
+            .setContentText(content)
+            .setSmallIcon(R.drawable.bell)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .build()
+
+        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
     }
 
     override fun onDestroy() {
