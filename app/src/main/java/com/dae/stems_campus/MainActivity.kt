@@ -1,19 +1,32 @@
 package com.dae.stems_campus
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.compose.setContent
 import androidx.fragment.app.FragmentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -59,9 +72,25 @@ fun AppContent () {
     val pushNotificationViewModel: PushNotificationViewModel = hiltViewModel()
     val authState by viewModel.authState.collectAsState()
 
-    // 啟動時檢查 token
+    val context = LocalContext.current
+    var showPushNotificationSettingDialogFlag by remember { mutableStateOf(false) }
+
+    // 啟動時檢查 token 與通知權限
     LaunchedEffect(Unit) {
         viewModel.checkToken()
+
+        // 沒有開啟通知 → 跳 dialog 導使用者去設定頁
+        val notificationsEnabled = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            NotificationManagerCompat.from(context).areNotificationsEnabled()
+        }
+        if (!notificationsEnabled) {
+            showPushNotificationSettingDialogFlag = true
+        }
     }
 
     // 已登入狀態下才主動同步 FCM token；避免未登入時送 token 觸發 401 / forceLogout flash
@@ -83,6 +112,33 @@ fun AppContent () {
                 launchSingleTop = true
             }
         }
+    }
+
+    if (showPushNotificationSettingDialogFlag) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("需要通知權限") },
+            text = { Text("請開啟通知權限以接收重要訊息") },
+            confirmButton = {
+                TextButton(onClick = {
+                    val intent = Intent().apply {
+                        action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+                        putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                    }
+                    context.startActivity(intent)
+                    showPushNotificationSettingDialogFlag = false
+                }) {
+                    Text("前往設定")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showPushNotificationSettingDialogFlag = false
+                }) {
+                    Text("稍後")
+                }
+            }
+        )
     }
 
     when (authState) {
