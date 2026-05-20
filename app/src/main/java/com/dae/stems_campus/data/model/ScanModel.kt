@@ -25,6 +25,7 @@ class ScanModel {
         val yourHoursBalance: Int? = null,
         val canStart: Boolean? = null,
         val canStartReason: String? = null,
+        val isAcOpenPeriod: Boolean? = null,
         val sessionToken: String? = null,
         val sessionTokenExpiresAt: String? = null
     )

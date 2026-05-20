@@ -1518,7 +1518,8 @@ private fun classroomPowerSupplyByStudentBottomSheetView(aData: ScanModel.ScanDa
                     checked = isAcControl,
                     onCheckedChange = { checked ->
                         isAcControl = checked
-                    }
+                    },
+                    enabled = aData?.isAcOpenPeriod == true
                 )
             }
             Spacer(modifier = Modifier.width(40.dp))
