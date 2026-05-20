@@ -261,10 +261,8 @@ class MqttVIewModel @Inject constructor(application: Application, private val cr
 
     //Refund
     private fun handleRefundTransactionFinished(intent: Intent) {
-        val userNameValue = intent.getStringExtra(MqttHelper.REQUEST_REFUND_TRANSACTION_FINISHED_USERNAME)
-        val deviceCodeValue = intent.getStringExtra(MqttHelper.REQUEST_REFUND_TRANSACTION_FINISHED_DEVICE_CODE)
-
-        if (!userNameValue.equals("") && !deviceCodeValue.equals("")) {
+        val resultValue = intent.getBooleanExtra(MqttHelper.REQUEST_REFUND_TRANSACTION_FINISHED_RESULT,false)
+        if (resultValue) {
             _mqttRefundTransactionFinishSuccessFlag.value = true
             _mqttRefundTransactionFinishSuccessMsg.value = "RefundSuccess"
         }else{
