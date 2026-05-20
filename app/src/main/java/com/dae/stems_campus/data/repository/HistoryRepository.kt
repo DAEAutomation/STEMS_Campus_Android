@@ -57,4 +57,22 @@ open class HistoryRepository @Inject constructor(apiService: ApiService, tokenMa
             ))
         }
     }
+
+    // 退款紀錄明細下載
+    suspend fun getRefundHistoryDownload(aRefundID: Int): Result<HistoryModel.RefundHistoryDownload> {
+        return executeAuthenticatedRequest {
+            apiService.refundHistoryDownload(HistoryModel.RefundHistoryDownloadRequest(
+                refund_id = aRefundID
+            ))
+        }
+    }
+
+    // 儲值紀錄下載明細
+    suspend fun getTopUpHistoryDownload(aTransactionID: Int): Result<HistoryModel.TopUpHistoryDownload> {
+        return executeAuthenticatedRequest {
+            apiService.topUpHistoryDownload(HistoryModel.TopUpHistoryDownloadRequest(
+                transaction_id = aTransactionID
+            ))
+        }
+    }
 }

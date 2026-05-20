@@ -51,6 +51,16 @@ interface ApiService {
 
 
     /**
+     * 推播金鑰
+     */
+    @POST("api/app/device/push-token")
+    suspend fun sendFCMToken(
+        @Body request: TokenModel.PushNotificationTokenRequest
+    ): APIResponse.ApiResponse<Unit>
+
+
+
+    /**
      * 發送驗證碼
      */
     @POST("api/app/auth/send-code")
@@ -244,6 +254,24 @@ interface ApiService {
     suspend fun refundHistory(
         @Body request: HistoryModel.HistoryRequest
     ): APIResponse.ApiResponse<List<HistoryModel.RefundHistory>>
+
+
+    /**
+     * 退款紀錄明細下載
+     */
+    @POST("api/app/refund/receipt")
+    suspend fun refundHistoryDownload(
+        @Body request: HistoryModel.RefundHistoryDownloadRequest
+    ): APIResponse.ApiResponse<HistoryModel.RefundHistoryDownload>
+
+
+    /**
+     * 儲值紀錄下載明細
+     */
+    @POST("api/app/records/topup-receipt")
+    suspend fun topUpHistoryDownload(
+        @Body request: HistoryModel.TopUpHistoryDownloadRequest
+    ): APIResponse.ApiResponse<HistoryModel.TopUpHistoryDownload>
 
 
     /**

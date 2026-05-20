@@ -116,4 +116,28 @@ class HistoryModel {
         val applicantRole: String? = null,
         val applicationDate: String? = null
     )
+
+    data class RefundHistoryDownloadRequest(
+        val refund_id: Int
+    )
+
+    //退款紀錄明細下載
+    data class RefundHistoryDownload(
+        val token: String? = null,
+        val download_url: String? = null,
+        val download_name: String? = null,
+        val expires_in: Double? = null
+    )
+
+    data class TopUpHistoryDownloadRequest(
+        val transaction_id: Int
+    )
+
+    //儲值紀錄下載明細
+    data class TopUpHistoryDownload(
+        val token: String? = null,
+        val download_url: String? = null,
+        val download_name: String? = null,
+        val expires_in: Double? = null
+    )
 }

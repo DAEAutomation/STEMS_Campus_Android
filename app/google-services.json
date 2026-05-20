@@ -1,0 +1,599 @@
+{
+  "project_info": {
+    "project_number": "833697109993",
+    "firebase_url": "https://dae-notification.firebaseio.com",
+    "project_id": "dae-notification",
+    "storage_bucket": "dae-notification.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833697109993:android:a9d15697498bb854a99d78",
+        "android_client_info": {
+          "package_name": "com.dae.android.cloudmetering.tenant"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "833697109993-tsc7u7c1pr5bfia1brghpkar3372o46o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dae.android.cloudmetering.tenant",
+            "certificate_hash": "a394c3db2cd0f9c913fdc31063f708432d5071c6"
+          }
+        },
+        {
+          "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0pYeWJ0IyvgPaNUZiuxoFA1ZKamUjAfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "833697109993-07ot1b4q7tlmb4k9m7be97jo9th2a068.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dae.TenantAppPublic"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833697109993:android:ed421cc7c8a945d6a99d78",
+        "android_client_info": {
+          "package_name": "com.dae.android.evc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0pYeWJ0IyvgPaNUZiuxoFA1ZKamUjAfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "833697109993-07ot1b4q7tlmb4k9m7be97jo9th2a068.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dae.TenantAppPublic"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833697109993:android:bb5000fff3a6524da99d78",
+        "android_client_info": {
+          "package_name": "com.dae.android.lighting.controller"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0pYeWJ0IyvgPaNUZiuxoFA1ZKamUjAfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "833697109993-07ot1b4q7tlmb4k9m7be97jo9th2a068.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dae.TenantAppPublic"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833697109993:android:2a8774e1c5b2040da99d78",
+        "android_client_info": {
+          "package_name": "com.dae.goldfundong"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0pYeWJ0IyvgPaNUZiuxoFA1ZKamUjAfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "833697109993-07ot1b4q7tlmb4k9m7be97jo9th2a068.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dae.TenantAppPublic"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833697109993:android:b42b7dea5729f19ba99d78",
+        "android_client_info": {
+          "package_name": "com.dae.stemscampus"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0pYeWJ0IyvgPaNUZiuxoFA1ZKamUjAfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "833697109993-07ot1b4q7tlmb4k9m7be97jo9th2a068.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dae.TenantAppPublic"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833697109993:android:ca59ea3a0a04bbdaa99d78",
+        "android_client_info": {
+          "package_name": "com.dae.stemsev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0pYeWJ0IyvgPaNUZiuxoFA1ZKamUjAfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "833697109993-07ot1b4q7tlmb4k9m7be97jo9th2a068.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dae.TenantAppPublic"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833697109993:android:0b310b2d846870f2a99d78",
+        "android_client_info": {
+          "package_name": "com.daeinstrument.android.dormitory.tenantapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "833697109993-oiv6gfe5komnd02hke5evm77ovapdkm7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.daeinstrument.android.dormitory.tenantapp",
+            "certificate_hash": "51fd37f34acde8636434b439e7bc5218a4cf7c0a"
+          }
+        },
+        {
+          "client_id": "833697109993-vc8hdjj4g8i8b62trnah0herhk4hq6c1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.daeinstrument.android.dormitory.tenantapp",
+            "certificate_hash": "1284099815044da18a9ef41fee77a23f57f0777f"
+          }
+        },
+        {
+          "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0pYeWJ0IyvgPaNUZiuxoFA1ZKamUjAfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "833697109993-07ot1b4q7tlmb4k9m7be97jo9th2a068.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dae.TenantAppPublic"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833697109993:android:2bb2d140536d0b12a99d78",
+        "android_client_info": {
+          "package_name": "com.daeinstrument.android.electricvehicles"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "833697109993-s0cnkrl17gdv61jg0l41uh9vq142e9cf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.daeinstrument.android.electricvehicles",
+            "certificate_hash": "1284099815044da18a9ef41fee77a23f57f0777f"
+          }
+        },
+        {
+          "client_id": "833697109993-v9ussgb9boh4pj82uek1vkttm1nkbntr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.daeinstrument.android.electricvehicles",
+            "certificate_hash": "f053bab552c64991b1c9267cc91c129a4fdaa3fb"
+          }
+        },
+        {
+          "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0pYeWJ0IyvgPaNUZiuxoFA1ZKamUjAfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "833697109993-07ot1b4q7tlmb4k9m7be97jo9th2a068.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dae.TenantAppPublic"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833697109993:android:00c45c940285bcfea99d78",
+        "android_client_info": {
+          "package_name": "com.daeinstrument.android.tenantplus"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "833697109993-2p7qr3f2hvtcc4o2kdh9k04cl0ja69a7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.daeinstrument.android.tenantplus",
+            "certificate_hash": "f053bab552c64991b1c9267cc91c129a4fdaa3fb"
+          }
+        },
+        {
+          "client_id": "833697109993-77jhd97t7974fe15h6p7nedflce20kn2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.daeinstrument.android.tenantplus",
+            "certificate_hash": "1284099815044da18a9ef41fee77a23f57f0777f"
+          }
+        },
+        {
+          "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0pYeWJ0IyvgPaNUZiuxoFA1ZKamUjAfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "833697109993-07ot1b4q7tlmb4k9m7be97jo9th2a068.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dae.TenantAppPublic"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833697109993:android:48ed4206bda4ff9ea99d78",
+        "android_client_info": {
+          "package_name": "com.daeinstrument.tenantapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "833697109993-8henoahmt4n2a2j8oip7tvkcfqo04lf5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.daeinstrument.tenantapp",
+            "certificate_hash": "a3bab18578b33f8894626de4f9648bf805d513c4"
+          }
+        },
+        {
+          "client_id": "833697109993-8vh5s40rlp92ndk64trbrp7ae0kdn1ii.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.daeinstrument.tenantapp",
+            "certificate_hash": "1284099815044da18a9ef41fee77a23f57f0777f"
+          }
+        },
+        {
+          "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0pYeWJ0IyvgPaNUZiuxoFA1ZKamUjAfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "833697109993-07ot1b4q7tlmb4k9m7be97jo9th2a068.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dae.TenantAppPublic"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833697109993:android:9d21ee62f0e1af20",
+        "android_client_info": {
+          "package_name": "com.daeinstrument.tenantapppublic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "833697109993-7kmjlu6k7tug50o94sve3dkhvcp4urta.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.daeinstrument.tenantapppublic",
+            "certificate_hash": "1284099815044da18a9ef41fee77a23f57f0777f"
+          }
+        },
+        {
+          "client_id": "833697109993-p9236pf049v1l32isk7qrr2s7k7ljgph.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.daeinstrument.tenantapppublic",
+            "certificate_hash": "a3bab18578b33f8894626de4f9648bf805d513c4"
+          }
+        },
+        {
+          "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0pYeWJ0IyvgPaNUZiuxoFA1ZKamUjAfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "833697109993-07ot1b4q7tlmb4k9m7be97jo9th2a068.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dae.TenantAppPublic"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833697109993:android:d6b5d0e43ec38898",
+        "android_client_info": {
+          "package_name": "tw.com.daeinstrument.dae_notification"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "833697109993-vv7tu2a8qm5kdleeb084k4vpq7iq6nt1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "tw.com.daeinstrument.dae_notification",
+            "certificate_hash": "1aba9a94046749cccb4ee350660381831395060d"
+          }
+        },
+        {
+          "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0pYeWJ0IyvgPaNUZiuxoFA1ZKamUjAfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "833697109993-07ot1b4q7tlmb4k9m7be97jo9th2a068.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dae.TenantAppPublic"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833697109993:android:dd17cc3faa0a27a2",
+        "android_client_info": {
+          "package_name": "www.daeinstrument.com.tw.tenantapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "833697109993-0rtne2v65fhfkscsmauu65k35lchb390.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "www.daeinstrument.com.tw.tenantapp",
+            "certificate_hash": "1537e168f9833501d842ef7203c133eb355bf6ce"
+          }
+        },
+        {
+          "client_id": "833697109993-4ose8u5lghoklopkcoqj0kbdhv51adml.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "www.daeinstrument.com.tw.tenantapp",
+            "certificate_hash": "a3bab18578b33f8894626de4f9648bf805d513c4"
+          }
+        },
+        {
+          "client_id": "833697109993-hb3o16qeik9oi6n4l5sljsnfijh3239f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "www.daeinstrument.com.tw.tenantapp",
+            "certificate_hash": "1284099815044da18a9ef41fee77a23f57f0777f"
+          }
+        },
+        {
+          "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0pYeWJ0IyvgPaNUZiuxoFA1ZKamUjAfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "833697109993-3bj5g052lfgasja7u5rpmdugu2uj1f92.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "833697109993-07ot1b4q7tlmb4k9m7be97jo9th2a068.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dae.TenantAppPublic"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

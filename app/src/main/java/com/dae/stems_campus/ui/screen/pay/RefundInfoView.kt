@@ -103,11 +103,11 @@ fun refundInfoScreen(navController: NavHostController, profileViewModel: Profile
         },
         onConfirmCashRefund = {
             // sheet 按確認 → 真的發退款申請
-            refundViewModel.refundRequestAction(1)
+            refundViewModel.refundRequestAction(refundType)
         },
         onRefundEasyCardHandled = {
-            refundViewModel.refundRequestAction(2)
             refundType = 2
+            refundViewModel.fetchRefundStatusAction()
         },
     )
 
@@ -194,10 +194,8 @@ fun refundInfoScreen(navController: NavHostController, profileViewModel: Profile
 
         }else {
             // 查到沒有任何進行中的退款（refundType 為 null 或其他值）→ 跳 bottom sheet 讓使用者確認
-            if (refundType == 1) {
-                refundViewModel.resetFetchRefundStatusSuccessFailDialogFlag(false)
-                showingRefundBottomSheet = true
-            }
+            refundViewModel.resetFetchRefundStatusSuccessFailDialogFlag(false)
+            showingRefundBottomSheet = true
         }
     }
 
@@ -205,10 +203,8 @@ fun refundInfoScreen(navController: NavHostController, profileViewModel: Profile
 
         // 後端「沒進行中退款」會回 success=true / data=null，被 BaseRepository 當 Error
         // 走到這條分支 → 視為沒進行中，使用者按現金時跳 bottom sheet
-        if (refundType == 1) {
-            refundViewModel.resetShowFetchRefundStatusFailDialogFlag(false)
-            showingRefundBottomSheet = true
-        }
+        refundViewModel.resetShowFetchRefundStatusFailDialogFlag(false)
+        showingRefundBottomSheet = true
     }
 }
 
@@ -226,6 +222,7 @@ private fun refundInfoContent(
     ) {
 
     val refundSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var refundType by remember { mutableStateOf(0) }
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF4F4F4))) {
         Scaffold(
@@ -306,6 +303,7 @@ private fun refundInfoContent(
                             Surface (modifier = Modifier
                                 .weight(1f)
                                 .clickable {
+                                    refundType = 1
                                     onRefundCashClick()
                                 },
 
@@ -360,6 +358,7 @@ private fun refundInfoContent(
                             Surface (modifier = Modifier
                                 .weight(1f)
                                 .clickable {
+                                    refundType = 2
                                     onRefundEasyCardHandled()
                                 },
 
@@ -414,7 +413,7 @@ private fun refundInfoContent(
                                 sheetState = refundSheetState,
                                 containerColor = Color.White
                             ) {
-                                refundBottomSheetView(profileInfo, onRefundHandled = {
+                                refundBottomSheetView(profileInfo, refundType = refundType, onRefundHandled = {
                                     onShowingRefundBottomSheetChange(false)
                                     onConfirmCashRefund()
                                 }, onCancelHandled = {
@@ -438,7 +437,7 @@ private fun refundInfoContent(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun refundBottomSheetView(aProfileData: ProfileModel.ProfileData?, onRefundHandled: () -> Unit, onCancelHandled: () -> Unit) {
+private fun refundBottomSheetView(aProfileData: ProfileModel.ProfileData?, refundType: Int?, onRefundHandled: () -> Unit, onCancelHandled: () -> Unit) {
     Column {
         Row (verticalAlignment = Alignment.CenterVertically){
             Surface (modifier = Modifier.weight(1f), color = Color.Unspecified){
@@ -448,7 +447,11 @@ private fun refundBottomSheetView(aProfileData: ProfileModel.ProfileData?, onRef
                         Image(painter = painterResource(id = R.drawable.currencycircledollar), contentDescription = "")
                     }
                     Spacer(modifier = Modifier.height(25.dp))
-                    Text("即將申請全額退款", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                    if (refundType == 1) {
+                        Text("即將申請[現金]全額退款", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                    }else if (refundType == 2) {
+                        Text("即將申請全額退款至[悠遊卡]", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                    }
                     Spacer(modifier = Modifier.height(3.dp))
                     Text("*退款期間不得儲值及用電", color = Color(0xFFE54343), style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(25.dp))
@@ -612,7 +615,7 @@ private fun refundInfoPreview() {
 @Composable
 private fun BottomSheetViewPreview() {
     STEMS_CampusTheme {
-        refundBottomSheetView(null, {}, {})
+        refundBottomSheetView(null,1, {}, {})
     }
 
 }

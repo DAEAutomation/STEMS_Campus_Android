@@ -1,5 +1,7 @@
 package com.dae.stems_campus.ui.screen.history
 
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -25,6 +28,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,28 +38,72 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.HistoryModel
+import com.dae.stems_campus.ui.components.LoadingView
+import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.utils.calculateDuration
 import com.dae.stems_campus.utils.toAmountString
 import com.dae.stems_campus.utils.toLocalDateTimeText
+import com.dae.stems_campus.viewmodel.HistoryViewModel
+import kotlinx.coroutines.delay
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun walletTopUpDetailScreen(navController: NavHostController, walletHistory: HistoryModel.WalletHistory?, onShowTabBarChange: (Boolean) -> Unit) {
+fun walletTopUpDetailScreen(navController: NavHostController, walletHistory: HistoryModel.WalletHistory?, historyViewModel: HistoryViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
+
+    val context = LocalContext.current
+
+    val showLoadingView by historyViewModel.showLoadingView.collectAsState()
+    val topUpHistoryDownload by historyViewModel.topUpHistoryDownload.collectAsState()
+    val resTopUpHistoryDownloadSuccessFlag by historyViewModel.resTopUpHistoryDownloadSuccessFlag.collectAsState()
+    val showTopUpHistoryDownloadFailDialogFlag by historyViewModel.showTopUpHistoryDownloadFailDialogFlag.collectAsState()
+    val showTopUpHistoryDownloadFailMsg by historyViewModel.showTopUpHistoryDownloadFailMsg.collectAsState()
 
     walletTopUpDetailContent(
         navController = navController,
         onShowTabBarChange = {},
-        walletHistory = walletHistory
+        walletHistory = walletHistory,
+        onDownloadClick = { transactionId ->
+            historyViewModel.getTopUpHistoryDownloadAction(transactionId)
+        }
     )
+
+    if (showLoadingView) {
+        LoadingView() {}
+    }
+
+    if (resTopUpHistoryDownloadSuccessFlag) {
+        LaunchedEffect(Unit) {
+            topUpHistoryDownload?.download_url?.takeIf { it.isNotEmpty() }?.let { url ->
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(intent)
+            }
+            historyViewModel.resetResTopUpHistoryDownloadSuccessFlag(false)
+        }
+    }
+
+    if (showTopUpHistoryDownloadFailDialogFlag) {
+        textTNoButtonAlert(
+            onDismissRequest = {},
+            dialogTitle = parseDialogMsg(showTopUpHistoryDownloadFailMsg ?: "")
+        )
+        LaunchedEffect(Unit) {
+            delay(1500)
+            historyViewModel.resetShowTopUpHistoryDownloadFailDialogFlag(false)
+        }
+    }
 }
 
 
@@ -62,7 +112,8 @@ fun walletTopUpDetailScreen(navController: NavHostController, walletHistory: His
 private fun walletTopUpDetailContent(
     navController: NavHostController,
     onShowTabBarChange: (Boolean) -> Unit,
-    walletHistory: HistoryModel.WalletHistory?) {
+    walletHistory: HistoryModel.WalletHistory?,
+    onDownloadClick: (Int) -> Unit) {
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF4F4F4))) {
         Scaffold(
@@ -214,6 +265,29 @@ private fun walletTopUpDetailContent(
                             }
                             Spacer(modifier = Modifier.width(20.dp))
                         }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Spacer(modifier = Modifier.width(30.dp))
+                            Surface(
+                                modifier = Modifier
+                                    .weight(0.13f)
+                                    .height(45.dp)
+                                    .align(Alignment.CenterVertically)
+                                    .clickable {
+                                        onDownloadClick(walletHistory?.id ?: 0)
+                                    },
+                                shape = RoundedCornerShape(2.dp),
+                                color = Color(0xFF2D859D)
+                            ) {
+                                Text(
+                                    text = stringResource(id = R.string.download_top_up_receipt),
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.wrapContentHeight(),
+                                    color = Color.White
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(30.dp))
+                        }
                     }
                 }
             }
@@ -282,5 +356,5 @@ private fun walletTopUpDetailPreview() {
 
 // 創建一個模擬的 NavController
     val navController = TestNavHostController(LocalContext.current)
-    walletTopUpDetailContent (navController,{},null)
+    walletTopUpDetailContent (navController,{},null,{})
 }

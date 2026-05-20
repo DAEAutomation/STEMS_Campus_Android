@@ -94,12 +94,22 @@ fun classroomDetailScreen(navController: NavHostController, selectDeviceCode: St
     val showControlAcFailMsg by homeInfoViewModel.showControlAcFailMsg.collectAsState()
     val controlAcCommand by homeInfoViewModel.controlAcCommand.collectAsState()
 
-    // 進入畫面時隱藏
+    var showingStopPowerInfoBottomSheet by remember { mutableStateOf(false) }
+    var showingStopPowerInfoByStudentBottomSheet by remember { mutableStateOf(false) }
+    val isAnyInfoSheetOpen = showingStopPowerInfoBottomSheet || showingStopPowerInfoByStudentBottomSheet
+
+    // 進入畫面時隱藏 tab bar
     LaunchedEffect(Unit) {
         onShowTabBarChange(false)
-        while (true) {
-            homeInfoViewModel.getUsingDeviceDetailAction(selectDeviceCode, uuid)
-            delay(30_000L)
+    }
+
+    // 30 秒輪詢使用中裝置；停止供電完成資訊 sheet（staff 或 student）開啟時暫停，關閉後恢復
+    LaunchedEffect(isAnyInfoSheetOpen) {
+        if (!isAnyInfoSheetOpen) {
+            while (true) {
+                homeInfoViewModel.getUsingDeviceDetailAction(selectDeviceCode, uuid)
+                delay(30_000L)
+            }
         }
     }
 
@@ -115,6 +125,10 @@ fun classroomDetailScreen(navController: NavHostController, selectDeviceCode: St
         resStopPowerSuccessFlag = resStopPowerSuccessFlag,
         onResStopPowerSuccessDismissed = { homeInfoViewModel.resetStopPowerSuccessFlag(false)},
         aStopSessionDetail = stopPowerData,
+        showingStopPowerInfoBottomSheet = showingStopPowerInfoBottomSheet,
+        onShowingStopPowerInfoBottomSheetChange = { showingStopPowerInfoBottomSheet = it },
+        showingStopPowerInfoByStudentBottomSheet = showingStopPowerInfoByStudentBottomSheet,
+        onShowingStopPowerInfoByStudentBottomSheetChange = { showingStopPowerInfoByStudentBottomSheet = it },
         onShowTabBarChange = onShowTabBarChange,
         onControlAcHandled = { value -> homeInfoViewModel.controlAcAction(uuid,firstSession?.control?.controlToken ?: "",value)}
     )
@@ -197,12 +211,14 @@ private fun classroomDetailContent(navController: NavHostController,
                                    resStopPowerSuccessFlag: Boolean = false,
                                    onResStopPowerSuccessDismissed: () -> Unit = {},
                                    aStopSessionDetail: ScanModel.StopPowerData?,
+                                   showingStopPowerInfoBottomSheet: Boolean = false,
+                                   onShowingStopPowerInfoBottomSheetChange: (Boolean) -> Unit = {},
+                                   showingStopPowerInfoByStudentBottomSheet: Boolean = false,
+                                   onShowingStopPowerInfoByStudentBottomSheetChange: (Boolean) -> Unit = {},
                                    onShowTabBarChange: (Boolean) -> Unit,
                                    onControlAcHandled:(String) -> Unit) {
 
     var showingStopPowerBottomSheet by remember { mutableStateOf(false) }
-    var showingStopPowerInfoBottomSheet by remember { mutableStateOf(false) }
-    var showingStopPowerInfoByStudentBottomSheet by remember { mutableStateOf(false) }
 
     val stopPowerSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val stopPowerInfoSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -263,13 +279,13 @@ private fun classroomDetailContent(navController: NavHostController,
                             showingStopPowerBottomSheet = false
                             ModalBottomSheet(
                                 onDismissRequest = {
-                                    showingStopPowerInfoBottomSheet = false
+                                    onShowingStopPowerInfoBottomSheetChange(false)
                                 },
                                 sheetState = stopPowerInfoSheetState,
                                 containerColor = Color.White
                             ) {
                                 stopPowerInfoBottomSheetView(aStopSessionDetail,{
-                                    showingStopPowerInfoBottomSheet = false
+                                    onShowingStopPowerInfoBottomSheetChange(false)
                                     navController.navigateUp()
                                 })
                             }
@@ -280,13 +296,13 @@ private fun classroomDetailContent(navController: NavHostController,
                             showingStopPowerBottomSheet = false
                             ModalBottomSheet(
                                 onDismissRequest = {
-                                    showingStopPowerInfoByStudentBottomSheet = false
+                                    onShowingStopPowerInfoByStudentBottomSheetChange(false)
                                 },
                                 sheetState = stopPowerInfoByStudentSheetState,
                                 containerColor = Color.White
                             ) {
                                 stopPowerInfoByStudentBottomSheetView(aBillingDetail,aStopSessionDetail,{
-                                    showingStopPowerInfoByStudentBottomSheet = false
+                                    onShowingStopPowerInfoByStudentBottomSheetChange(false)
                                     navController.navigateUp()
                                 })
                             }
@@ -294,9 +310,9 @@ private fun classroomDetailContent(navController: NavHostController,
 
                         if (resStopPowerSuccessFlag) {
                             if (aRole.equals("staff")) {
-                                showingStopPowerInfoBottomSheet = true
+                                onShowingStopPowerInfoBottomSheetChange(true)
                             }else if (aRole.equals("student")){
-                                showingStopPowerInfoByStudentBottomSheet = true
+                                onShowingStopPowerInfoByStudentBottomSheetChange(true)
                             }
 
                             onResStopPowerSuccessDismissed()
