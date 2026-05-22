@@ -37,6 +37,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.pullToRefresh
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -59,7 +62,9 @@ import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -309,6 +314,14 @@ private fun homeContent(mainNavController: NavController,
                         onNavigateToSetting: () -> Unit = {},
                         onNavigateToWallet: () -> Unit = {}) {
 
+    var isRefreshing by remember { mutableStateOf(false) }
+    // VM 的 showLoadingView 在 API call 結束時會切回 false → 同步把下拉刷新的 indicator 收掉
+    LaunchedEffect(showLoadingView) {
+        if (!showLoadingView && isRefreshing) {
+            isRefreshing = false
+        }
+    }
+
     val classroomTeacherSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val dormitoryTeacherSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val classroomStudentSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -407,19 +420,52 @@ private fun homeContent(mainNavController: NavController,
             }
             Spacer(modifier = Modifier.height(30.dp))
 
-            Surface (modifier = Modifier
-                .weight(0.8f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),  color = Color.Unspecified){
-                Column {
+            // 錢包 / 時數 / 餘額警告 - 固定區，不參與下拉位移
+            if (profileInfo?.role.equals("staff")) {
+                walletHoursHeaderByTeacher(aData = profileInfo, onNavigateToWalletClick = { onNavigateToWallet() })
+            } else if (profileInfo?.role.equals("student")) {
+                walletHoursHeaderByStudent(aData = profileInfo, onNavigateToWalletClick = { onNavigateToWallet() })
+            }
+
+            val pullState = rememberPullToRefreshState()
+            val density = LocalDensity.current
+            Box(
+                modifier = Modifier
+                    .weight(0.8f)
+                    .fillMaxWidth()
+                    .pullToRefresh(
+                        isRefreshing = isRefreshing,
+                        state = pullState,
+                        enabled = profileInfo?.activeSession?.hasActive ?: false, // 未有裝置時不下拉
+                        onRefresh = {
+                            isRefreshing = true
+                            onRefreshProfile()
+                        }
+                    )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .graphicsLayer {
+                            // 下拉時跟著手指下移；下拉到 threshold 時整塊位移 80dp
+                            translationY = pullState.distanceFraction * with(density) { 80.dp.toPx() }
+                        }
+                ) {
                     if (profileInfo?.role.equals("staff")) {
                         infoViewByTeacher(profileInfo?.activeSession?.hasActive ?: false, profileInfo, onScanClick = { cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA) }, onGetUsingDeviceDetailByClassroomHandled = { value -> navHostController.navigate("ClassroomDetail/${value}")}, onGetUsingDeviceDetailByDormitoryHandled = { value -> navHostController.navigate("DormitoryDetail/${value}")}, onNavigateToWalletClick = { onNavigateToWallet()})
                     }else if (profileInfo?.role.equals("student")){
                         infoViewByStudent(profileInfo?.activeSession?.hasActive ?: false, profileInfo, onScanClick = { cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA) }, onGetUsingDeviceDetailByClassroomHandled = { value -> navHostController.navigate("ClassroomDetail/${value}")}, onGetUsingDeviceDetailByDormitoryHandled = { value -> navHostController.navigate("DormitoryDetail/${value}")}, onNavigateToWalletClick = { onNavigateToWallet()})
                     }
                 }
+                PullToRefreshDefaults.Indicator(
+                    state = pullState,
+                    isRefreshing = isRefreshing,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
             }
-            if (showLoadingView) {
+            // 下拉刷新時不再額外蓋全螢幕 LoadingView，indicator 自己會顯示
+            if (showLoadingView && !isRefreshing) {
                 LoadingView() {}
             }
             if (showGetProfileInfoFailDialogFlag) {
@@ -661,14 +707,10 @@ private fun homeContent(mainNavController: NavController,
 }
 
 @Composable
-private fun infoViewByTeacher(
-    hasDevice: Boolean,
+private fun walletHoursHeaderByTeacher(
     aData: ProfileModel.ProfileData?,
-    onScanClick: () -> Unit,
-    onGetUsingDeviceDetailByClassroomHandled: (String) -> Unit,
-    onGetUsingDeviceDetailByDormitoryHandled: (String) -> Unit,
-    onNavigateToWalletClick: () -> Unit = {}) {
-
+    onNavigateToWalletClick: () -> Unit = {}
+) {
     Row {
         Spacer(modifier = Modifier.width(25.dp))
         Surface(
@@ -735,6 +777,17 @@ private fun infoViewByTeacher(
         }
     }
     Spacer(modifier = Modifier.height(20.dp))
+}
+
+@Composable
+private fun infoViewByTeacher(
+    hasDevice: Boolean,
+    aData: ProfileModel.ProfileData?,
+    onScanClick: () -> Unit,
+    onGetUsingDeviceDetailByClassroomHandled: (String) -> Unit,
+    onGetUsingDeviceDetailByDormitoryHandled: (String) -> Unit,
+    onNavigateToWalletClick: () -> Unit = {}) {
+
     if (hasDevice) {
         Column {
             aData?.activeSession?.sessions?.forEach { item ->
@@ -813,13 +866,10 @@ private fun infoViewByTeacher(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun infoViewByStudent(
-    hasDevice: Boolean,
+private fun walletHoursHeaderByStudent(
     aData: ProfileModel.ProfileData?,
-    onScanClick: () -> Unit,
-    onGetUsingDeviceDetailByClassroomHandled: (String) -> Unit,
-    onGetUsingDeviceDetailByDormitoryHandled: (String) -> Unit,
-    onNavigateToWalletClick: () -> Unit = {}) {
+    onNavigateToWalletClick: () -> Unit = {}
+) {
     Row {
         Spacer(modifier = Modifier.width(25.dp))
         Surface(
@@ -863,9 +913,19 @@ private fun infoViewByStudent(
             }
         }
     }
-
-
     Spacer(modifier = Modifier.height(20.dp))
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun infoViewByStudent(
+    hasDevice: Boolean,
+    aData: ProfileModel.ProfileData?,
+    onScanClick: () -> Unit,
+    onGetUsingDeviceDetailByClassroomHandled: (String) -> Unit,
+    onGetUsingDeviceDetailByDormitoryHandled: (String) -> Unit,
+    onNavigateToWalletClick: () -> Unit = {}) {
+
     if (hasDevice) {
         Column {
             aData?.activeSession?.sessions?.forEach { item ->
