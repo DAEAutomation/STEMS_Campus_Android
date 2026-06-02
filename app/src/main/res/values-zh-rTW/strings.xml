@@ -110,6 +110,7 @@
     <string name="balance_may_vary_with_usage">隨著持續用電而有所差異</string>
     <string name="report_type">報表類型</string>
     <string name="wallet_top_up_history">錢包儲值紀錄</string>
+    <string name="no_records_in_range">區間內尚無紀錄</string>
     <string name="applicant">申請人</string>
     <string name="applicant_account">申請人帳號</string>
     <string name="download_top_up_receipt">下載儲值電子收據</string>
