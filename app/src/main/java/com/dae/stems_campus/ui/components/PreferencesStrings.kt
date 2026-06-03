@@ -17,6 +17,9 @@ class PreferencesStrings {
         val BIOMETRIC_ENABLED = booleanPreferencesKey("C10")
         val DEPOSIT_MAC_ADDRESS = stringPreferencesKey("C11")
         val REFUND_ID = intPreferencesKey("C12")
+        val SEARCH_SELECT_TYPE = stringPreferencesKey("C13")
+        val SEARCH_SELECT_START_DATE = stringPreferencesKey("C14")
+        val SEARCH_SELECT_END_DATE = stringPreferencesKey("C15")
 
 
 

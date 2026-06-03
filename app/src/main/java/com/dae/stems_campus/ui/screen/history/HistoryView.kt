@@ -32,6 +32,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -43,6 +44,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -79,6 +83,22 @@ fun historyScreen(mainNavController: NavController, historyViewModel: HistoryVie
     val currentRoute = backStackEntry?.destination?.route
     LaunchedEffect(currentRoute) {
         onShowTabBarChange(currentRoute == null || currentRoute == "History")
+    }
+
+    // MainTabView 切 tab 用了 restoreState=true，composable 不會真的 dispose、onDispose 抓不到
+    // 改抓 NavBackStackEntry 的 lifecycle ON_STOP：tab 被切走時一定會走到 STOPPED
+    // 子畫面 nav（WalletHistory 等）走的是 inner NavHost，不會把這個 entry 推到 STOPPED
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) {
+                historyViewModel.clearSearchHistoryCondition()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     NavHost(navController = historyNavController, startDestination = "History") {
@@ -167,7 +187,12 @@ private fun historyMainLoad(mainNavController: NavController, navController: Nav
     val showGetProfileInfoFailDialogFlag by profileViewModel.showGetProfileInfoFailDialogFlag.collectAsState()
     val showGetProfileInfoFailMsg by profileViewModel.showGetProfileInfoFailMsg.collectAsState()
 
+    val searchSelectType by historyViewModel.searchSelectType.collectAsState()
+    val searchSelectStartDate by historyViewModel.searchSelectStartDate.collectAsState()
+    val searchSelectEndDate by historyViewModel.searchSelectEndDate.collectAsState()
+
     LaunchedEffect(Unit) {
+        // searchSelectType/StartDate/EndDate 已在 VM 用 stateIn 持續同步 DataStore，這裡不用再 load
         profileViewModel.getProfileInfoAction()
     }
 
@@ -175,27 +200,35 @@ private fun historyMainLoad(mainNavController: NavController, navController: Nav
         mainNavController = mainNavController,
         navController = navController,
         profileData = profileInfo,
+        preferencesSearchType = searchSelectType,
+        preferencesSearchStartDate = searchSelectStartDate,
+        preferencesSearchEndDate = searchSelectEndDate,
         queryHistoryHandle = { value, dateValue ->
             when (value) {
                 "WalletTopUpHistory" -> {
                     selectQueryType = value
                     historyViewModel.getWalletHistoryAction(dateValue.first, dateValue.second)
+                    historyViewModel.saveSearchHistoryConditionToDataStore(value, dateValue.first, dateValue.second)
                 }
                 "HourAllocationHistory" -> {
                     selectQueryType = value
                     historyViewModel.getHoursHistoryAction(dateValue.first, dateValue.second)
+                    historyViewModel.saveSearchHistoryConditionToDataStore(value, dateValue.first, dateValue.second)
                 }
                 "ClassroomUsageHistory" -> {
                     selectQueryType = value
                     historyViewModel.getClassroomHistoryAction(dateValue.first, dateValue.second)
+                    historyViewModel.saveSearchHistoryConditionToDataStore(value, dateValue.first, dateValue.second)
                 }
                 "DormitoryUsageHistory" -> {
                     selectQueryType = value
                     historyViewModel.getDormitoryHistoryAction(dateValue.first, dateValue.second)
+                    historyViewModel.saveSearchHistoryConditionToDataStore(value, dateValue.first, dateValue.second)
                 }
                 "RefundHistory" -> {
                     selectQueryType = value
                     historyViewModel.getRefundHistoryAction(dateValue.first, dateValue.second)
+                    historyViewModel.saveSearchHistoryConditionToDataStore(value, dateValue.first, dateValue.second)
                 }
             }
         },
@@ -271,21 +304,28 @@ private fun historyContent(
     mainNavController: NavController,
     navController: NavHostController,
     profileData: ProfileModel.ProfileData?,
+    preferencesSearchType: String?,
+    preferencesSearchStartDate: String?,
+    preferencesSearchEndDate: String?,
     queryHistoryHandle:(String,Pair<String, String>) -> Unit,
     lastSevenDaysClick:() -> Pair<String, String>,
     lastMonthClick:() -> Pair<String, String>,
     lastThreeMonthsClick:() -> Pair<String, String>){
 
-    val beginDateTitle = stringResource(id = R.string.select_start_date)
-    val endDateTitle = stringResource(id = R.string.select_end_date)
+    // 抽到 composable scope，下面 .clickable lambda 才能用（lambda 內不能直接呼叫 @Composable）
+    val startDateHint = stringResource(id = R.string.select_start_date)
+    val endDateHint = stringResource(id = R.string.select_end_date)
+    val beginDateTitle = if (preferencesSearchStartDate?.isEmpty() ?: true) startDateHint else preferencesSearchStartDate
+    val endDateTitle = if (preferencesSearchEndDate?.isEmpty() ?: true) endDateHint else preferencesSearchEndDate
     var beginDate by remember { mutableStateOf(beginDateTitle) }
     var endDate by remember { mutableStateOf(endDateTitle) }
     var selectedRange by remember { mutableStateOf<String?>(null) }
 
     var showHistoryTypeBottomSheet by remember { mutableStateOf(false) }
     val historyTypeSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var selectQueryType by remember { mutableStateOf("WalletTopUpHistory") }
-    var selectQueryTitle by remember { mutableStateOf("") }
+    val selectQueryTitle = if (preferencesSearchType?.isEmpty() ?: true) "WalletTopUpHistory" else preferencesSearchType
+    var selectQueryType by remember { mutableStateOf(selectQueryTitle) }
+
 
     var showBeginSelectDate by remember { mutableStateOf(false) }
     var showEndSelectDate by remember { mutableStateOf(false) }
@@ -531,7 +571,7 @@ private fun historyContent(
                                 .height(45.dp)
                                 .align(Alignment.CenterVertically)
                                 .clickable {
-                                    if (beginDate == beginDateTitle || endDate == endDateTitle) {
+                                    if (beginDate == startDateHint || endDate == endDateHint) {
                                         showNotSelectDate = true
                                     } else {
                                         showNotSelectDate = false
@@ -725,7 +765,7 @@ private fun historyPreview() {
 
 // 創建一個模擬的 NavController
     val navController = TestNavHostController(LocalContext.current)
-    historyContent (navController,navController,null,{ a,b -> },{ Pair("","")},{ Pair("","")},{ Pair("","")})
+    historyContent (navController,navController,null,"","", "",{ a,b -> },{ Pair("","")},{ Pair("","")},{ Pair("","")})
 }
 
 @Preview(showBackground = true)
