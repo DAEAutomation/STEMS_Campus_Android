@@ -3,12 +3,14 @@ package com.dae.stems_campus.ui.screen.history
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -106,8 +108,18 @@ private fun walletTopUpHistoryContent(
                             .background(color = Color(0xFFABABAB)))
 
                     }
-                    Column (modifier = Modifier.verticalScroll(rememberScrollState())){
+                    Column (modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())){
                         Spacer(modifier = Modifier.height(30.dp))
+
+                        if (grouped.isEmpty()) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                                Text(
+                                    stringResource(R.string.no_records_in_range),
+                                    color = Color(0xFF303236),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        }
 
                         grouped.forEach { (ym, items) ->
                             Row {

@@ -11,7 +11,10 @@ import com.dae.stems_campus.data.repository.ProfileRepository
 import com.dae.stems_campus.data.repository.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -32,6 +35,16 @@ class HistoryViewModel @Inject constructor(private var historyRepository: Histor
 
     private val _showHistoryFailMsg = MutableStateFlow<String?>("")
     val showHistoryFailMsg: StateFlow<String?> = _showHistoryFailMsg
+
+    // 暫存查詢條件：直接把 DataStore Flow 升成 StateFlow，VM 一建立就持續同步，UI 不用再呼叫 load
+    val searchSelectType: StateFlow<String> = userPreferences.getSearchSelectTypeValue
+        .stateIn(viewModelScope, SharingStarted.Eagerly, "")
+
+    val searchSelectStartDate: StateFlow<String> = userPreferences.getSearchSelectStartDateValue
+        .stateIn(viewModelScope, SharingStarted.Eagerly, "")
+
+    val searchSelectEndDate: StateFlow<String> = userPreferences.getSearchSelectEndDateValue
+        .stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
     private val _walletHistoryList = MutableStateFlow<List<HistoryModel.WalletHistory>>(emptyList())
     val walletHistoryList: StateFlow<List<HistoryModel.WalletHistory>> = _walletHistoryList
@@ -77,7 +90,6 @@ class HistoryViewModel @Inject constructor(private var historyRepository: Histor
 
     private val _showTopUpHistoryDownloadFailMsg = MutableStateFlow<String?>("")
     val showTopUpHistoryDownloadFailMsg: StateFlow<String?> = _showTopUpHistoryDownloadFailMsg
-
 
     // 查詢 錢包儲值紀錄
     fun getWalletHistoryAction(startDate: String, endDate: String) {
@@ -292,6 +304,23 @@ class HistoryViewModel @Inject constructor(private var historyRepository: Histor
         println("今天：$todayStr")
         println("3個月前：$threeMonthAgoStr")
         return Pair(threeMonthAgoStr,todayStr)
+    }
+
+
+    // 儲存 紀錄查詢暫存 報表類型 開始日期 結束日期
+    fun saveSearchHistoryConditionToDataStore(type: String, startDate: String, endDate: String) {
+        viewModelScope.launch {
+            userPreferences.setSearchSelectTypeValue(type)
+            userPreferences.setSearchSelectStartDateValue(startDate)
+            userPreferences.setSearchSelectEndDateValue(endDate)
+        }
+    }
+
+    // 離開 History tab 時清除暫存（type / startDate / endDate 全部移除）
+    fun clearSearchHistoryCondition() {
+        viewModelScope.launch {
+            userPreferences.clearSearchSelectConditionPreferences()
+        }
     }
 
 

@@ -134,6 +134,51 @@ open class UserPreferencesRepository @Inject constructor (@ApplicationContext pr
         }
     }
 
+    // 讀取 Search Select Type
+    var getSearchSelectTypeValue: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesStrings.SEARCH_SELECT_TYPE] ?: ""
+    }
+
+    // 儲存 Search Select Type
+    suspend fun setSearchSelectTypeValue(value: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesStrings.SEARCH_SELECT_TYPE] = value
+        }
+    }
+
+    // 讀取 Search Select Start Date
+    var getSearchSelectStartDateValue: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesStrings.SEARCH_SELECT_START_DATE] ?: ""
+    }
+
+    // 儲存 Search Select Start Date
+    suspend fun setSearchSelectStartDateValue(value: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesStrings.SEARCH_SELECT_START_DATE] = value
+        }
+    }
+
+    // 讀取 Search Select End Date
+    var getSearchSelectEndDateValue: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesStrings.SEARCH_SELECT_END_DATE] ?: ""
+    }
+
+    // 儲存 Search Select End Date
+    suspend fun setSearchSelectEndDateValue(value: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesStrings.SEARCH_SELECT_END_DATE] = value
+        }
+    }
+
+    // 離開紀錄查詢 清除暫存
+    suspend fun clearSearchSelectConditionPreferences() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(PreferencesStrings.SEARCH_SELECT_TYPE)
+            preferences.remove(PreferencesStrings.SEARCH_SELECT_START_DATE)
+            preferences.remove(PreferencesStrings.SEARCH_SELECT_END_DATE)
+        }
+    }
+
     // 讀取 Language
 //    val getLanguageValue: Flow<String> = context.dataStore.data.map { preferences ->
 //        preferences[PreferencesStrings.LANGUAGE_VALUE] ?: "zh"
