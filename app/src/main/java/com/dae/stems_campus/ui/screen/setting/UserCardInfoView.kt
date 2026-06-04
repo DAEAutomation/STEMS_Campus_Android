@@ -1,5 +1,9 @@
 package com.dae.stems_campus.ui.screen.setting
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.nfc.NfcAdapter
 import android.print.PrinterInfo
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -37,6 +41,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -446,6 +451,21 @@ private fun inputCardIDBottomSheetView(
     inputFailMsg: String,
     onInputFailDismissed: () -> Unit,
 ) {
+    var nfcReading by remember { mutableStateOf(false) }
+    var nfcUnavailable by remember { mutableStateOf(false) }
+
+    rememberNfcReader(
+        enabled = nfcReading,
+        onUidRead = { hex ->
+            onUidChange(hex)
+            nfcReading = false
+        },
+        onUnavailable = {
+            nfcReading = false
+            nfcUnavailable = true
+        },
+    )
+
     Column {
         Spacer(modifier = Modifier.height(40.dp))
         Row {
@@ -501,6 +521,23 @@ private fun inputCardIDBottomSheetView(
             }
         }
         Spacer(modifier = Modifier.height(35.dp))
+
+        Row {
+            Spacer(modifier = Modifier.width(20.dp))
+            Text(
+                text = stringResource(id = R.string.nfc_read_tag_uid),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.wrapContentHeight().clickable {
+                    nfcReading = true
+                },
+                color = Color.Black,
+                style = TextStyle(textDecoration = TextDecoration.Underline)
+            )
+            Spacer(Modifier.weight(1f))
+            Text("", color = Color(0xFFE54343))
+            Spacer(modifier = Modifier.width(20.dp))
+        }
+        Spacer(modifier = Modifier.height(20.dp))
         Row {
             Spacer(modifier = Modifier.width(30.dp))
             Surface(
@@ -551,6 +588,23 @@ private fun inputCardIDBottomSheetView(
             Spacer(modifier = Modifier.width(50.dp))
         }
         Spacer(modifier = Modifier.height(40.dp))
+    }
+
+    // 等待感應卡片：點 LoadingView 外或返回鍵會關掉並 disable ReaderMode
+    if (nfcReading) {
+        LoadingView(title = stringResource(id = R.string.nfc_place_card_on_back)) {
+            nfcReading = false
+        }
+    }
+    if (nfcUnavailable) {
+        textTNoButtonAlert(
+            onDismissRequest = { nfcUnavailable = false },
+            dialogTitle = stringResource(id = R.string.nfc_unavailable)
+        )
+        LaunchedEffect(Unit) {
+            delay(1500)
+            nfcUnavailable = false
+        }
     }
 }
 
@@ -653,6 +707,59 @@ private fun parseDialogMsg(aMsg: String): String {
         "PleaseReLogin" -> stringResource(id = R.string.please_re_login)
         else -> aMsg
     }
+}
+
+/**
+ * NFC ReaderMode 包裝：enabled=true 時 enable，false 時 disable，離開畫面自動 disable。
+ * 偵測到卡片 → 取 tag.id 前 4 bytes 轉 8 碼 hex（大寫）回呼。
+ * 裝置不支援 NFC 或 NFC 關閉時呼叫 onUnavailable。
+ */
+@Composable
+private fun rememberNfcReader(
+    enabled: Boolean,
+    onUidRead: (String) -> Unit,
+    onUnavailable: () -> Unit = {},
+) {
+    val context = LocalContext.current
+    val activity = remember(context) { context.findActivity() }
+    // ReaderMode callback 用閉包抓到的引用；用 rememberUpdatedState 確保總是最新版
+    val onUidLatest by rememberUpdatedState(onUidRead)
+    val onUnavailLatest by rememberUpdatedState(onUnavailable)
+
+    DisposableEffect(activity, enabled) {
+        val adapter = activity?.let { NfcAdapter.getDefaultAdapter(it) }
+        if (enabled) {
+            if (activity == null || adapter == null || !adapter.isEnabled) {
+                onUnavailLatest()
+            } else {
+                val flags = NfcAdapter.FLAG_READER_NFC_A or
+                        NfcAdapter.FLAG_READER_NFC_B or
+                        NfcAdapter.FLAG_READER_NFC_F or
+                        NfcAdapter.FLAG_READER_NFC_V or
+                        NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK
+                adapter.enableReaderMode(activity, { tag ->
+                    // 校園卡 UID 為 4 bytes / 8 hex（[[project_card_binding_rules]]）
+                    val hex = tag.id.take(4).joinToString("") { "%02X".format(it) }
+                    // ReaderMode callback 在 binder thread，要切回 UI thread 更新 state
+                    activity.runOnUiThread { onUidLatest(hex) }
+                }, flags, null)
+            }
+        }
+        onDispose {
+            if (adapter != null && activity != null) {
+                runCatching { adapter.disableReaderMode(activity) }
+            }
+        }
+    }
+}
+
+private fun Context.findActivity(): Activity? {
+    var c: Context = this
+    while (c is ContextWrapper) {
+        if (c is Activity) return c
+        c = c.baseContext
+    }
+    return null
 }
 
 @Preview(showBackground = true)
