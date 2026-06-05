@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -688,13 +689,13 @@ private fun stopPowerBottomSheetView(aSpaceDetail: ProfileModel.SpaceDetail?, on
             Surface(
                 modifier = Modifier
                     .weight(1f)
-                    .height(90.dp),
+                    .heightIn(min = 90.dp), // 預設 90dp，系統字體放大時跟著 Column 內容往下長
                 color = Color(0xFFE8E8E8),
                 shape = RoundedCornerShape(9.dp)
             ) {
                 Column (horizontalAlignment = Alignment.CenterHorizontally){
                     Spacer(modifier = Modifier.height( 15.dp))
-                    Row {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Spacer(modifier = Modifier.width(20.dp))
                         Text("${"空間類型："}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                         Spacer(modifier = Modifier.weight(1f))
@@ -705,7 +706,7 @@ private fun stopPowerBottomSheetView(aSpaceDetail: ProfileModel.SpaceDetail?, on
                         }, color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                         Spacer(modifier = Modifier.width(20.dp))
                     }
-                    Row {
+                    Row(verticalAlignment = Alignment.Top) {
                         Spacer(modifier = Modifier.width(20.dp))
                         Text("${"地點："}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                         Spacer(modifier = Modifier.weight(1f))

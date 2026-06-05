@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -1339,7 +1340,7 @@ private fun classroomPowerSupplyByTeacherBottomSheetView(aData: ScanModel.ScanDa
             Surface(
                 modifier = Modifier
                     .weight(1f)
-                    .height(190.dp),
+                    .heightIn(min = 190.dp), // 字體放大時跟著 Column 內容往下長
                 color = Color(0xFFE8E8E8),
                 shape = RoundedCornerShape(9.dp)
             ) {
@@ -1351,6 +1352,7 @@ private fun classroomPowerSupplyByTeacherBottomSheetView(aData: ScanModel.ScanDa
 
                     Spacer(modifier = Modifier.height(15.dp))
                     Text("${aData?.buildingName} ${aData?.floorName}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(35.dp))
                 }
 
             }
@@ -1435,7 +1437,7 @@ private fun dormitoryPowerSupplyByTeacherBottomSheetView(aData: ScanModel.ScanDa
             Surface(
                 modifier = Modifier
                     .weight(1f)
-                    .height(230.dp),
+                    .heightIn(min = 230.dp), // 字體放大時跟著 Column 內容往下長
                 color = Color(0xFFE8E8E8),
                 shape = RoundedCornerShape(9.dp)
             ) {
@@ -1541,7 +1543,7 @@ private fun classroomPowerSupplyByStudentBottomSheetView(aData: ScanModel.ScanDa
             Surface(
                 modifier = Modifier
                     .weight(1f)
-                    .height(230.dp),
+                    .heightIn(min = 230.dp), // 字體放大時跟著 Column 內容往下長
                 color = Color(0xFFE8E8E8),
                 shape = RoundedCornerShape(9.dp)
             ) {
@@ -1663,7 +1665,7 @@ private fun dormitoryPowerSupplyByStudentBottomSheetView(aData: ScanModel.ScanDa
             Surface(
                 modifier = Modifier
                     .weight(1f)
-                    .height(230.dp),
+                    .heightIn(min = 230.dp), // 字體放大時跟著 Column 內容往下長
                 color = Color(0xFFE8E8E8),
                 shape = RoundedCornerShape(9.dp)
             ) {
