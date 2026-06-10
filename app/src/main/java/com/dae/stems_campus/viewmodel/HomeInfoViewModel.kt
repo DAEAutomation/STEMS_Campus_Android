@@ -49,6 +49,9 @@ class HomeInfoViewModel @Inject constructor(private var scanRepository: ScanRepo
     private val _showStartPowerFailMsg = MutableStateFlow<String?>("")
     val showStartPowerFailMsg: StateFlow<String?> = _showStartPowerFailMsg
 
+    private val _showLoadingViewByStartPowerStudent = MutableStateFlow(false)
+    val showLoadingViewByStartPowerStudent: StateFlow<Boolean> get() = _showLoadingViewByStartPowerStudent
+
     //停止用電
     private val _resStopPowerSuccessFlag = MutableStateFlow(false)
     val resStopPowerSuccessFlag: StateFlow<Boolean> get() = _resStopPowerSuccessFlag
@@ -88,6 +91,9 @@ class HomeInfoViewModel @Inject constructor(private var scanRepository: ScanRepo
 
     private val _controlAcCommand = MutableStateFlow<String?>("")
     val controlAcCommand: StateFlow<String?> = _controlAcCommand
+
+    private val _showLoadingViewBAcControlStudent = MutableStateFlow(false)
+    val showLoadingViewBAcControlStudent: StateFlow<Boolean> get() = _showLoadingViewBAcControlStudent
 
     init {
         loadLoginPreferences()
@@ -153,19 +159,19 @@ class HomeInfoViewModel @Inject constructor(private var scanRepository: ScanRepo
     // 啟用用電(學生)
     fun startPowerByStudentAction(deviceCode: String, deviceID: String, sessionID: String, acValue: Boolean) {
         viewModelScope.launch {
-            _showLoadingView.value = true
+            _showLoadingViewByStartPowerStudent.value = true
             when (val result = scanRepository.startPowerByStudent(deviceCode,deviceID,sessionID, acValue)) {
                 is BaseRepository.Result.Success -> {
-                    _showLoadingView.value = false
+                    _showLoadingViewByStartPowerStudent.value = false
                     _resStartPowerSuccessFlag.value = true
                 }
                 is BaseRepository.Result.Error -> {
-                    _showLoadingView.value = false
+                    _showLoadingViewByStartPowerStudent.value = false
                     _showStartPowerFailDialogFlag.value = true
                     _showStartPowerFailMsg.value = result.message
                 }
                 is BaseRepository.Result.Unauthorized -> {
-                    _showLoadingView.value = false
+                    _showLoadingViewByStartPowerStudent.value = false
                     _showStartPowerFailDialogFlag.value = true
                     _showStartPowerFailMsg.value = "PleaseReLogin"
                 }
@@ -224,20 +230,20 @@ class HomeInfoViewModel @Inject constructor(private var scanRepository: ScanRepo
     // 冷氣控制
     fun controlAcAction(deviceID: String, controlToken: String, command: String) {
         viewModelScope.launch {
-            _showLoadingView.value = true
+            _showLoadingViewBAcControlStudent.value = true
             _controlAcCommand.value = command
             when (val result = scanRepository.control(deviceID,controlToken,command)) {
                 is BaseRepository.Result.Success -> {
-                    _showLoadingView.value = false
+                    _showLoadingViewBAcControlStudent.value = false
                     _resControlAcSuccessFlag.value = true
                 }
                 is BaseRepository.Result.Error -> {
-                    _showLoadingView.value = false
+                    _showLoadingViewBAcControlStudent.value = false
                     _showControlAcFailDialogFlag.value = true
                     _showControlAcFailMsg.value = result.message
                 }
                 is BaseRepository.Result.Unauthorized -> {
-                    _showLoadingView.value = false
+                    _showLoadingViewBAcControlStudent.value = false
                     _showControlAcFailDialogFlag.value = true
                     _showControlAcFailMsg.value = "PleaseReLogin"
                 }

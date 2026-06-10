@@ -143,7 +143,7 @@
     <string name="application_time">申請時間</string>
     <string name="transaction_time">交易時間</string>
     <string name="school_cash_refund_time">校方退現時間</string>
-    <string name="download_e_receipt">下載電子票證</string>
+    <string name="download_refund_receipt">下載退款電子收據</string>
     <string name="mode_rate">模式費率</string>
     <string name="power_supply_mode">供電模式</string>
     <string name="cumulative_deduction_amount">累計扣款</string>
