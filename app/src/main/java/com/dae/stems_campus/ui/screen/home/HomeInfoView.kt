@@ -1123,7 +1123,7 @@ private fun dormitoryView(aData: ProfileModel.UsingDeviceData?, onDetailClick: (
                             Spacer(modifier = Modifier.width(10.dp))
                             Text("${stringResource(R.string.cumulative_deduction_amount)}  $", color = Color.White,style = MaterialTheme.typography.bodyLarge)
                             Spacer(modifier = Modifier.width(2.dp))
-                            Text("${aData?.billing?.general?.totalAmount?.toTwoDecimalString()}", color = Color.White,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
+                            Text("${aData?.billing?.general?.totalAmount}", color = Color.White,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
                         }
 
                     }

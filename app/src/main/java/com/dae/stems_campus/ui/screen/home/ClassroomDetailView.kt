@@ -574,7 +574,7 @@ private fun contentViewByStudent(aSpaceDetail: ProfileModel.SpaceDetail?,
                     Spacer(modifier = Modifier.width(20.dp))
                     Text("${stringResource(R.string.cumulative_deduction_amount)}：", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(5.dp))
-                    Text("${aBillingDetail?.totalCharged?.toTwoDecimalString()}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${aBillingDetail?.totalCharged}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(5.dp))
                     Text("${stringResource(R.string.currency_unit)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                 }
@@ -1019,7 +1019,7 @@ private fun stopPowerInfoByStudentBottomSheetView(aBillingDetail : BillingDetail
                     Spacer(modifier = Modifier.width(20.dp))
                     Text("${"預估扣款："}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.weight(1f))
-                    Text("${aStopPowerData?.totalCharged?.toTwoDecimalString()}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${aStopPowerData?.totalCharged}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(5.dp))
                     Text("${stringResource(R.string.currency_unit)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(20.dp))
