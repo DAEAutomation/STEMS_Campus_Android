@@ -121,7 +121,9 @@ class ProfileModel {
         val startTime: String? = null,
         val durationMinutes: Int? = null,
         val totalKwh: Double? = null,
-        val totalAmount: Double? = null
+        val totalAmount: Double? = null,
+        val isAcOpenPeriod: Boolean? = null,
+        val freeMode: Boolean? = null,
     )
 
     data class ControlDetail(

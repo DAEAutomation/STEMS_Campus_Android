@@ -182,6 +182,7 @@ private fun homeMainLoad(
     val resStartPowerSuccessFlag by homeInfoViewModel.resStartPowerSuccessFlag.collectAsState()
     val showStartPowerFailDialogFlag by homeInfoViewModel.showStartPowerFailDialogFlag.collectAsState()
     val showStartPowerFailMsg by homeInfoViewModel.showStartPowerFailMsg.collectAsState()
+    val showLoadingViewByStartPowerStudent by homeInfoViewModel.showLoadingViewByStartPowerStudent.collectAsState()
 
     var isAcControl by remember { mutableStateOf(false) }
 
@@ -243,6 +244,10 @@ private fun homeMainLoad(
         onBiometricsStartPowerSupplyHandled = { handleBiometricStartPower() },
         onNavigateToSetting = { onNavigateToSetting() },
         onNavigateToWallet = { onNavigateToWallet() })
+
+    if (showLoadingViewByStartPowerStudent) {
+        LoadingView() {}
+    }
 
     //密碼驗證成功後
     if (resVerifyPasswordSuccessFlag) {
@@ -1118,7 +1123,7 @@ private fun dormitoryView(aData: ProfileModel.UsingDeviceData?, onDetailClick: (
                             Spacer(modifier = Modifier.width(10.dp))
                             Text("${stringResource(R.string.cumulative_deduction_amount)}  $", color = Color.White,style = MaterialTheme.typography.bodyLarge)
                             Spacer(modifier = Modifier.width(2.dp))
-                            Text("${aData?.billing?.general?.totalAmount?.toTwoDecimalString()}", color = Color.White,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
+                            Text("${aData?.billing?.general?.totalAmount}", color = Color.White,style = MaterialTheme.typography.headlineMedium,fontWeight = FontWeight.Bold)
                         }
 
                     }
@@ -1581,7 +1586,8 @@ private fun classroomPowerSupplyByStudentBottomSheetView(aData: ScanModel.ScanDa
                     onCheckedChange = { checked ->
                         isAcControl = checked
                     },
-                    enabled = aData?.isAcOpenPeriod == true
+                    // 只有在冷氣開放時段、且非 freeMode（免費模式）時才可開啟
+                    enabled = aData?.isAcOpenPeriod == true && aData?.freeMode != true
                 )
             }
             Spacer(modifier = Modifier.width(40.dp))

@@ -284,7 +284,7 @@ private fun refundDetailContent(
                                     color = Color(0xFF2D859D)
                                 ) {
                                     Text(
-                                        text = stringResource(id = R.string.download_top_up_receipt),
+                                        text = stringResource(id = R.string.download_refund_receipt),
                                         textAlign = TextAlign.Center,
                                         modifier = Modifier.wrapContentHeight(),
                                         color = Color.White

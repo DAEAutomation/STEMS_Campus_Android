@@ -348,7 +348,7 @@ private fun contentViewByStudent(classroomHistory: HistoryModel.ClassroomHistory
                         Row {
                             Text("${stringResource(R.string.cumulative_deduction_amount)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                             Spacer(modifier = Modifier.width(20.dp))
-                            Text("${classroomHistory?.totalAmount?.toTwoDecimalString()}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                            Text("${classroomHistory?.totalAmount}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                             Text("${stringResource(R.string.currency_unit)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                         }
                         Spacer(modifier = Modifier.height(20.dp))

@@ -60,6 +60,7 @@ import com.dae.stems_campus.data.model.ProfileModel.BillingDetail
 import com.dae.stems_campus.data.model.ProfileModel.ControlDetail
 import com.dae.stems_campus.data.model.ProfileModel.DeviceDetail
 import com.dae.stems_campus.data.model.ScanModel
+import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.ui.theme.STEMS_CampusTheme
 import com.dae.stems_campus.utils.computeDurationAtLeastOneMinute
@@ -94,6 +95,7 @@ fun classroomDetailScreen(navController: NavHostController, selectDeviceCode: St
     val showControlAcFailDialogFlag by homeInfoViewModel.showControlAcFailDialogFlag.collectAsState()
     val showControlAcFailMsg by homeInfoViewModel.showControlAcFailMsg.collectAsState()
     val controlAcCommand by homeInfoViewModel.controlAcCommand.collectAsState()
+    val showLoadingViewBAcControlStudent by homeInfoViewModel.showLoadingViewBAcControlStudent.collectAsState()
 
     var showingStopPowerInfoBottomSheet by remember { mutableStateOf(false) }
     var showingStopPowerInfoByStudentBottomSheet by remember { mutableStateOf(false) }
@@ -160,29 +162,45 @@ fun classroomDetailScreen(navController: NavHostController, selectDeviceCode: St
     }
 
     //冷氣控制
-    if (resControlAcSuccessFlag) {
-        if (controlAcCommand.equals("ac_on")) {
-            textTNoButtonAlert(
-                onDismissRequest = {},
-                dialogTitle = "冷氣已開啟\n 請等待一分鐘"
-            )
-            // 在 Dialog 顯示後啟動計時器
-            LaunchedEffect(Unit) {
-                delay(15000) // 延遲 1.5 秒
-                homeInfoViewModel.resetControlAcSuccessFlag(false)
-            }
-        }else{
-            textTNoButtonAlert(
-                onDismissRequest = {},
-                dialogTitle = "冷氣已關閉\n 請等待一分鐘"
-            )
-            // 在 Dialog 顯示後啟動計時器
-            LaunchedEffect(Unit) {
-                delay(15000) // 延遲 1.5 秒
-                homeInfoViewModel.resetControlAcSuccessFlag(false)
-            }
+    if (showLoadingViewBAcControlStudent) {
+        LoadingView() {
+
         }
     }
+    // LoadingView 結束（true → false）時重抓使用中裝置最新狀態
+    var wasAcControlLoading by remember { mutableStateOf(false) }
+    LaunchedEffect(showLoadingViewBAcControlStudent) {
+        if (showLoadingViewBAcControlStudent) {
+            wasAcControlLoading = true
+        } else if (wasAcControlLoading) {
+            wasAcControlLoading = false
+            homeInfoViewModel.getUsingDeviceDetailAction(selectDeviceCode, uuid)
+        }
+    }
+
+//    if (resControlAcSuccessFlag) {
+//        if (controlAcCommand.equals("ac_on")) {
+//            textTNoButtonAlert(
+//                onDismissRequest = {},
+//                dialogTitle = "冷氣已開啟\n 請等待一分鐘"
+//            )
+//            // 在 Dialog 顯示後啟動計時器
+//            LaunchedEffect(Unit) {
+//                delay(1500) // 延遲 1.5 秒
+//                homeInfoViewModel.resetControlAcSuccessFlag(false)
+//            }
+//        }else{
+//            textTNoButtonAlert(
+//                onDismissRequest = {},
+//                dialogTitle = "冷氣已關閉\n 請等待一分鐘"
+//            )
+//            // 在 Dialog 顯示後啟動計時器
+//            LaunchedEffect(Unit) {
+//                delay(15000) // 延遲 1.5 秒
+//                homeInfoViewModel.resetControlAcSuccessFlag(false)
+//            }
+//        }
+//    }
 
     if (showControlAcFailDialogFlag) {
         textTNoButtonAlert(
@@ -466,6 +484,8 @@ private fun contentViewByStudent(aSpaceDetail: ProfileModel.SpaceDetail?,
                                  onControlAcClick:(String) -> Unit) {
 
     val isAcOn = aDeviceDetail?.powerSupply?.ac?.on == true
+    val isAcOpenPeriod = aBillingDetail?.ac?.isAcOpenPeriod
+    val freeMode = aBillingDetail?.ac?.freeMode
     val acButtonColor = if (isAcOn) Color(0xFF484C4F) else Color(0xFF2D859D)
     val acButtonText = if (isAcOn)
         stringResource(R.string.air_conditioner_power_off)    // 冷氣開著 → 顯示「關閉冷氣」
@@ -473,6 +493,9 @@ private fun contentViewByStudent(aSpaceDetail: ProfileModel.SpaceDetail?,
 
     var currentElapsed by remember {
         mutableStateOf(aBillingDetail?.general?.startTime?.elapsedTime()) }
+
+    var showAcNotMoneyAlert by remember { mutableStateOf(false) }
+    var showAcNotOpenAlert by remember { mutableStateOf(false) }
 
     LaunchedEffect(aBillingDetail?.general?.startTime) {
         while (true) {
@@ -551,7 +574,7 @@ private fun contentViewByStudent(aSpaceDetail: ProfileModel.SpaceDetail?,
                     Spacer(modifier = Modifier.width(20.dp))
                     Text("${stringResource(R.string.cumulative_deduction_amount)}：", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(5.dp))
-                    Text("${aBillingDetail?.totalCharged?.toTwoDecimalString()}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${aBillingDetail?.totalCharged}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(5.dp))
                     Text("${stringResource(R.string.currency_unit)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                 }
@@ -575,7 +598,17 @@ private fun contentViewByStudent(aSpaceDetail: ProfileModel.SpaceDetail?,
                                     if (isAcOn) {
                                         onControlAcClick("ac_off")
                                     }else{
-                                        onControlAcClick("ac_on")
+                                        if (isAcOpenPeriod == true) {
+                                            if (freeMode == true) {
+                                                showAcNotMoneyAlert = true
+                                            }else{
+                                                onControlAcClick("ac_on")
+                                            }
+                                        }else{
+                                            showAcNotOpenAlert = true
+                                        }
+                                        
+
                                     }
                                 },
                             color = Color.Transparent
@@ -617,6 +650,30 @@ private fun contentViewByStudent(aSpaceDetail: ProfileModel.SpaceDetail?,
             }
         }
         Spacer(modifier = Modifier.width(20.dp))
+    }
+
+    if (showAcNotOpenAlert) {
+        textTNoButtonAlert(
+            onDismissRequest = {},
+            dialogTitle = "非冷氣開放時段，無法開啟冷氣"
+        )
+        // 在 Dialog 顯示後啟動計時器
+        LaunchedEffect(Unit) {
+            delay(1500) // 延遲 1.5 秒
+            showAcNotOpenAlert = false
+        }
+    }
+
+    if (showAcNotMoneyAlert) {
+        textTNoButtonAlert(
+            onDismissRequest = {},
+            dialogTitle = "錢包餘額不足，無法開啟冷氣"
+        )
+        // 在 Dialog 顯示後啟動計時器
+        LaunchedEffect(Unit) {
+            delay(1500) // 延遲 1.5 秒
+            showAcNotMoneyAlert = false
+        }
     }
 }
 
@@ -962,7 +1019,7 @@ private fun stopPowerInfoByStudentBottomSheetView(aBillingDetail : BillingDetail
                     Spacer(modifier = Modifier.width(20.dp))
                     Text("${"預估扣款："}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.weight(1f))
-                    Text("${aStopPowerData?.totalCharged?.toTwoDecimalString()}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${aStopPowerData?.totalCharged}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(5.dp))
                     Text("${stringResource(R.string.currency_unit)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(20.dp))
