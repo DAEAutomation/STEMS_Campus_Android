@@ -59,12 +59,13 @@ open class BaseRepository @Inject constructor(
                             SessionEventBus.notifyForceLogout()
                             return@withContext Result.Unauthorized
                         }
-                    } else if (e.code() == 401) {
-                        // 第二輪仍 401，或非 TOKEN_EXPIRED 的 401 → 視為未授權
+                    } else if (e.code() == 401 && errorCode == "TOKEN_EXPIRED") {
+                        // 第二輪仍 TOKEN_EXPIRED → session 真的失效，強制登出
                         tokenManager.clearTokens()
                         SessionEventBus.notifyForceLogout()
                         return@withContext Result.Unauthorized
                     } else {
+                        // 其他 401（如 INVALID_CREDENTIALS）→ 一般錯誤，不清 token、不強制登出
                         return@withContext Result.Error(errorMessage ?: "請求失敗 (${e.code()})")
                     }
                 } catch (e: Exception) {
@@ -112,12 +113,13 @@ open class BaseRepository @Inject constructor(
                             SessionEventBus.notifyForceLogout()
                             return@withContext Result.Unauthorized
                         }
-                    } else if (e.code() == 401) {
-                        // 第二輪仍 401，或非 TOKEN_EXPIRED 的 401 → 視為未授權
+                    } else if (e.code() == 401 && errorCode == "TOKEN_EXPIRED") {
+                        // 第二輪仍 TOKEN_EXPIRED → session 真的失效，強制登出
                         tokenManager.clearTokens()
                         SessionEventBus.notifyForceLogout()
                         return@withContext Result.Unauthorized
                     } else {
+                        // 其他 401（如 INVALID_CREDENTIALS）→ 一般錯誤，不清 token、不強制登出
                         return@withContext Result.Error(errorMessage ?: "請求失敗 (${e.code()})")
                     }
                 } catch (e: Exception) {
