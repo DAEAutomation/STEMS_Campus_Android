@@ -139,6 +139,7 @@
     <string name="session_rate">當次費率</string>
     <string name="session_deduction_amount">當次扣款</string>
     <string name="usage_time">使用時長</string>
+    <string name="transaction_number">交易編號</string>
     <string name="application_number">申請單號</string>
     <string name="application_time">申請時間</string>
     <string name="transaction_time">交易時間</string>
@@ -185,4 +186,10 @@
     <string name="email_verify_success">E-mail驗證成功！</string>
     <string name="register_success">註冊成功</string>
     <string name="set_password">設定密碼</string>
+    <string name="device_id">設備ID</string>
+    <string name="easy_card_number">悠遊卡卡號</string>
+    <string name="balance_after_transaction">交易後餘額</string>
+    <string name="auto_top_up">自動加值</string>
+    <string name="transaction_type">交易類型</string>
+    <string name="easy_card_information">悠遊卡資訊</string>
 </resources>

@@ -21,10 +21,17 @@ class HistoryModel {
         val paymentMethod: String? = null,
         val note: String? = null,
         val createdAt: String? = null,
+        val topupSerial: String? = null,
         val account: String? = null,
         val userName: String? = null,
         val kioskName: String? = null,
-        val txStatus: String? = null
+        val txStatus: String? = null,
+        val kioskPaymentType: Int? = null,
+        val ezDeviceId: String? = null,
+        val ezCardId: String? = null,
+        val kioskPaymentTypeLabel: String? = null,
+        val ezBalanceBefore: Int? = null,
+        val ezBalanceAfter: Int? = null,
     )
 
     data class Pagination(
@@ -114,7 +121,12 @@ class HistoryModel {
         val applicantName: String? = null,
         val applicantNo: String? = null,
         val applicantRole: String? = null,
-        val applicationDate: String? = null
+        val applicationDate: String? = null,
+        val transactionNo: String? = null,
+        val ezDeviceId: String? = null,
+        val ezCardId: String? = null,
+        val ezBalanceBefore: Int? = null,
+        val ezBalanceAfter: Int? = null,
     )
 
     data class RefundHistoryDownloadRequest(

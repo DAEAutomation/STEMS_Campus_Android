@@ -49,6 +49,7 @@ import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.utils.toAmountString
 import com.dae.stems_campus.utils.toLocalDateTimeText
+import com.dae.stems_campus.utils.toThousandsSeparator
 import com.dae.stems_campus.viewmodel.HistoryViewModel
 import kotlinx.coroutines.delay
 import java.time.OffsetDateTime
@@ -158,116 +159,12 @@ private fun refundDetailContent(
                         }
                         Spacer(modifier = Modifier.height(30.dp))
 
-                        Row {
-                            Spacer(modifier = Modifier.width(20.dp))
-                            Surface (modifier = Modifier
-                                .weight(1f)
-                                .clickable {
-                                    navController.navigate("TopUpBinding")
-                                },
-
-                                color = Color.White,
-                                shape = RoundedCornerShape(
-                                    topStart = 9.dp,
-                                    topEnd = 9.dp,
-                                    bottomStart = 0.dp,
-                                    bottomEnd = 0.dp)){
-
-                                Row (verticalAlignment = Alignment.CenterVertically){
-                                    Spacer(modifier = Modifier.width(20.dp))
-
-                                    Surface (
-                                        modifier = Modifier
-                                            .align(Alignment.CenterVertically)
-                                            .weight(0.9f),
-                                        color = Color.Unspecified
-                                    ){
-                                        Column {
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                            Row {
-                                                Text("${stringResource(R.string.application_number)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
-                                                Spacer(modifier = Modifier.width(20.dp))
-                                                Text("${refundHistory?.refundNo}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                                            }
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                            val createdAtText = refundHistory?.createdAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: "--"
-                                            Row {
-                                                Text("${stringResource(R.string.application_time)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
-                                                Spacer(modifier = Modifier.width(20.dp))
-                                                Text("${createdAtText}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                                            }
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                            val completedAtText = refundHistory?.completedAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: "--"
-                                            Row {
-                                                Text("${stringResource(R.string.transaction_time)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
-                                                Spacer(modifier = Modifier.width(20.dp))
-                                                Text("${completedAtText}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                                            }
-                                            Row {
-                                                Text("(校方退現時間)", color = Color(0xFF2D859D), style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(110.dp))
-                                            }
-
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.width(20.dp))
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(20.dp))
+                        if (refundHistory?.refundTypeLabel.equals("悠遊卡")) {
+                            easyCardRefundView(refundHistory = refundHistory)
+                        }else if (refundHistory?.refundTypeLabel.equals("現金")) {
+                            cashRefundView(refundHistory = refundHistory)
                         }
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Row {
-                            Spacer(modifier = Modifier.width(20.dp))
-                            Surface (modifier = Modifier
-                                .weight(1f)
-                                .clickable {
-//                                    navController.navigate("changeName/${accountName}")
-                                },
 
-                                color = Color.White,
-                                shape = RoundedCornerShape(
-                                    topStart = 0.dp,
-                                    topEnd = 0.dp,
-                                    bottomStart = 9.dp,
-                                    bottomEnd = 9.dp)){
-
-                                Row (verticalAlignment = Alignment.CenterVertically){
-                                    Spacer(modifier = Modifier.width(20.dp))
-
-                                    Surface (
-                                        modifier = Modifier
-                                            .align(Alignment.CenterVertically)
-                                            .weight(0.9f),
-                                        color = Color.Unspecified
-                                    ){
-                                        Column {
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                            Row {
-                                                Text("${stringResource(R.string.applicant)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
-                                                Spacer(modifier = Modifier.width(20.dp))
-                                                Text("${refundHistory?.applicantName}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                                            }
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                            Row {
-                                                Text("${stringResource(R.string.applicant_account)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
-                                                Spacer(modifier = Modifier.width(20.dp))
-                                                Text("${refundHistory?.applicantNo}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                                            }
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                            Row {
-                                                Text("${stringResource(R.string.status)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
-                                                Spacer(modifier = Modifier.width(20.dp))
-                                                Text("${refundHistory?.statusLabel}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                                            }
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.width(20.dp))
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(20.dp))
-                        }
                         if (refundHistory?.statusLabel.equals("已完成")) {
                             Spacer(modifier = Modifier.height(20.dp))
                             Row {
@@ -292,6 +189,7 @@ private fun refundDetailContent(
                                 }
                                 Spacer(modifier = Modifier.width(30.dp))
                             }
+                            Spacer(modifier = Modifier.height(20.dp))
                         }
 
                     }
@@ -305,6 +203,300 @@ private fun refundDetailContent(
 
     }
 
+}
+
+@Composable
+private fun cashRefundView(refundHistory: HistoryModel.RefundHistory?) {
+    Row {
+        Spacer(modifier = Modifier.width(20.dp))
+        Surface (modifier = Modifier
+            .weight(1f),
+
+            color = Color.White,
+            shape = RoundedCornerShape(
+                topStart = 9.dp,
+                topEnd = 9.dp,
+                bottomStart = 0.dp,
+                bottomEnd = 0.dp)){
+
+            Row (verticalAlignment = Alignment.CenterVertically){
+                Spacer(modifier = Modifier.width(20.dp))
+
+                Surface (
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .weight(0.9f),
+                    color = Color.Unspecified
+                ){
+                    Column {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.applicant)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${refundHistory?.applicantName}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.applicant_account)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${refundHistory?.applicantNo}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.application_number)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${refundHistory?.refundNo}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.transaction_number)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${refundHistory?.transactionNo ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        val createdAtText = refundHistory?.createdAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: "--"
+                        Row {
+                            Text("${stringResource(R.string.application_time)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${createdAtText}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        val completedAtText = refundHistory?.completedAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: "--"
+                        Row {
+                            Text("${stringResource(R.string.transaction_time)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${completedAtText}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Row {
+                            Text("(校方退現時間)", color = Color(0xFF2D859D), style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(110.dp))
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }
+        Spacer(modifier = Modifier.width(20.dp))
+    }
+    Spacer(modifier = Modifier.height(2.dp))
+    Row {
+        Spacer(modifier = Modifier.width(20.dp))
+        Surface (modifier = Modifier
+            .weight(1f),
+
+            color = Color.White,
+            shape = RoundedCornerShape(
+                topStart = 0.dp,
+                topEnd = 0.dp,
+                bottomStart = 9.dp,
+                bottomEnd = 9.dp)){
+
+            Row (verticalAlignment = Alignment.CenterVertically){
+                Spacer(modifier = Modifier.width(20.dp))
+
+                Surface (
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .weight(0.9f),
+                    color = Color.Unspecified
+                ){
+                    Column {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.status)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${refundHistory?.statusLabel}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }
+        Spacer(modifier = Modifier.width(20.dp))
+    }
+}
+
+@Composable
+private fun easyCardRefundView(refundHistory: HistoryModel.RefundHistory?) {
+    Row {
+        Spacer(modifier = Modifier.width(20.dp))
+        Surface (modifier = Modifier
+            .weight(1f),
+
+            color = Color.White,
+            shape = RoundedCornerShape(
+                topStart = 9.dp,
+                topEnd = 9.dp,
+                bottomStart = 0.dp,
+                bottomEnd = 0.dp)){
+
+            Row (verticalAlignment = Alignment.CenterVertically){
+                Spacer(modifier = Modifier.width(20.dp))
+
+                Surface (
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .weight(0.9f),
+                    color = Color.Unspecified
+                ){
+                    Column {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.applicant)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${refundHistory?.applicantName}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.applicant_account)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${refundHistory?.applicantNo}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.application_number)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${refundHistory?.refundNo}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.transaction_number)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${refundHistory?.transactionNo ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        val createdAtText = refundHistory?.createdAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: "--"
+                        Row {
+                            Text("${stringResource(R.string.application_time)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${createdAtText}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        val completedAtText = refundHistory?.completedAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: "--"
+                        Row {
+                            Text("${stringResource(R.string.transaction_time)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${completedAtText}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Row {
+                            Text("(校方退現時間)", color = Color(0xFF2D859D), style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(110.dp))
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }
+        Spacer(modifier = Modifier.width(20.dp))
+    }
+    Spacer(modifier = Modifier.height(2.dp))
+    Row {
+        Spacer(modifier = Modifier.width(20.dp))
+        Surface (modifier = Modifier
+            .weight(1f),
+
+            color = Color.White,
+            shape = RoundedCornerShape(
+                topStart = 0.dp,
+                topEnd = 0.dp,
+                bottomStart = 0.dp,
+                bottomEnd = 0.dp)){
+
+            Row (verticalAlignment = Alignment.CenterVertically){
+                Spacer(modifier = Modifier.width(20.dp))
+
+                Surface (
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .weight(0.9f),
+                    color = Color.Unspecified
+                ){
+                    Column {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.top_up_machine_name)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${refundHistory?.kioskName}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.transaction_type)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${refundHistory?.refundTypeLabel}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.status)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${refundHistory?.statusLabel}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }
+        Spacer(modifier = Modifier.width(20.dp))
+    }
+    Spacer(modifier = Modifier.height(2.dp))
+    Row {
+        Spacer(modifier = Modifier.width(20.dp))
+        Surface (modifier = Modifier
+            .weight(1f),
+
+            color = Color.White,
+            shape = RoundedCornerShape(
+                topStart = 0.dp,
+                topEnd = 0.dp,
+                bottomStart = 9.dp,
+                bottomEnd = 9.dp)){
+
+            Row (verticalAlignment = Alignment.CenterVertically){
+                Spacer(modifier = Modifier.width(20.dp))
+
+                Surface (
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .weight(0.9f),
+                    color = Color.Unspecified
+                ){
+                    Column {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.easy_card_information)}", color = Color(0xFF2D859D), style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.device_id)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${refundHistory?.ezDeviceId}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.easy_card_number)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${refundHistory?.ezCardId}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.balance_after_transaction)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("$${refundHistory?.ezBalanceAfter?.toThousandsSeparator()}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }
+        Spacer(modifier = Modifier.width(20.dp))
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

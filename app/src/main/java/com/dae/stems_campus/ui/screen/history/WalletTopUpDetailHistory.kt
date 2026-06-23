@@ -53,6 +53,7 @@ import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.utils.calculateDuration
 import com.dae.stems_campus.utils.toAmountString
 import com.dae.stems_campus.utils.toLocalDateTimeText
+import com.dae.stems_campus.utils.toThousandsSeparator
 import com.dae.stems_campus.viewmodel.HistoryViewModel
 import kotlinx.coroutines.delay
 import java.time.OffsetDateTime
@@ -166,105 +167,17 @@ private fun walletTopUpDetailContent(
                         }
                         Spacer(modifier = Modifier.height(30.dp))
 
-                        Row {
-                            Spacer(modifier = Modifier.width(20.dp))
-                            Surface (modifier = Modifier
-                                .weight(1f)
-                                .clickable {
-                                    navController.navigate("TopUpBinding")
-                                },
 
-                                color = Color.White,
-                                shape = RoundedCornerShape(
-                                    topStart = 9.dp,
-                                    topEnd = 9.dp,
-                                    bottomStart = 0.dp,
-                                    bottomEnd = 0.dp)){
-
-                                Row (verticalAlignment = Alignment.CenterVertically){
-                                    Spacer(modifier = Modifier.width(20.dp))
-
-                                    Surface (
-                                        modifier = Modifier
-                                            .align(Alignment.CenterVertically)
-                                            .weight(0.9f),
-                                        color = Color.Unspecified
-                                    ){
-                                        Column {
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                            Row {
-                                                Text("${stringResource(R.string.applicant)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
-                                                Spacer(modifier = Modifier.width(20.dp))
-                                                Text("${walletHistory?.userName}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                                            }
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                            Row {
-                                                Text("${stringResource(R.string.applicant_account)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
-                                                Spacer(modifier = Modifier.width(20.dp))
-                                                Text("${walletHistory?.account}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                                            }
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.width(20.dp))
-                                }
+                        if (walletHistory?.kioskPaymentType == 1) {
+                            cashTopUpView(walletHistory)
+                        } else if (walletHistory?.kioskPaymentType == 2) {
+                            easyCardTopUpView(walletHistory)
+                        } else {
+                            if (walletHistory?.paymentMethod.equals("管理員儲值")) {
+                                administratorTopUpView(walletHistory)
                             }
-                            Spacer(modifier = Modifier.width(20.dp))
                         }
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Row {
-                            Spacer(modifier = Modifier.width(20.dp))
-                            Surface (modifier = Modifier
-                                .weight(1f)
-                                .clickable {
-//                                    navController.navigate("changeName/${accountName}")
-                                },
 
-                                color = Color.White,
-                                shape = RoundedCornerShape(
-                                    topStart = 0.dp,
-                                    topEnd = 0.dp,
-                                    bottomStart = 9.dp,
-                                    bottomEnd = 9.dp)){
-
-                                Row (verticalAlignment = Alignment.CenterVertically){
-                                    Spacer(modifier = Modifier.width(20.dp))
-
-                                    Surface (
-                                        modifier = Modifier
-                                            .align(Alignment.CenterVertically)
-                                            .weight(0.9f),
-                                        color = Color.Unspecified
-                                    ){
-                                        Column {
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                            Row {
-                                                Text("${stringResource(R.string.balance_after_top_up)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
-                                                Spacer(modifier = Modifier.width(20.dp))
-                                                Text("$${walletHistory?.balanceAfter?.toAmountString()}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                                            }
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                            Row {
-                                                Text("${stringResource(R.string.top_up_machine_name)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
-                                                Spacer(modifier = Modifier.width(20.dp))
-                                                Text("${walletHistory?.kioskName ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                                            }
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                            Row {
-                                                Text("${stringResource(R.string.status)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
-                                                Spacer(modifier = Modifier.width(20.dp))
-                                                Text("${walletHistory?.txStatus ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                                            }
-
-                                            Spacer(modifier = Modifier.height(20.dp))
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.width(20.dp))
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(20.dp))
-                        }
                         Spacer(modifier = Modifier.height(20.dp))
                         Row {
                             Spacer(modifier = Modifier.width(30.dp))
@@ -288,6 +201,7 @@ private fun walletTopUpDetailContent(
                             }
                             Spacer(modifier = Modifier.width(30.dp))
                         }
+                        Spacer(modifier = Modifier.height(20.dp))
                     }
                 }
             }
@@ -299,6 +213,363 @@ private fun walletTopUpDetailContent(
 
     }
 
+}
+
+@Composable
+private fun cashTopUpView(walletHistory: HistoryModel.WalletHistory?) {
+    Row {
+        Spacer(modifier = Modifier.width(20.dp))
+        Surface (modifier = Modifier
+            .weight(1f),
+
+            color = Color.White,
+            shape = RoundedCornerShape(
+                topStart = 9.dp,
+                topEnd = 9.dp,
+                bottomStart = 0.dp,
+                bottomEnd = 0.dp)){
+
+            Row (verticalAlignment = Alignment.CenterVertically){
+                Spacer(modifier = Modifier.width(20.dp))
+
+                Surface (
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .weight(0.9f),
+                    color = Color.Unspecified
+                ){
+                    Column {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.applicant)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${walletHistory?.userName}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.applicant_account)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${walletHistory?.account}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.transaction_number)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${walletHistory?.topupSerial ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }
+        Spacer(modifier = Modifier.width(20.dp))
+    }
+    Spacer(modifier = Modifier.height(2.dp))
+    Row {
+        Spacer(modifier = Modifier.width(20.dp))
+        Surface (modifier = Modifier
+            .weight(1f),
+
+            color = Color.White,
+            shape = RoundedCornerShape(
+                topStart = 0.dp,
+                topEnd = 0.dp,
+                bottomStart = 9.dp,
+                bottomEnd = 9.dp)){
+
+            Row (verticalAlignment = Alignment.CenterVertically){
+                Spacer(modifier = Modifier.width(20.dp))
+
+                Surface (
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .weight(0.9f),
+                    color = Color.Unspecified
+                ){
+                    Column {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.balance_after_top_up)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("$${walletHistory?.balanceAfter?.toAmountString()}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.top_up_machine_name)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${walletHistory?.kioskName ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.transaction_type)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${walletHistory?.kioskPaymentTypeLabel ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.status)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${walletHistory?.txStatus ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }
+        Spacer(modifier = Modifier.width(20.dp))
+    }
+}
+
+@Composable
+private fun easyCardTopUpView(walletHistory: HistoryModel.WalletHistory?) {
+    Row {
+        Spacer(modifier = Modifier.width(20.dp))
+        Surface (modifier = Modifier
+            .weight(1f),
+
+            color = Color.White,
+            shape = RoundedCornerShape(
+                topStart = 9.dp,
+                topEnd = 9.dp,
+                bottomStart = 0.dp,
+                bottomEnd = 0.dp)){
+
+            Row (verticalAlignment = Alignment.CenterVertically){
+                Spacer(modifier = Modifier.width(20.dp))
+
+                Surface (
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .weight(0.9f),
+                    color = Color.Unspecified
+                ){
+                    Column {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.applicant)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${walletHistory?.userName}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.applicant_account)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${walletHistory?.account}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.transaction_number)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${walletHistory?.topupSerial ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }
+        Spacer(modifier = Modifier.width(20.dp))
+    }
+    Spacer(modifier = Modifier.height(2.dp))
+    Row {
+        Spacer(modifier = Modifier.width(20.dp))
+        Surface (modifier = Modifier
+            .weight(1f),
+
+            color = Color.White,
+            shape = RoundedCornerShape(
+                topStart = 0.dp,
+                topEnd = 0.dp,
+                bottomStart = 0.dp,
+                bottomEnd = 0.dp)){
+
+            Row (verticalAlignment = Alignment.CenterVertically){
+                Spacer(modifier = Modifier.width(20.dp))
+
+                Surface (
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .weight(0.9f),
+                    color = Color.Unspecified
+                ){
+                    Column {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.balance_after_top_up)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("$${walletHistory?.balanceAfter?.toAmountString()}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.top_up_machine_name)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${walletHistory?.kioskName ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.transaction_type)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${walletHistory?.kioskPaymentTypeLabel ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.status)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${walletHistory?.txStatus ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }
+        Spacer(modifier = Modifier.width(20.dp))
+    }
+    Spacer(modifier = Modifier.height(2.dp))
+    Row {
+        Spacer(modifier = Modifier.width(20.dp))
+        Surface (modifier = Modifier
+            .weight(1f),
+
+            color = Color.White,
+            shape = RoundedCornerShape(
+                topStart = 0.dp,
+                topEnd = 0.dp,
+                bottomStart = 9.dp,
+                bottomEnd = 9.dp)){
+
+            Row (verticalAlignment = Alignment.CenterVertically){
+                Spacer(modifier = Modifier.width(20.dp))
+
+                Surface (
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .weight(0.9f),
+                    color = Color.Unspecified
+                ){
+                    Column {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.easy_card_information)}", color = Color(0xFF2D859D), style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.device_id)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${walletHistory?.ezDeviceId}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.easy_card_number)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${walletHistory?.ezCardId}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.balance_after_transaction)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("$${walletHistory?.ezBalanceAfter?.toThousandsSeparator()}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }
+        Spacer(modifier = Modifier.width(20.dp))
+    }
+}
+
+@Composable
+private fun administratorTopUpView(walletHistory: HistoryModel.WalletHistory?) {
+    Row {
+        Spacer(modifier = Modifier.width(20.dp))
+        Surface (modifier = Modifier
+            .weight(1f),
+
+            color = Color.White,
+            shape = RoundedCornerShape(
+                topStart = 9.dp,
+                topEnd = 9.dp,
+                bottomStart = 0.dp,
+                bottomEnd = 0.dp)){
+
+            Row (verticalAlignment = Alignment.CenterVertically){
+                Spacer(modifier = Modifier.width(20.dp))
+
+                Surface (
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .weight(0.9f),
+                    color = Color.Unspecified
+                ){
+                    Column {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.transaction_number)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${walletHistory?.topupSerial ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }
+        Spacer(modifier = Modifier.width(20.dp))
+    }
+    Spacer(modifier = Modifier.height(2.dp))
+    Row {
+        Spacer(modifier = Modifier.width(20.dp))
+        Surface (modifier = Modifier
+            .weight(1f),
+
+            color = Color.White,
+            shape = RoundedCornerShape(
+                topStart = 0.dp,
+                topEnd = 0.dp,
+                bottomStart = 9.dp,
+                bottomEnd = 9.dp)){
+
+            Row (verticalAlignment = Alignment.CenterVertically){
+                Spacer(modifier = Modifier.width(20.dp))
+
+                Surface (
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .weight(0.9f),
+                    color = Color.Unspecified
+                ){
+                    Column {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.balance_after_top_up)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("$${walletHistory?.balanceAfter?.toAmountString()}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Text("${stringResource(R.string.status)}", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("${walletHistory?.txStatus ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }
+        Spacer(modifier = Modifier.width(20.dp))
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
