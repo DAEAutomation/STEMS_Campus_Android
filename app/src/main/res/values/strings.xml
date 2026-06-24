@@ -192,4 +192,5 @@
     <string name="auto_top_up">自動加值</string>
     <string name="transaction_type">交易類型</string>
     <string name="easy_card_information">悠遊卡資訊</string>
+    <string name="use_face_or_fingerprint_verification">使用您的臉部或指紋進行驗證</string>
 </resources>
