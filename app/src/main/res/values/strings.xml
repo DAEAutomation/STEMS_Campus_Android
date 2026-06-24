@@ -38,7 +38,7 @@
     <string name="new_password">新密碼</string>
     <string name="reenter_password">再次輸入密碼</string>
     <string name="reenter_new_password">再次輸入新密碼</string>
-    <string name="password_rule">10~20位數，應包含數字及大小寫英文字母和特殊符號</string>
+    <string name="password_rule">8~20位數，應包含數字及大小寫英文字母</string>
     <string name="start_now">開始使用</string>
     <string name="language_settings">語言設定</string>
     <string name="version">版本訊息</string>

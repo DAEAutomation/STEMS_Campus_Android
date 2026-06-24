@@ -187,7 +187,7 @@ private fun changePasswordContent(
                             placeholder = stringResource(R.string.enter_new_password),
                             isError = showInputFailTag == 2,
                             errorMsg = if (showInputFailTag == 2) parseChangePasswordMsg(showInputFailMsg) else "",
-                            hint = "10~20位數，應包含數字及英文字母",
+                            hint = stringResource(R.string.password_rule),
                             visibility = newPwVisibility,
                             onValueChange = onNewPasswordChange,
                             onVisibilityToggle = { newPwVisibility = !newPwVisibility }
@@ -387,7 +387,7 @@ private fun parseChangePasswordMsg(aMsg: String): String {
     return when (aMsg) {
         "OldPasswordNotEntered" -> "尚未輸入舊密碼"
         "NewPasswordNotEntered" -> "尚未輸入新密碼"
-        "NewPasswordInvalidFormat" -> "密碼需為6~20位數，且包含數字及英文字母"
+        "NewPasswordInvalidFormat" -> stringResource(R.string.password_rule)
         "PasswordMismatch" -> "兩次輸入密碼不一致"
         "PleaseReLogin" -> stringResource(id = R.string.please_re_login)
         else -> aMsg

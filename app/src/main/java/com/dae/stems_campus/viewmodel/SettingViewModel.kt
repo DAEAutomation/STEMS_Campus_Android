@@ -145,8 +145,8 @@ class SettingViewModel @Inject constructor(private var profileRepository: Profil
                 _showChangePasswordInputFailMsg.value = "NewPasswordNotEntered"
                 return@launch
             }
-            // 10~20 位數，需同時含數字與英文字母
-            if (!aNewPassword.matches(Regex("^(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]{10,20}$"))) {
+            // 8~20 位數，需同時含數字與英文字母
+            if (!aNewPassword.matches(Regex("^(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]{8,20}$"))) {
                 _showChangePasswordInputFailTag.value = 2
                 _showChangePasswordInputFailMsg.value = "NewPasswordInvalidFormat"
                 return@launch
