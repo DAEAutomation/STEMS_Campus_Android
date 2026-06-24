@@ -1,6 +1,9 @@
 package com.dae.stems_campus.ui.screen
 
+import android.app.Activity
 import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -16,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,11 +45,31 @@ import com.dae.stems_campus.ui.screen.setting.settingScreen
 @Composable
 fun mainTabScreen(mainNavController: NavController) {
 
+    val context = LocalContext.current
+    val activity = context as? Activity
+
     val bottomBarNavController = rememberNavController()
     // 創建一個狀態來保存當前頁面的標題
     val currentTitle = rememberSaveable { mutableStateOf(NavigationItem.Home.navTitle) }
     // 控制 bottomBar 是否顯示（子頁進入時隱藏）
     val showTabBar = rememberSaveable { mutableStateOf(true) }
+
+    // 目前所在的 tab route（子頁時 tab bar 已隱藏，這裡仍是該 tab 的 route）
+    val navBackStackEntry by bottomBarNavController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    // Home tab 最上層：兩秒內再按一次實體 back 才離開 App。
+    // 放在最外層 → 優先權低於各內層 NavHost，子頁的 back 仍由內層處理。
+    val backPressedTime = remember { mutableStateOf(0L) }
+    BackHandler(enabled = currentRoute == NavigationItem.Home.route) {
+        val now = System.currentTimeMillis()
+        if (now - backPressedTime.value < 2000) {
+            activity?.finish()
+        } else {
+            backPressedTime.value = now
+            Toast.makeText(context, "再按一次離開", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -120,17 +144,11 @@ private fun BottomNavigationBar(bottomBarNavController: NavController, onItemSel
                     bottomBarNavController.navigate(item.route) {
 //                        mainTabViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
                         onItemSelected(item.navTitle)
-                        // Pop up to the start destination of the graph to
-                        // avoid building up a large stack of destinations
-                        // on the back stack as users select items
-
-                        // 這行確保每次點擊都回到該頁面的 "第一頁"
-                        popUpTo(item.route) { inclusive = true }
-                        // Avoid multiple copies of the same destination when
-                        // reselecting the same item
+                        // back stack 永遠維持 [Home, 當前tab]：
+                        // pop 到 Home（不含 Home）→ 任何 tab 按實體 back 都一步回 Home。
+                        popUpTo(NavigationItem.Home.route) { inclusive = false }
+                        // 避免同一頁重複堆疊
                         launchSingleTop = true
-                        // Restore state when reselecting a previously selected item
-                        restoreState = true
                     }
                 }
             )

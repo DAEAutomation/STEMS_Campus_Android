@@ -798,13 +798,6 @@ private fun settingContent(
         }
     }
 
-
-
-    //處理手機上的Back按鍵
-    BackHandler {
-        onShowTabBarChange(true)
-        navController.navigateUp()
-    }
 }
 
 @Composable

@@ -264,7 +264,7 @@ private fun changePasswordContent(
     }
 
     BackHandler {
-        navController.navigateUp()
+
     }
 }
 

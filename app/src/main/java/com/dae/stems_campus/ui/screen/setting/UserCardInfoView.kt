@@ -435,7 +435,6 @@ private fun userCardInfoContent(
     }
 
     BackHandler {
-        navController.navigateUp()
     }
 }
 
