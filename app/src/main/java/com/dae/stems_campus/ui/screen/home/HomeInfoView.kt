@@ -379,7 +379,7 @@ private fun homeContent(mainNavController: NavController,
 
         Column {
             Surface (modifier = Modifier
-                .weight(0.15f)
+                .weight(0.2f)
                 .fillMaxWidth(),  color = Color.Unspecified){
                 Column {
                     Spacer(modifier = Modifier.height(50.dp))
