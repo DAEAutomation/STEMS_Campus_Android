@@ -99,7 +99,7 @@ private fun notificationDetailContent(
                             ){
                                 Column (horizontalAlignment = Alignment.CenterHorizontally) {
                                     Spacer(modifier = Modifier.height(20.dp))
-                                    val createdAtText = notificationData?.createdAt?.toLocalDateTimeText("yyyy-MM-dd") ?: ""
+                                    val createdAtText = notificationData?.createdAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: ""
                                     Text(createdAtText, color = Color.White, style = MaterialTheme.typography.titleMedium)
                                     Spacer(modifier = Modifier.height(20.dp))
                                     Text("${notificationData?.title}", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)

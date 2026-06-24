@@ -59,17 +59,18 @@ open class BaseRepository @Inject constructor(
                             SessionEventBus.notifyForceLogout()
                             return@withContext Result.Unauthorized
                         }
-                    } else if (e.code() == 401) {
-                        // 第二輪仍 401，或非 TOKEN_EXPIRED 的 401 → 視為未授權
+                    } else if (e.code() == 401 && errorCode == "TOKEN_EXPIRED") {
+                        // 第二輪仍 TOKEN_EXPIRED → session 真的失效，強制登出
                         tokenManager.clearTokens()
                         SessionEventBus.notifyForceLogout()
                         return@withContext Result.Unauthorized
                     } else {
+                        // 其他 401（如 INVALID_CREDENTIALS）→ 一般錯誤，不清 token、不強制登出
                         return@withContext Result.Error(errorMessage ?: "請求失敗 (${e.code()})")
                     }
                 } catch (e: Exception) {
                     Log.e("DAE_Develop", "API 請求錯誤", e)
-                    return@withContext Result.Error(e.message ?: "網路錯誤")
+                    return@withContext Result.Error(friendlyNetworkMessage(e))
                 }
             }
 
@@ -112,17 +113,18 @@ open class BaseRepository @Inject constructor(
                             SessionEventBus.notifyForceLogout()
                             return@withContext Result.Unauthorized
                         }
-                    } else if (e.code() == 401) {
-                        // 第二輪仍 401，或非 TOKEN_EXPIRED 的 401 → 視為未授權
+                    } else if (e.code() == 401 && errorCode == "TOKEN_EXPIRED") {
+                        // 第二輪仍 TOKEN_EXPIRED → session 真的失效，強制登出
                         tokenManager.clearTokens()
                         SessionEventBus.notifyForceLogout()
                         return@withContext Result.Unauthorized
                     } else {
+                        // 其他 401（如 INVALID_CREDENTIALS）→ 一般錯誤，不清 token、不強制登出
                         return@withContext Result.Error(errorMessage ?: "請求失敗 (${e.code()})")
                     }
                 } catch (e: Exception) {
                     Log.e("DAE_Develop", "API 請求錯誤", e)
-                    return@withContext Result.Error(e.message ?: "網路錯誤")
+                    return@withContext Result.Error(friendlyNetworkMessage(e))
                 }
             }
             Result.Error("請求失敗")
@@ -153,7 +155,7 @@ open class BaseRepository @Inject constructor(
                 Result.Error(errorResponse?.error?.message ?: "請求失敗 (${e.code()})")
             } catch (e: Exception) {
                 Log.e("DAE_Develop", "API 請求錯誤", e)
-                Result.Error(e.message ?: "網路錯誤")
+                Result.Error(friendlyNetworkMessage(e))
             }
         }
     }
@@ -183,6 +185,19 @@ open class BaseRepository @Inject constructor(
 //            }
 //        }
 //    }
+
+    /**
+     * 將網路類例外轉成友善訊息，避免原始英文（如 "Unable to resolve host ..."）直接顯示給使用者
+     */
+    private fun friendlyNetworkMessage(e: Exception): String {
+        return when (e) {
+            is java.net.UnknownHostException,
+            is java.net.ConnectException,
+            is java.net.SocketTimeoutException,
+            is java.io.IOException -> "網路連線異常，請檢查網路後再試"
+            else -> e.message ?: "網路錯誤"
+        }
+    }
 
     /**
      * 從 HttpException 解析 errorBody（只讀一次）

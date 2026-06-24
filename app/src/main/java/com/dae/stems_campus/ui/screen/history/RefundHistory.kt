@@ -197,12 +197,16 @@ private fun refundHistoryRow(
                             Spacer(modifier = Modifier.height(20.dp))
                             Text(dateText, color = Color.Black, style = MaterialTheme.typography.bodySmall)
                             Spacer(modifier = Modifier.height(5.dp))
-                            Row {
-                                Text("${item.amount?.toAmountString()}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                                Text("${stringResource(R.string.currency_unit)}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                            }
-
+                            Text("${item.refundTypeLabel}退款", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                             Spacer(modifier = Modifier.height(20.dp))
+                        }
+                        Spacer(modifier = Modifier.weight(1f))
+                        Column(modifier = Modifier.align(Alignment.CenterVertically)) {
+                            Text(
+                                "$${item.amount?.toAmountString()}",
+                                color = Color(0xFF2D859D),
+                                style = MaterialTheme.typography.titleMedium
+                            )
                         }
                         Spacer(modifier = Modifier.width(20.dp))
                     }

@@ -392,7 +392,7 @@ class AccountViewModel @Inject constructor(private var accountRepository: Accoun
                 _showRegisterInfoInputFailMsg.value = "PasswordNotEntered"
                 return@launch
             }
-            if (!aPassword.matches(Regex("^[A-Za-z0-9\\p{Punct}]+$"))) {
+            if (!aPassword.matches(Regex("^(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]{8,20}$"))) {
                 _showRegisterInfoInputFailTag.value = 1
                 _showRegisterInfoInputFailMsg.value = "PasswordInvalidFormat"
                 return@launch
@@ -431,7 +431,7 @@ class AccountViewModel @Inject constructor(private var accountRepository: Accoun
                 _showResetPasswordInputFailMsg.value = "PasswordNotEntered"
                 return@launch
             }
-            if (!aPassword.matches(Regex("^[A-Za-z0-9\\p{Punct}]+$"))) {
+            if (!aPassword.matches(Regex("^(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]{8,20}$"))) {
                 _showResetPasswordInputFailTag.value = 1
                 _showResetPasswordInputFailMsg.value = "PasswordInvalidFormat"
                 return@launch

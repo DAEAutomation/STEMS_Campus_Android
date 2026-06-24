@@ -26,7 +26,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -240,8 +242,15 @@ private fun classroomDetailContent(navController: NavHostController,
     var showingStopPowerBottomSheet by remember { mutableStateOf(false) }
 
     val stopPowerSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val stopPowerInfoSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val stopPowerInfoByStudentSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val stopPowerInfoSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+        // 攔截狀態變化：不允許被切到 Hidden（擋掉點空白處 / 下滑關閉）
+        confirmValueChange = { it != SheetValue.Hidden }
+    )
+    val stopPowerInfoByStudentSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+        // 攔截狀態變化：不允許被切到 Hidden（擋掉點空白處 / 下滑關閉）
+        confirmValueChange = { it != SheetValue.Hidden })
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF4F4F4))) {
         Scaffold(
@@ -298,10 +307,15 @@ private fun classroomDetailContent(navController: NavHostController,
                             showingStopPowerBottomSheet = false
                             ModalBottomSheet(
                                 onDismissRequest = {
-                                    onShowingStopPowerInfoBottomSheetChange(false)
                                 },
                                 sheetState = stopPowerInfoSheetState,
-                                containerColor = Color.White
+                                containerColor = Color.White,
+                                // 關掉拖曳手勢（擋下滑）
+                                sheetGesturesEnabled = false,
+                                // 返回鍵也不關閉
+                                properties = ModalBottomSheetProperties(
+                                    shouldDismissOnBackPress = false
+                                )
                             ) {
                                 stopPowerInfoBottomSheetView(aStopSessionDetail,{
                                     onShowingStopPowerInfoBottomSheetChange(false)
@@ -318,7 +332,13 @@ private fun classroomDetailContent(navController: NavHostController,
                                     onShowingStopPowerInfoByStudentBottomSheetChange(false)
                                 },
                                 sheetState = stopPowerInfoByStudentSheetState,
-                                containerColor = Color.White
+                                containerColor = Color.White,
+                                // 關掉拖曳手勢（擋下滑）
+                                sheetGesturesEnabled = false,
+                                // 返回鍵也不關閉
+                                properties = ModalBottomSheetProperties(
+                                    shouldDismissOnBackPress = false
+                                )
                             ) {
                                 stopPowerInfoByStudentBottomSheetView(aBillingDetail,aStopSessionDetail,{
                                     onShowingStopPowerInfoByStudentBottomSheetChange(false)

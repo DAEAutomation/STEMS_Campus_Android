@@ -407,18 +407,9 @@ private fun settingContent(
                                 ){
                                     Column {
                                         Spacer(modifier = Modifier.height(20.dp))
-                                        Text(stringResource(R.string.enable_touch_face_id_login), color = Color.Black, style = MaterialTheme.typography.bodyLarge)
-
-                                        Row (verticalAlignment = Alignment.CenterVertically){
-                                            Text(stringResource(R.string.agree_touch_face_id_login), color = Color.Black, style = MaterialTheme.typography.bodySmall)
-                                            TextButton(
-                                                onClick = {
-
-                                                }
-                                            ) {
-                                                Text(stringResource(id = R.string.terms_of_use),style = TextStyle(textDecoration = TextDecoration.Underline), color = Color(0xFF2D859D))
-                                            }
-                                        }
+                                        Text(stringResource(R.string.biometric_login), color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                                        Spacer(modifier = Modifier.height(15.dp))
+                                        Text(stringResource(R.string.use_face_or_fingerprint_verification), color = Color.Black, style = MaterialTheme.typography.bodySmall)
                                         Spacer(modifier = Modifier.height(20.dp))
                                     }
                                 }
@@ -798,13 +789,6 @@ private fun settingContent(
         }
     }
 
-
-
-    //處理手機上的Back按鍵
-    BackHandler {
-        onShowTabBarChange(true)
-        navController.navigateUp()
-    }
 }
 
 @Composable
