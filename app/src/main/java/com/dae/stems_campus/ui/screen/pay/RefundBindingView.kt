@@ -268,7 +268,7 @@ private fun qrScanView(onScanCodeHandled:(String) -> Unit) {
             Column (horizontalAlignment = Alignment.CenterHorizontally){
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Text(stringResource(R.string.scan_location_qr_code_to_start), color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.scan_top_up_qr_code), color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                 Spacer(modifier = Modifier.height(25.dp))
 
             }
