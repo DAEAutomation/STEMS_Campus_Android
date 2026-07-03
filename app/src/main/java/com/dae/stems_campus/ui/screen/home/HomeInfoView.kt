@@ -600,7 +600,7 @@ private fun homeContent(mainNavController: NavController,
                     classroomPowerSupplyByStudentBottomSheetView(scanInfo,
                         onPowerSupplyHandled = { value ->
                             if (isBiometricFlag) {
-
+                                onBiometricsStartPowerSupplyHandled()
                             }else{
                                 acControlHandled(value)
                                 showingInputPasswordBottomSheet = true

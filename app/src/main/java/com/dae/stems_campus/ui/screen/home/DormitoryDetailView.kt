@@ -565,9 +565,11 @@ private fun stopPowerInfoBottomSheetView(aBillingDetail : BillingDetail?, aStopP
                 }
                 Row {
                     Spacer(modifier = Modifier.width(20.dp))
-                    Text("${"使用時間："}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${"使用度數："}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.weight(1f))
-                    Text(computeDurationAtLeastOneMinute(aStopPowerData?.session?.startTime ?: "",aStopPowerData?.session?.endTime ?: ""), color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Text("${"${aBillingDetail?.totalKwh}"}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text("${stringResource(R.string.electricity_unit)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.width(20.dp))
                 }
                 Spacer(modifier = Modifier.height( 35.dp))

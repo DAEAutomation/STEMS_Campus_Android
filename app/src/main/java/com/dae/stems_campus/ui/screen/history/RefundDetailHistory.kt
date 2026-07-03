@@ -381,9 +381,6 @@ private fun easyCardRefundView(refundHistory: HistoryModel.RefundHistory?) {
                             Spacer(modifier = Modifier.width(20.dp))
                             Text("${completedAtText}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                         }
-                        Row {
-                            Text("(校方退現時間)", color = Color(0xFF2D859D), style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(110.dp))
-                        }
 
                         Spacer(modifier = Modifier.height(20.dp))
                     }
