@@ -17,7 +17,7 @@ android {
         applicationId = "com.dae.stemscampus"
         minSdk = 29
         targetSdk = 36
-        versionCode = 13
+        versionCode = 15
         versionName = "1.0.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
