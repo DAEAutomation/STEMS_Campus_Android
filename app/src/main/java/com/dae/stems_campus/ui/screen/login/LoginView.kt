@@ -1,6 +1,7 @@
 package com.dae.stems_campus.ui.screen.login
 
 import android.widget.Toast
+import androidx.biometric.BiometricManager
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -414,18 +415,29 @@ private fun LoginContent(navController: NavHostController,
                                             onClick = {
                                                 if (isBiometricFlag) {
                                                     if (biometricHelper != null) {
-                                                        if (biometricHelper.canAuthenticate()) {
-                                                            biometricHelper?.authenticate(
-                                                                onSuccess = {
-                                                                    onBiometricLoginHandled()
-                                                                },
-                                                                onError = {
-                                                                    Toast.makeText(context, "$it", Toast.LENGTH_SHORT).show()
-                                                                }
-                                                            )
-                                                        } else {
-                                                            showBiometricFailDialogFlag = true
-                                                            showBiometricFailMsg = "BiometricNotSupportedOrDisabled"
+                                                        when (biometricHelper.canAuthenticate()) {
+                                                            BiometricManager.BIOMETRIC_SUCCESS -> {
+                                                                biometricHelper.authenticate(
+                                                                    onSuccess = {
+                                                                        onBiometricLoginHandled()
+                                                                    },
+                                                                    onError = {
+                                                                        Toast.makeText(context, "$it", Toast.LENGTH_SHORT).show()
+                                                                    }
+                                                                )
+                                                            }
+                                                            BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
+                                                                showBiometricFailDialogFlag = true
+                                                                showBiometricFailMsg = "BiometricNoneEnrolled"
+                                                            }
+                                                            BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> {
+                                                                showBiometricFailDialogFlag = true
+                                                                showBiometricFailMsg = "BiometricUnavailable"
+                                                            }
+                                                            else -> {
+                                                                showBiometricFailDialogFlag = true
+                                                                showBiometricFailMsg = "BiometricNotSupportedOrDisabled"
+                                                            }
                                                         }
                                                     }else{
                                                         showBiometricFailDialogFlag = true
@@ -698,6 +710,10 @@ private fun parseDialogMsg(aMsg: String):(String){
         msg = stringResource(id = R.string.biometric_not_supported_or_disabled)
     }else if (aMsg == "BiometricNotSupported") {
         msg = stringResource(id = R.string.biometric_not_supported)
+    }else if (aMsg == "BiometricNoneEnrolled") {
+        msg = stringResource(id = R.string.biometric_none_enrolled)
+    }else if (aMsg == "BiometricUnavailable") {
+        msg = stringResource(id = R.string.biometric_unavailable)
     }else if (aMsg == "EmailNotEntered") {
         msg = "請輸入 E-mail"
     }else if (aMsg == "EmailFormatInvalid") {

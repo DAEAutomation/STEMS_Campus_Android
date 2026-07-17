@@ -3,6 +3,7 @@ package com.dae.stems_campus.ui.screen.setting
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.compose.BackHandler
+import androidx.biometric.BiometricManager
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -419,11 +420,22 @@ private fun settingContent(
                                         onCheckedChange = { checked ->
                                             if (checked) {
                                                 if (biometricHelper != null) {
-                                                    if (biometricHelper.canAuthenticate()) {
-                                                        showInputPasswordOpenBiometricBottomSheet = true
-                                                    } else {
-                                                        showBiometricFailDialogFlag = true
-                                                        showBiometricFailMsg = "BiometricNotSupportedOrDisabled"
+                                                    when (biometricHelper.canAuthenticate()) {
+                                                        BiometricManager.BIOMETRIC_SUCCESS -> {
+                                                            showInputPasswordOpenBiometricBottomSheet = true
+                                                        }
+                                                        BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
+                                                            showBiometricFailDialogFlag = true
+                                                            showBiometricFailMsg = "BiometricNoneEnrolled"
+                                                        }
+                                                        BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> {
+                                                            showBiometricFailDialogFlag = true
+                                                            showBiometricFailMsg = "BiometricUnavailable"
+                                                        }
+                                                        else -> {
+                                                            showBiometricFailDialogFlag = true
+                                                            showBiometricFailMsg = "BiometricNotSupportedOrDisabled"
+                                                        }
                                                     }
                                                 }else{
                                                     showBiometricFailDialogFlag = true
@@ -1376,6 +1388,10 @@ private fun parseDialogMsg(aMsg: String):(String){
         msg = stringResource(id = R.string.biometric_not_supported_or_disabled)
     }else if (aMsg == "BiometricNotSupported") {
         msg = stringResource(id = R.string.biometric_not_supported)
+    }else if (aMsg == "BiometricNoneEnrolled") {
+        msg = stringResource(id = R.string.biometric_none_enrolled)
+    }else if (aMsg == "BiometricUnavailable") {
+        msg = stringResource(id = R.string.biometric_unavailable)
     }else if(aMsg == "PasswordNotEntered") {
         msg = stringResource(R.string.password_not_entered)
     }else {

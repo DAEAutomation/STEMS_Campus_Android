@@ -164,6 +164,10 @@
     <string name="biometric_not_supported_or_disabled">此裝置不支援生物辨識或未開啟</string>
     <string name="biometric_login_not_enabled">尚未啟用生物辨識登入功能</string>
     <string name="biometric_not_supported">沒有生物辨識功能，預覽或非支援裝置</string>
+    <string name="biometric_prompt_title">身份驗證</string>
+    <string name="biometric_prompt_use_password">使用密碼</string>
+    <string name="biometric_none_enrolled">尚未註冊臉部或指紋，請先至系統設定新增</string>
+    <string name="biometric_unavailable">生物辨識暫時無法使用，請稍後再試</string>
     <string name="confirm_turn_on_air_conditioner">是否開啟冷氣</string>
     <string name="confirm_delete_account">確定要刪除帳戶？\n＊刪除後將無法進行復原</string>
     <string name="delete_success">刪除成功</string>

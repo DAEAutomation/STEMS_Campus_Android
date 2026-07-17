@@ -2,6 +2,7 @@ package com.dae.stems_campus.ui.screen.home
 
 import android.util.Log
 import android.widget.Toast
+import androidx.biometric.BiometricManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -9,6 +10,7 @@ import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.core.content.ContextCompat
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -45,6 +47,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -192,24 +195,38 @@ private fun homeMainLoad(
     }
     val passwordText by loginViewModel.passwordText.collectAsState()
 
+    // Toast 在非 composable 的 lambda 裡顯示，文字先在這裡取好
+    val msgLoginNotEnabled = stringResource(R.string.biometric_login_not_enabled)
+    val msgNotSupported = stringResource(R.string.biometric_not_supported)
+    val msgNoneEnrolled = stringResource(R.string.biometric_none_enrolled)
+    val msgUnavailable = stringResource(R.string.biometric_unavailable)
+    val msgNotSupportedOrDisabled = stringResource(R.string.biometric_not_supported_or_disabled)
+
     //生物辨識判斷
     val handleBiometricStartPower = {
         if (!isBiometricFlag) {
-            Toast.makeText(context, "BiometricNotSupportedOrDisabled",
-                Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, msgLoginNotEnabled, Toast.LENGTH_SHORT).show()
         } else if (biometricHelper == null) {
-            Toast.makeText(context, "BiometricNotSupported", Toast.LENGTH_SHORT).show()
-        } else if (!biometricHelper.canAuthenticate()) {
-            Toast.makeText(context, "BiometricLoginNotEnabled", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, msgNotSupported, Toast.LENGTH_SHORT).show()
         } else {
-            biometricHelper.authenticate(
-                onSuccess = {
-                    loginViewModel.verifyPasswordAction(passwordText, "bind_device", uuid)
-                },
-                onError = {
-                    Toast.makeText(context, "$it", Toast.LENGTH_SHORT).show()
+            when (biometricHelper.canAuthenticate()) {
+                BiometricManager.BIOMETRIC_SUCCESS -> {
+                    biometricHelper.authenticate(
+                        onSuccess = {
+                            loginViewModel.verifyPasswordAction(passwordText, "bind_device", uuid)
+                        },
+                        onError = {
+                            Toast.makeText(context, "$it", Toast.LENGTH_SHORT).show()
+                        }
+                    )
                 }
-            )
+                BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED ->
+                    Toast.makeText(context, msgNoneEnrolled, Toast.LENGTH_SHORT).show()
+                BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE ->
+                    Toast.makeText(context, msgUnavailable, Toast.LENGTH_SHORT).show()
+                else ->
+                    Toast.makeText(context, msgNotSupportedOrDisabled, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -1155,40 +1172,52 @@ private fun CameraPreview(modifier: Modifier = Modifier, onCodeScanned: (String)
     val previewView = remember { PreviewView(context) }
     var isScanning by remember { mutableStateOf(true) }
 
-    LaunchedEffect(Unit) {
+    // 用 DisposableEffect 而非 LaunchedEffect：相機是綁在 Activity 的 lifecycleOwner 上，
+    // 這個 composable 消失時不會自動解除，不 unbind 的話後鏡頭會一直開著，
+    // 後續的臉部辨識搶不到相機（「相機正在使用中」）。
+    DisposableEffect(Unit) {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-        val cameraProvider = cameraProviderFuture.get()
-
-        val preview = androidx.camera.core.Preview.Builder().build().apply {
-            setSurfaceProvider(previewView.surfaceProvider)
-        }
-
         val barcodeScanner = BarcodeScanning.getClient()
-        val analysis = ImageAnalysis.Builder()
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
-        analysis.setAnalyzer(Dispatchers.Default.asExecutor()) { imageProxy ->
-            if (isScanning) {
-                processImageProxy(barcodeScanner, imageProxy) { result ->
-                    // 掃到結果時停止掃描
-                    isScanning = false
-                    onCodeScanned(result)
-                }
-            }else{
-                imageProxy.close()
-            }
-        }
+        var cameraProvider: ProcessCameraProvider? = null
 
-        try {
-            cameraProvider.unbindAll()
-            cameraProvider.bindToLifecycle(
-                lifecycleOwner,
-                CameraSelector.DEFAULT_BACK_CAMERA,
-                preview,
-                analysis
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
+        cameraProviderFuture.addListener({
+            cameraProvider = cameraProviderFuture.get()
+
+            val preview = androidx.camera.core.Preview.Builder().build().apply {
+                setSurfaceProvider(previewView.surfaceProvider)
+            }
+
+            val analysis = ImageAnalysis.Builder()
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+            analysis.setAnalyzer(Dispatchers.Default.asExecutor()) { imageProxy ->
+                if (isScanning) {
+                    processImageProxy(barcodeScanner, imageProxy) { result ->
+                        // 掃到結果時停止掃描
+                        isScanning = false
+                        onCodeScanned(result)
+                    }
+                }else{
+                    imageProxy.close()
+                }
+            }
+
+            try {
+                cameraProvider?.unbindAll()
+                cameraProvider?.bindToLifecycle(
+                    lifecycleOwner,
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    preview,
+                    analysis
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }, ContextCompat.getMainExecutor(context))
+
+        onDispose {
+            cameraProvider?.unbindAll()
+            barcodeScanner.close()
         }
     }
 
