@@ -15,7 +15,7 @@ android {
 
     defaultConfig {
         applicationId = "com.dae.stemscampus"
-        minSdk = 29
+        minSdk = 30
         targetSdk = 36
         versionCode = 17
         versionName = "1.0.8"
