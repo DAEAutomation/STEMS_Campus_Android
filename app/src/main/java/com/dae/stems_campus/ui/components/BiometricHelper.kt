@@ -9,11 +9,12 @@ import com.dae.stems_campus.R
 
 class BiometricHelper(private val activity: FragmentActivity) {
 
-    // 不含 DEVICE_CREDENTIAL：鎖屏 PIN 只證明「解得開這台手機」，不足以當帳號層級的本人驗證。
-    // 另外 BIOMETRIC_WEAK or DEVICE_CREDENTIAL 在 API 29 是非法組合，minSdk 29 不能用。
+    // minSdk 已提升到 30，可安全組合臉部(WEAK) + 裝置密碼(DEVICE_CREDENTIAL)。
+    // 系統辨識畫面會自帶「使用密碼」直接走手機解鎖 PIN，不需自訂 fallback。
     private val authenticators =
         BiometricManager.Authenticators.BIOMETRIC_STRONG or
-                BiometricManager.Authenticators.BIOMETRIC_WEAK
+                BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                BiometricManager.Authenticators.DEVICE_CREDENTIAL
 
     /** 回傳 BiometricManager.BIOMETRIC_* 原始碼，讓呼叫端分辨「沒硬體」和「有硬體但沒註冊」 */
     fun canAuthenticate(): Int =
@@ -25,11 +26,11 @@ class BiometricHelper(private val activity: FragmentActivity) {
     ) {
         val executor = ContextCompat.getMainExecutor(activity)
 
+        // 含 DEVICE_CREDENTIAL 時不可設 setNegativeButtonText，密碼入口由系統畫面自帶
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle(activity.getString(R.string.biometric_prompt_title))
             .setSubtitle(activity.getString(R.string.use_face_or_fingerprint_verification))
             .setAllowedAuthenticators(authenticators)
-            .setNegativeButtonText(activity.getString(R.string.biometric_prompt_use_password))
             .setConfirmationRequired(false)
             .build()
 
@@ -42,9 +43,8 @@ class BiometricHelper(private val activity: FragmentActivity) {
                 }
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                    // 使用者主動取消或按「使用密碼」不是錯誤，直接收掉讓他回原畫面輸密碼
+                    // 使用者主動取消（返回鍵、下滑關閉）→ 什麼都不做，其餘才報錯
                     if (errorCode == BiometricPrompt.ERROR_USER_CANCELED ||
-                        errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
                         errorCode == BiometricPrompt.ERROR_CANCELED
                     ) return
                     onError(errString.toString())

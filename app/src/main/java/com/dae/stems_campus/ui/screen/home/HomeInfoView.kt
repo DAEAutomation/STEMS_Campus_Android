@@ -202,7 +202,7 @@ private fun homeMainLoad(
     val msgUnavailable = stringResource(R.string.biometric_unavailable)
     val msgNotSupportedOrDisabled = stringResource(R.string.biometric_not_supported_or_disabled)
 
-    //生物辨識判斷
+    //生物辨識判斷（含裝置密碼，密碼入口由系統辨識畫面自帶）
     val handleBiometricStartPower = {
         if (!isBiometricFlag) {
             Toast.makeText(context, msgLoginNotEnabled, Toast.LENGTH_SHORT).show()
@@ -592,10 +592,6 @@ private fun homeContent(mainNavController: NavController,
                         onPowerSupplyHandled = {
                             if (isBiometricFlag) {
                                 onBiometricsStartPowerSupplyHandled()
-
-
-
-
                             }else{
                                 showingInputPasswordBottomSheet = true
                             }
