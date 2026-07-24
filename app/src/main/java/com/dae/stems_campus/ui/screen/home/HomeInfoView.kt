@@ -1569,6 +1569,8 @@ private fun dormitoryPowerSupplyByTeacherBottomSheetView(aData: ScanModel.ScanDa
 @Composable
 private fun classroomPowerSupplyByStudentBottomSheetView(aData: ScanModel.ScanData?, onPowerSupplyHandled: (Boolean) -> Unit, onCancelHandled: () -> Unit) {
     var isAcControl by remember { mutableStateOf(false) }
+    var showAcNotOpenAlert by remember { mutableStateOf(false) }
+    val isAcOpenPeriod = aData?.isAcOpenPeriod == true
     Column {
         Row (verticalAlignment = Alignment.CenterVertically){
             Surface (modifier = Modifier.weight(1f), color = Color.Unspecified){
@@ -1623,16 +1625,38 @@ private fun classroomPowerSupplyByStudentBottomSheetView(aData: ScanModel.ScanDa
             Spacer(modifier = Modifier.width(5.dp))
             Spacer(modifier = Modifier.weight(1f))
             Surface (modifier = Modifier.padding(start = 10.dp),color = Color.Unspecified){
-                Switch(
-                    checked = isAcControl,
-                    onCheckedChange = { checked ->
-                        isAcControl = checked
-                    },
-                    // 只有在冷氣開放時段、且非 freeMode（免費模式）時才可開啟
-                    enabled = aData?.isAcOpenPeriod == true && aData?.freeMode != true
-                )
+                Box {
+                    Switch(
+                        checked = isAcControl,
+                        onCheckedChange = { checked ->
+                            isAcControl = checked
+                        },
+                        // 只有在冷氣開放時段、且非 freeMode（免費模式）時才可開啟
+                        enabled = isAcOpenPeriod && aData?.freeMode != true
+                    )
+                    // 非開放時段 Switch 被 disable 收不到點擊，蓋一層透明區塊攔截點擊跳提示
+                    if (!isAcOpenPeriod) {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showAcNotOpenAlert = true }
+                        )
+                    }
+                }
             }
             Spacer(modifier = Modifier.width(40.dp))
+        }
+
+        if (showAcNotOpenAlert) {
+            textTNoButtonAlert(
+                onDismissRequest = {},
+                dialogTitle = stringResource(R.string.ac_not_open_period)
+            )
+            // 在 Dialog 顯示後啟動計時器
+            LaunchedEffect(Unit) {
+                delay(1500) // 延遲 1.5 秒
+                showAcNotOpenAlert = false
+            }
         }
 
         Spacer(modifier = Modifier.height( 35.dp))

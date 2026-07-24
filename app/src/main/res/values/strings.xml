@@ -168,6 +168,7 @@
     <string name="biometric_none_enrolled">尚未註冊臉部或指紋，請先至系統設定新增</string>
     <string name="biometric_unavailable">生物辨識暫時無法使用，請稍後再試</string>
     <string name="confirm_turn_on_air_conditioner">是否開啟冷氣</string>
+    <string name="ac_not_open_period">目前非冷氣開放期間\n或錢包餘額不足</string>
     <string name="confirm_delete_account">確定要刪除帳戶？\n＊刪除後將無法進行復原</string>
     <string name="delete_success">刪除成功</string>
     <string name="execute_success">執行成功</string>
