@@ -213,7 +213,11 @@ private fun homeMainLoad(
                 BiometricManager.BIOMETRIC_SUCCESS -> {
                     biometricHelper.authenticate(
                         onSuccess = {
-                            loginViewModel.verifyPasswordAction(passwordText, "bind_device", uuid)
+                            if (profileInfo?.role.equals("staff")) {
+                                homeInfoViewModel.startPowerAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "")
+                            }else if (profileInfo?.role.equals("student")){
+                                homeInfoViewModel.startPowerByStudentAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "", isAcControl)
+                            }
                         },
                         onError = {
                             Toast.makeText(context, "$it", Toast.LENGTH_SHORT).show()
@@ -255,6 +259,7 @@ private fun homeMainLoad(
         showVerifyPasswordFailDialogFlag = showVerifyPasswordFailDialogFlag,
         showVerifyPasswordFailMsg = showVerifyPasswordFailMsg,
         onVerifyPasswordFailDismissed = { loginViewModel.resetShowVerifyPasswordFailDialogFlag(false)},
+        resStartPowerSuccessFlag = resStartPowerSuccessFlag,
         acControlHandled = { value -> isAcControl = value },
         isBiometricFlag = isBiometricFlag,
         biometricHelper = biometricHelper,
@@ -330,6 +335,7 @@ private fun homeContent(mainNavController: NavController,
                         showVerifyPasswordFailDialogFlag: Boolean = false,
                         showVerifyPasswordFailMsg: String? = null,
                         onVerifyPasswordFailDismissed: () -> Unit = {},
+                        resStartPowerSuccessFlag: Boolean = false,
                         acControlHandled:(Boolean) -> Unit = {},
                         isBiometricFlag: Boolean = false,
                         biometricHelper: BiometricHelper? = null,
@@ -677,6 +683,16 @@ private fun homeContent(mainNavController: NavController,
             }
 
             if (resVerifyPasswordSuccessFlag) {
+                showingInputPasswordBottomSheet = false
+                showDormitoryPowerSupplyByTeacherBottomSheet = false
+                showClassroomPowerSupplyByTeacherBottomSheet = false
+                showClassroomPowerSupplyByStudentBottomSheet = false
+                showDormitoryPowerSupplyByStudentBottomSheet = false
+            }
+
+            // 生物辨識開電不會經過密碼驗證（resVerifyPasswordSuccessFlag 不會被設 true），
+            // 改用開電成功 flag 統一關閉所有 power supply sheet，兩條路徑都涵蓋
+            if (resStartPowerSuccessFlag) {
                 showingInputPasswordBottomSheet = false
                 showDormitoryPowerSupplyByTeacherBottomSheet = false
                 showClassroomPowerSupplyByTeacherBottomSheet = false
