@@ -5,8 +5,10 @@ import androidx.biometric.BiometricManager
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,16 +21,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -48,6 +57,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -59,19 +70,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
+import com.dae.stems_campus.data.model.SchoolHostModel
 import com.dae.stems_campus.ui.components.BiometricHelper
 import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.viewmodel.AccountViewModel
 import com.dae.stems_campus.viewmodel.LoginViewModel
 import com.dae.stems_campus.viewmodel.PushNotificationViewModel
+import com.dae.stems_campus.viewmodel.SelectSchoolViewModel
 import com.dae.stems_campus.viewmodel.SettingViewModel
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun login(navController: NavHostController, loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), accountViewModel: AccountViewModel = hiltViewModel(), pushNotificationViewModel: PushNotificationViewModel = hiltViewModel()) {
+fun login(navController: NavHostController, loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), accountViewModel: AccountViewModel = hiltViewModel(), pushNotificationViewModel: PushNotificationViewModel = hiltViewModel(), selectSchoolViewModel: SelectSchoolViewModel = hiltViewModel()) {
 
     var loginOrRegister by remember { mutableStateOf(true) }
     var pwVisibility by remember { mutableStateOf(false) }
@@ -97,6 +110,10 @@ fun login(navController: NavHostController, loginViewModel: LoginViewModel = hil
     val rememberLoginInfoChecked by loginViewModel.rememberLoginInfoChecked.collectAsState()
 
     val isBiometricFlag by settingViewModel.isBiometricEnabled.collectAsState()
+
+    val apiDomainValue by loginViewModel.apiDomainValue.collectAsState()
+    val schoolList by selectSchoolViewModel.schools.collectAsState()
+
 
     LaunchedEffect(Unit) {
         settingViewModel.getBiometricValue()
@@ -140,10 +157,16 @@ fun login(navController: NavHostController, loginViewModel: LoginViewModel = hil
         onRegisterSendEmailFailDismissed = {
             accountViewModel.resetShowRegisterSendEmailFailDialogFlag(false)
             accountViewModel.resetShowRegisterEmailInputFailFlag(false)
-        }
+        },
+        apiDomainValue = apiDomainValue,
+        schoolList = schoolList,
+        onLoadSchoolList = { selectSchoolViewModel.loadSchools() },
+        onApiDomainConfirmed = { host -> selectSchoolViewModel.confirmSchool(host) }
     )
+
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LoginContent(navController: NavHostController,
                          userNameText: String = "",
@@ -171,7 +194,11 @@ private fun LoginContent(navController: NavHostController,
                          onRegisterEmailFocused: () -> Unit = {},
                          onRegisterSendEmailClick: () -> Unit = {},
                          onRegisterSendEmailSuccessHandled: () -> Unit = {},
-                         onRegisterSendEmailFailDismissed: () -> Unit = {}) {
+                         onRegisterSendEmailFailDismissed: () -> Unit = {},
+                         apiDomainValue: String = "",
+                         schoolList: List<SchoolHostModel> = emptyList(),
+                         onLoadSchoolList: () -> Unit = {},
+                         onApiDomainConfirmed: (String) -> Unit = {}) {
 
     var loginOrRegister by remember { mutableStateOf(true) }
     var pwVisibility by remember { mutableStateOf(false) }
@@ -186,6 +213,27 @@ private fun LoginContent(navController: NavHostController,
     var showBiometricFailDialogFlag by remember { mutableStateOf(false) }
     var showBiometricFailMsg by remember { mutableStateOf("") }
 
+    var developModelCount by remember { mutableStateOf(0) }
+    var showInputPasswordDevelopBottomSheet by remember { mutableStateOf(false) }
+    val InputPasswordDevelopSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showVerifyPasswordFailDialogFlag by remember { mutableStateOf(false) }
+    var showVerifyPasswordFailMsg by remember { mutableStateOf("") }
+
+    var showDevelopBottomSheet by remember { mutableStateOf(false) }
+    val developSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    var showSchoolListBottomSheet by remember { mutableStateOf(false) }
+    val schoolListSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    // 開發者模式輸入框的網址：state 提升到這層，才能同時被「預帶 apiDomain」與「學校清單選取」寫入
+    var developDomainText by remember { mutableStateOf("") }
+
+    // 每次打開開發者模式 BottomSheet 時，預帶目前的 apiDomain
+    LaunchedEffect(showDevelopBottomSheet, apiDomainValue) {
+        if (showDevelopBottomSheet) {
+            developDomainText = apiDomainValue
+        }
+    }
 
     Column (){
         Surface(modifier = Modifier
@@ -362,6 +410,13 @@ private fun LoginContent(navController: NavHostController,
                                                 checked = rememberLoginInfoChecked,
                                                 onCheckedChange = { isCheck ->
                                                     onRememberCheckedChange(isCheck)
+                                                    
+                                                    developModelCount+=1
+
+                                                    if (developModelCount == 20){
+                                                        developModelCount = 0
+                                                        showInputPasswordDevelopBottomSheet = true
+                                                    }
                                                 }
                                             )
                                             Text(text = stringResource(id = R.string.remember),
@@ -494,6 +549,80 @@ private fun LoginContent(navController: NavHostController,
                         }
                     }
 
+                    // 開發者模式：輸入密碼
+                    if (showInputPasswordDevelopBottomSheet) {
+                        ModalBottomSheet(
+                            onDismissRequest = {
+                                showInputPasswordDevelopBottomSheet = false
+                            },
+                            sheetState = InputPasswordDevelopSheetState,
+                            containerColor = Color.White
+                        ) {
+
+                            inputPasswordBottomSheetView(stringResource(R.string.enter_password),onInputText = { value ->
+                                if (value == "13093059!@Dae") {
+                                    showVerifyPasswordFailDialogFlag = false
+                                    showInputPasswordDevelopBottomSheet = false
+                                    showDevelopBottomSheet = true
+                                }else{
+                                    showVerifyPasswordFailDialogFlag = true
+                                    showVerifyPasswordFailMsg = "WrongPassword"
+                                }
+                            }, onCancelHandled = {
+                                showInputPasswordDevelopBottomSheet = false
+                            }, showVerifyPasswordFailDialogFlag = showVerifyPasswordFailDialogFlag,
+                                showVerifyPasswordFailMsg = showVerifyPasswordFailMsg,
+                                onVerifyPasswordFailDismissed = {
+
+                                })
+                        }
+                    }
+
+                    // 開發者模式
+                    if (showDevelopBottomSheet) {
+                        ModalBottomSheet(
+                            onDismissRequest = {
+                                showDevelopBottomSheet = false
+                            },
+                            sheetState = developSheetState,
+                            containerColor = Color.White
+                        ) {
+                            inputPasswordAndLinkBottomSheetView(
+                                domainText = developDomainText,
+                                onDomainTextChange = { developDomainText = it },
+                                onInputText = { value ->
+                                    // 送出：切換 baseUrl 並寫回 DataStore
+                                    if (value.isNotEmpty()) {
+                                        onApiDomainConfirmed(value)
+                                    }
+                                    showDevelopBottomSheet = false
+                                },
+                                onCancelHandled = {
+                                    showDevelopBottomSheet = false
+                                },
+                                goToSchoolList = {
+                                    onLoadSchoolList()
+                                    showSchoolListBottomSheet = true
+                                })
+                        }
+                    }
+
+                    // 學校清單
+                    if (showSchoolListBottomSheet) {
+                        ModalBottomSheet(
+                            onDismissRequest = {
+                                showSchoolListBottomSheet = false
+                            },
+                            sheetState = schoolListSheetState,
+                            containerColor = Color.White
+                        ) {
+                            schoolListBottomSheetView(aSchoolList = schoolList) { school ->
+                                // 選完學校 → 回填到開發者模式的網址輸入框
+                                developDomainText = school.host ?: ""
+                                showSchoolListBottomSheet = false
+                            }
+                        }
+                    }
 
                 }
             }
@@ -679,6 +808,277 @@ private fun LoginContent(navController: NavHostController,
     }
 
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun inputPasswordBottomSheetView(title: String, onInputText:(String) -> Unit, onCancelHandled: () -> Unit, showVerifyPasswordFailDialogFlag: Boolean, showVerifyPasswordFailMsg: String?, onVerifyPasswordFailDismissed: () -> Unit) {
+    var inputPasswordText by remember { mutableStateOf("") }
+    Column {
+        Spacer(modifier = Modifier.height(40.dp))
+        Row {
+            Spacer(modifier = Modifier.width(20.dp))
+            Text(title, color = Color.Black, style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.width(20.dp))
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Row {
+            BasicTextField(
+                value = inputPasswordText,
+                onValueChange = { inputPasswordText = it },
+                textStyle = TextStyle( color = Color.Black),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                modifier = Modifier
+                    .fillMaxWidth().padding(start = 20.dp, end = 20.dp) ,
+                decorationBox = { innerTextField ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(
+                                width = 2.dp,
+                                color = if (showVerifyPasswordFailDialogFlag) Color(0xFFE54343) else Color(0xFF999999),
+                                shape = RoundedCornerShape(10.dp)
+                            ).padding(15.dp)
+                    ) {
+                        if (inputPasswordText.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.enter_password),
+                                color = Color(0xFFAAAAAA)
+                            )
+                        }else{
+                            onVerifyPasswordFailDismissed()
+                        }
+                        innerTextField()
+                    }
+                },
+                visualTransformation = PasswordVisualTransformation()
+            )
+
+        }
+
+        //處理錯誤輸入顯示
+        if (showVerifyPasswordFailDialogFlag) {
+            Spacer(modifier = Modifier.height( 10.dp))
+            Row {
+                Spacer(modifier = Modifier.width(20.dp))
+                Text(parseDialogMsg(showVerifyPasswordFailMsg ?: ""), color = Color(0xFFE54343))
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }
+        Spacer(modifier = Modifier.height( 35.dp))
+        Row {
+            Spacer(modifier = Modifier.width(30.dp))
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .align(Alignment.CenterVertically)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(
+                        color = Color(0xFF2D859D)
+                    )
+                    .clickable {
+//                        settingViewModel.passwordAuthenticationAction(inputPasswordText)
+                        onInputText(inputPasswordText)
+                        inputPasswordText = ""
+                    },
+
+                color = Color.Transparent
+            ) {
+                Text(
+                    text = stringResource(R.string.confirm),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.wrapContentHeight(),
+                    color = Color.White
+                )
+            }
+            Spacer(modifier = Modifier.width(30.dp))
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+        Row {
+            Spacer(modifier = Modifier.width(50.dp))
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .align(Alignment.CenterVertically)
+                    .clickable {
+                        onCancelHandled()
+                    },
+                color = Color.Transparent
+            ) {
+                Text(
+                    text = stringResource(R.string.cancel),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.wrapContentHeight(),
+                    color = Color.Black,
+                    style = TextStyle(textDecoration = TextDecoration.Underline)
+                )
+            }
+            Spacer(modifier = Modifier.width(50.dp))
+        }
+        Spacer(modifier = Modifier.height(40.dp))
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun inputPasswordAndLinkBottomSheetView(domainText: String, onDomainTextChange: (String) -> Unit, onInputText:(String) -> Unit, onCancelHandled: () -> Unit, goToSchoolList: () -> Unit) {
+    Column {
+        Spacer(modifier = Modifier.height(40.dp))
+        Row {
+            Spacer(modifier = Modifier.width(20.dp))
+            Text(stringResource(R.string.enter_api_domain), color = Color.Black, style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.width(20.dp))
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Row {
+            BasicTextField(
+                value = domainText,
+                onValueChange = { onDomainTextChange(it) },
+                textStyle = TextStyle( color = Color.Black),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Uri,
+                    imeAction = ImeAction.Done
+                ),
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth().padding(start = 20.dp, end = 20.dp) ,
+                decorationBox = { innerTextField ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(
+                                width = 2.dp,
+                                color = Color(0xFF999999),
+                                shape = RoundedCornerShape(10.dp)
+                            ).padding(15.dp)
+                    ) {
+                        if (domainText.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.enter_api_domain),
+                                color = Color(0xFFAAAAAA)
+                            )
+                        }
+                        innerTextField()
+                    }
+                }
+            )
+
+        }
+
+        Spacer(modifier = Modifier.height( 10.dp))
+        Row {
+            Spacer(modifier = Modifier.width(20.dp))
+            Text(
+                text = stringResource(R.string.go_to_school_list),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.wrapContentHeight().clickable{ goToSchoolList() },
+                color = Color.Black,
+                style = TextStyle(textDecoration = TextDecoration.Underline)
+            )
+            Spacer(modifier = Modifier.width(20.dp))
+        }
+        Spacer(modifier = Modifier.height( 35.dp))
+        Row {
+            Spacer(modifier = Modifier.width(30.dp))
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .align(Alignment.CenterVertically)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(
+                        color = Color(0xFF2D859D)
+                    )
+                    .clickable {
+                        onInputText(domainText)
+                    },
+
+                color = Color.Transparent
+            ) {
+                Text(
+                    text = stringResource(R.string.submit),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.wrapContentHeight(),
+                    color = Color.White
+                )
+            }
+            Spacer(modifier = Modifier.width(30.dp))
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+        Row {
+            Spacer(modifier = Modifier.width(50.dp))
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .align(Alignment.CenterVertically)
+                    .clickable {
+                        onCancelHandled()
+                    },
+                color = Color.Transparent
+            ) {
+                Text(
+                    text = stringResource(R.string.cancel),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.wrapContentHeight(),
+                    color = Color.Black,
+                    style = TextStyle(textDecoration = TextDecoration.Underline)
+                )
+            }
+            Spacer(modifier = Modifier.width(50.dp))
+        }
+        Spacer(modifier = Modifier.height(40.dp))
+    }
+}
+
+@Composable
+private fun schoolListBottomSheetView(aSchoolList: List<SchoolHostModel>, onItemClick: (SchoolHostModel) -> Unit = {}) {
+    LazyColumn() {
+        items(aSchoolList) { item ->
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onItemClick(item) }
+                    .padding(top = 3.dp),
+                color = Color.White
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = item.schoolName ?: "",
+                            color = Color.Black,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Spacer(modifier = Modifier.width(20.dp))
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row {
+                        Spacer(modifier = Modifier.width(30.dp))
+                        Spacer(
+                            modifier = Modifier
+                                .height(1.dp)
+                                .weight(1f)
+                                .background(color = Color(0xFF414141))
+                        )
+                        Spacer(modifier = Modifier.width(30.dp))
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 private fun getCurrentYear(): String {
     val formatter = DateTimeFormatter.ofPattern("yyyy") // 設定日期格式

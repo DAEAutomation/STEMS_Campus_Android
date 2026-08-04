@@ -197,4 +197,6 @@
     <string name="transaction_type">交易類型</string>
     <string name="easy_card_information">悠遊卡資訊</string>
     <string name="use_face_or_fingerprint_verification">使用您的臉部或指紋進行驗證</string>
+    <string name="go_to_school_list">從清單選擇</string>
+    <string name="enter_api_domain">請輸入 API 網址</string>
 </resources>
