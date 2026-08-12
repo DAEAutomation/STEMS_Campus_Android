@@ -17,6 +17,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,6 +30,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -92,6 +95,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
+import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.data.model.ProfileModel
 import com.dae.stems_campus.data.model.ScanModel
 import com.dae.stems_campus.ui.components.BiometricHelper
@@ -367,7 +371,9 @@ private fun homeContent(mainNavController: NavController,
     var showingPowerEnableBottomSheet by remember { mutableStateOf(false) }
     var showingInputPasswordBottomSheet by remember { mutableStateOf(false) }
     var showScanBottomSheet by remember { mutableStateOf(false) }
+    var showPayBottomSheet by remember { mutableStateOf(false) }
     val scanSheetState = rememberModalBottomSheetState()
+    val paySheetState = rememberModalBottomSheetState()
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -599,7 +605,8 @@ private fun homeContent(mainNavController: NavController,
                             if (isBiometricFlag) {
                                 onBiometricsStartPowerSupplyHandled()
                             }else{
-                                showingInputPasswordBottomSheet = true
+                                showPayBottomSheet = true
+
                             }
                     }, onCancelHandled = {
                         showDormitoryPowerSupplyByTeacherBottomSheet = false
@@ -646,7 +653,8 @@ private fun homeContent(mainNavController: NavController,
                             if (isBiometricFlag) {
                                 onBiometricsStartPowerSupplyHandled()
                             }else{
-                                showingInputPasswordBottomSheet = true
+                                showPayBottomSheet = true
+
                             }
                     }, onCancelHandled = {
                         showDormitoryPowerSupplyByStudentBottomSheet = false
@@ -735,6 +743,21 @@ private fun homeContent(mainNavController: NavController,
                         showScanBottomSheet = false
                         onScanInfoFinishHandled(code)
                     })
+                }
+            }
+
+            if (showPayBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showPayBottomSheet = false
+                    },
+                    sheetState = paySheetState,
+                    containerColor = Color.White
+                ) {
+                    payListView() { value ->
+                        showPayBottomSheet = false
+                        showingInputPasswordBottomSheet = true
+                    }
                 }
             }
 
@@ -1331,6 +1354,59 @@ private fun scanQRBottomSheetView(onCodeScanned: (String) -> Unit) {
         Spacer(modifier = Modifier.height(50.dp))
     }
 }
+
+@Composable
+private fun payListView( onItemClick: (String) -> Unit = {}) {
+
+    val items = listOf(
+        HistoryModel.HistoryTypeItem(R.string.wallet_top_up_history, "WalletTopUpHistory"),
+        HistoryModel.HistoryTypeItem(R.string.hour_allocation_history, "HourAllocationHistory"),
+        HistoryModel.HistoryTypeItem(R.string.classroom_usage_history, "ClassroomUsageHistory"),
+        HistoryModel.HistoryTypeItem(R.string.dormitory_usage_history, "DormitoryUsageHistory"),
+        HistoryModel.HistoryTypeItem(R.string.refund_history, "RefundHistory"),
+    )
+
+
+    LazyColumn() {
+        items(items) { item ->
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onItemClick(item.route) }
+                    .padding(top = 3.dp),
+                color = Color.White
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(id = item.titleRes),
+                            color = Color.Black,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Spacer(modifier = Modifier.width(20.dp))
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row {
+                        Spacer(modifier = Modifier.width(30.dp))
+                        Spacer(
+                            modifier = Modifier
+                                .height(1.dp)
+                                .weight(1f)
+                                .background(color = Color(0xFF414141))
+                        )
+                        Spacer(modifier = Modifier.width(30.dp))
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 @Composable
 private fun parseDialogMsg(aMsg: String):(String){

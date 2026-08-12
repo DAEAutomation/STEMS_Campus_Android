@@ -961,6 +961,58 @@ private fun userInfoByTeacherView(profileInfo: ProfileModel.ProfileData? = null)
             Spacer(modifier = Modifier.width(20.dp))
         }
         Spacer(modifier = Modifier.height(2.dp))
+        // <-----宿舍綁定----->
+        Row {
+            Spacer(modifier = Modifier.width(20.dp))
+            Surface (modifier = Modifier
+                .weight(1f)
+                .clickable {
+//                                    navController.navigate("changeName/${accountName}")
+                },
+
+                color = Color.White,
+                shape = RoundedCornerShape(0.dp)){
+
+                Row (verticalAlignment = Alignment.CenterVertically){
+                    Spacer(modifier = Modifier.width(20.dp))
+
+                    Surface (
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .weight(0.9f),
+                        color = Color.Unspecified
+                    ){
+                        Column {
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Text(stringResource(R.string.dormitory_binding), color = Color(0xFF303236), style = MaterialTheme.typography.bodyLarge)
+                            Spacer(modifier = Modifier.height(10.dp))
+                            if (profileInfo?.uid.equals("")){
+                                Text("尚未綁定", color = Color(0xFFE54343), style = MaterialTheme.typography.titleLarge)
+                            }else{
+                                Text(profileInfo?.uid ?: "", color = Color.Black, style = MaterialTheme.typography.titleLarge)
+                            }
+                            Spacer(modifier = Modifier.height(20.dp))
+                        }
+                    }
+                    Surface (
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .weight(0.1f),
+                        color = Color.Unspecified
+                    ){
+                        Icon(
+                            painter = painterResource(id = R.drawable.caretright),
+                            tint = Color.Black,
+                            contentDescription = "Localized description"
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(20.dp))
+                }
+            }
+            Spacer(modifier = Modifier.width(20.dp))
+        }
+        Spacer(modifier = Modifier.height(2.dp))
         // <-----信箱----->
         Row {
             Spacer(modifier = Modifier.width(20.dp))
@@ -1131,6 +1183,58 @@ private fun userInfoByStudentView(profileInfo: ProfileModel.ProfileData? = null,
                         Column {
                             Spacer(modifier = Modifier.height(20.dp))
                             Text(stringResource(R.string.physical_card_id), color = Color(0xFF303236), style = MaterialTheme.typography.bodyLarge)
+                            Spacer(modifier = Modifier.height(10.dp))
+                            if (profileInfo?.uid.equals("")){
+                                Text("尚未綁定", color = Color(0xFFE54343), style = MaterialTheme.typography.titleLarge)
+                            }else{
+                                Text(profileInfo?.uid ?: "", color = Color.Black, style = MaterialTheme.typography.titleLarge)
+                            }
+                            Spacer(modifier = Modifier.height(20.dp))
+                        }
+                    }
+                    Surface (
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .weight(0.1f),
+                        color = Color.Unspecified
+                    ){
+                        Icon(
+                            painter = painterResource(id = R.drawable.caretright),
+                            tint = Color.Black,
+                            contentDescription = "Localized description"
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(20.dp))
+                }
+            }
+            Spacer(modifier = Modifier.width(20.dp))
+        }
+        Spacer(modifier = Modifier.height(2.dp))
+        // <-----宿舍綁定----->
+        Row {
+            Spacer(modifier = Modifier.width(20.dp))
+            Surface (modifier = Modifier
+                .weight(1f)
+                .clickable {
+//                                    navController.navigate("changeName/${accountName}")
+                },
+
+                color = Color.White,
+                shape = RoundedCornerShape(0.dp)){
+
+                Row (verticalAlignment = Alignment.CenterVertically){
+                    Spacer(modifier = Modifier.width(20.dp))
+
+                    Surface (
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .weight(0.9f),
+                        color = Color.Unspecified
+                    ){
+                        Column {
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Text(stringResource(R.string.dormitory_binding), color = Color(0xFF303236), style = MaterialTheme.typography.bodyLarge)
                             Spacer(modifier = Modifier.height(10.dp))
                             if (profileInfo?.uid.equals("")){
                                 Text("尚未綁定", color = Color(0xFFE54343), style = MaterialTheme.typography.titleLarge)

@@ -199,16 +199,16 @@ private fun walletContent(
             Spacer(modifier = Modifier.height(20.dp))
             Surface (modifier = Modifier.weight(0.9f).verticalScroll(rememberScrollState()), color = Color.Unspecified) {
                 Column {
-                    if (profileInfo?.role.equals("staff")) {
-                        infoViewByTeacher(profileInfo)
-                    }else if (profileInfo?.role.equals("student")){
-                        infoViewByStudent(profileInfo)
-                    }
-
+//                    if (profileInfo?.role.equals("staff")) {
+//                        infoViewByTeacher(profileInfo)
+//                    }else if (profileInfo?.role.equals("student")){
+//                        infoViewByStudent(profileInfo)
+//                    }
+                    infoViewByTeacher(profileInfo)
                     Spacer(modifier = Modifier.height(40.dp))
                     Row {
-                        Spacer(modifier = Modifier.width(20.dp))
-                        Text(stringResource(R.string.wallet_top_up), color = Color(0xFF2D859D), style = MaterialTheme.typography.titleMedium)
+                        Spacer(modifier = Modifier.width(30.dp))
+                        Text(stringResource(R.string.personal_wallet), color = Color(0xFF2D859D), style = MaterialTheme.typography.titleMedium)
                     }
                     Spacer(modifier = Modifier.height(20.dp))
 
@@ -355,7 +355,65 @@ private fun walletContent(
                         }
                         Spacer(modifier = Modifier.width(20.dp))
                     }
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    //共用錢包
+                    Row {
+                        Spacer(modifier = Modifier.width(30.dp))
+                        Text(stringResource(R.string.shared_wallet), color = Color(0xFF2D859D), style = MaterialTheme.typography.titleMedium)
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    //<-----撥款----->
+                    Row {
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Surface (modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+
+                            },
+
+                            color = Color.White,
+                            shape = RoundedCornerShape(
+                                topStart = 9.dp,
+                                topEnd = 9.dp,
+                                bottomStart = 9.dp,
+                                bottomEnd = 9.dp)){
+
+                            Row (verticalAlignment = Alignment.CenterVertically){
+                                Spacer(modifier = Modifier.width(20.dp))
+
+                                Surface (
+                                    modifier = Modifier
+                                        .align(Alignment.CenterVertically)
+                                        .weight(0.9f),
+                                    color = Color.Unspecified
+                                ){
+                                    Column {
+                                        Spacer(modifier = Modifier.height(20.dp))
+                                        Text(stringResource(R.string.disbursement), color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                                        Spacer(modifier = Modifier.height(20.dp))
+                                    }
+                                }
+                                Surface (
+                                    modifier = Modifier
+                                        .align(Alignment.CenterVertically)
+                                        .weight(0.1f),
+                                    color = Color.Unspecified
+                                ){
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.caretdown),
+                                        tint = Color.Unspecified,
+                                        contentDescription = "Localized description"
+                                    )
+                                }
+
+
+                                Spacer(modifier = Modifier.width(20.dp))
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(20.dp))
+                    }
                 }
             }
         }
@@ -434,7 +492,11 @@ private fun infoViewByTeacher(profileInfo: ProfileModel.ProfileData?) {
                 .weight(1f)
                 .clickable {  },
             color = Color(0xFF2D859D),
-            shape = RoundedCornerShape(9.dp)
+            shape = RoundedCornerShape(
+                topStart = 9.dp,
+                topEnd = 9.dp,
+                bottomStart = 0.dp,
+                bottomEnd = 0.dp)
         ) {
             Row (verticalAlignment = Alignment.CenterVertically){
                 Surface (modifier = Modifier
@@ -445,12 +507,12 @@ private fun infoViewByTeacher(profileInfo: ProfileModel.ProfileData?) {
                         Row (verticalAlignment = Alignment.CenterVertically){
                             Spacer(modifier = Modifier.width(15.dp))
                             Icon(
-                                painter = painterResource(id = R.drawable.wallet_w),
+                                painter = painterResource(id = R.drawable.tipjar),
                                 contentDescription = "",
                                 tint = Color.Unspecified
                             )
                             Spacer(modifier = Modifier.width(10.dp))
-                            Text(stringResource(R.string.wallet), color = Color.White,style = MaterialTheme.typography.bodyLarge)
+                            Text(stringResource(R.string.personal_wallet), color = Color.White,style = MaterialTheme.typography.bodyLarge)
                             Row (verticalAlignment = Alignment.Bottom){
                                 Spacer(modifier = Modifier.width(20.dp))
                                 Text("${profileInfo?.balance?.toAmountString()}", color = Color.White, style = MaterialTheme.typography.headlineLarge,fontWeight = FontWeight.Bold)
@@ -461,10 +523,72 @@ private fun infoViewByTeacher(profileInfo: ProfileModel.ProfileData?) {
                         Spacer(modifier = Modifier.height(5.dp))
                         Row (verticalAlignment = Alignment.CenterVertically){
                             Spacer(modifier = Modifier.width(20.dp))
-                            Text("自動四捨五入至整數", color = Color.White,style = MaterialTheme.typography.bodySmall)
+                            Text("顯示金額皆取整數", color = Color.White,style = MaterialTheme.typography.bodySmall)
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                     }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.width(20.dp))
+    }
+
+    Row {
+        Spacer(modifier = Modifier.width(20.dp))
+        Surface(
+            modifier = Modifier
+                .weight(1f)
+                .clickable {  },
+            color = Color.White,
+            shape = RoundedCornerShape(
+                topStart = 0.dp,
+                topEnd = 0.dp,
+                bottomStart = 0.dp,
+                bottomEnd = 0.dp)
+        ) {
+            Row (verticalAlignment = Alignment.CenterVertically){
+                Surface (modifier = Modifier
+                    .weight(1f)
+                    , color = Color.White){
+                    Column (){
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row (verticalAlignment = Alignment.CenterVertically){
+                            Spacer(modifier = Modifier.width(15.dp))
+                            Icon(
+                                painter = painterResource(id = R.drawable.house_pay),
+                                contentDescription = "",
+                                tint = Color.Black
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(stringResource(R.string.personal_wallet), color = Color.Black,style = MaterialTheme.typography.bodyLarge)
+                            Row (verticalAlignment = Alignment.Bottom){
+                                Spacer(modifier = Modifier.width(20.dp))
+                                Text("${profileInfo?.balance?.toAmountString()}", color = Color(0xFF2D859D), style = MaterialTheme.typography.headlineLarge,fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.width(15.dp))
+                                Text(stringResource(R.string.currency_unit), color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(5.dp))
+                        Row (verticalAlignment = Alignment.CenterVertically){
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text("由個人錢包撥款，不可退款", color = Color.Black,style = MaterialTheme.typography.bodySmall)
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                }
+                Surface (
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .weight(0.3f)
+                        .height(80.dp),
+                    color = Color.White
+                ){
+                    Row (verticalAlignment = Alignment.CenterVertically) {
+                        Spacer(Modifier.weight(1f))
+                        Text(stringResource(R.string.shared_wallet), color = Color(0xFF2D859D),style = MaterialTheme.typography.bodyMedium, modifier = Modifier.background(Color.Unspecified).border(1.dp, Color(0xFF2D859D) , RoundedCornerShape(15.dp)).padding(5.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
+                    }
+
                 }
             }
         }
