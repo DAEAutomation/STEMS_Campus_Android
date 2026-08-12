@@ -3,6 +3,7 @@ package com.dae.stems_campus.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dae.stems_campus.data.model.SettingModel
 import com.dae.stems_campus.data.repository.AccountRepository
 import com.dae.stems_campus.data.repository.BaseRepository
 import com.dae.stems_campus.data.repository.CredentialRepository
@@ -86,6 +87,52 @@ class SettingViewModel @Inject constructor(private var profileRepository: Profil
 
     private val _showCardUnBindingFailMsg = MutableStateFlow<String?>("")
     val showCardUnBindingFailMsg: StateFlow<String?> = _showCardUnBindingFailMsg
+
+    //宿舍綁定掃描取得資訊
+    private val _dormScanInfoData = MutableStateFlow<SettingModel.DormScanInfoData?>(null)
+    val dormScanInfoData: StateFlow<SettingModel.DormScanInfoData?> = _dormScanInfoData
+
+    private val _resDormScanInfoSuccessFlag = MutableStateFlow(false)
+    val resDormScanInfoSuccessFlag: StateFlow<Boolean> = _resDormScanInfoSuccessFlag
+
+    private val _showDormScanInfoFailDialogFlag = MutableStateFlow(false)
+    val showDormScanInfoFailDialogFlag: StateFlow<Boolean> = _showDormScanInfoFailDialogFlag
+
+    private val _showDormScanInfoFailMsg = MutableStateFlow<String?>("")
+    val showDormScanInfoFailMsg: StateFlow<String?> = _showDormScanInfoFailMsg
+
+    //宿舍綁定
+    private val _dormBindingData = MutableStateFlow<SettingModel.DormBindingData?>(null)
+    val dormBindingData: StateFlow<SettingModel.DormBindingData?> = _dormBindingData
+
+    private val _resDormBindingSuccessFlag = MutableStateFlow(false)
+    val resDormBindingSuccessFlag: StateFlow<Boolean> = _resDormBindingSuccessFlag
+
+    private val _showDormBindingFailDialogFlag = MutableStateFlow(false)
+    val showDormBindingFailDialogFlag: StateFlow<Boolean> = _showDormBindingFailDialogFlag
+
+    private val _showDormBindingFailMsg = MutableStateFlow<String?>("")
+    val showDormBindingFailMsg: StateFlow<String?> = _showDormBindingFailMsg
+
+    //宿舍解除綁定
+    private val _resDormUnBindingSuccessFlag = MutableStateFlow(false)
+    val resDormUnBindingSuccessFlag: StateFlow<Boolean> = _resDormUnBindingSuccessFlag
+
+    private val _showDormUnBindingFailDialogFlag = MutableStateFlow(false)
+    val showDormUnBindingFailDialogFlag: StateFlow<Boolean> = _showDormUnBindingFailDialogFlag
+
+    private val _showDormUnBindingFailMsg = MutableStateFlow<String?>("")
+    val showDormUnBindingFailMsg: StateFlow<String?> = _showDormUnBindingFailMsg
+
+    //目前綁定的宿舍
+    private val _myDormitoryData = MutableStateFlow<SettingModel.MyDormitoryData?>(null)
+    val myDormitoryData: StateFlow<SettingModel.MyDormitoryData?> = _myDormitoryData
+
+    private val _showMyDormitoryFailDialogFlag = MutableStateFlow(false)
+    val showMyDormitoryFailDialogFlag: StateFlow<Boolean> = _showMyDormitoryFailDialogFlag
+
+    private val _showMyDormitoryFailMsg = MutableStateFlow<String?>("")
+    val showMyDormitoryFailMsg: StateFlow<String?> = _showMyDormitoryFailMsg
 
     init {
         loadLoginPreferences()
@@ -282,5 +329,153 @@ class SettingViewModel @Inject constructor(private var profileRepository: Profil
 
     fun resetShowCardUnBindingFailDialogFlag(value: Boolean) {
         _showCardUnBindingFailDialogFlag.value = value
+    }
+
+    // Dormitory Scan-宿舍綁定掃描取得資訊
+
+    fun dormScanInfoAction(qrCode: String) {
+        viewModelScope.launch {
+            if (qrCode.isEmpty()) {
+                _showDormScanInfoFailDialogFlag.value = true
+                _showDormScanInfoFailMsg.value = "QRCodeInvalid"
+                return@launch
+            }
+            _showLoadingView.value = true
+            when (val result = settingRepository.dormScanInfo(qrCode)) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _resDormScanInfoSuccessFlag.value = true
+                    _dormScanInfoData.value = result.data
+                }
+                is BaseRepository.Result.Error -> {
+                    Log.d("DAE_Develop", "dormScanInfo Res ->${result.message}")
+                    _showLoadingView.value = false
+                    _showDormScanInfoFailDialogFlag.value = true
+                    _showDormScanInfoFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showDormScanInfoFailDialogFlag.value = true
+                    _showDormScanInfoFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+    fun resetShowDormScanInfoFailDialogFlag(value: Boolean) {
+        _showDormScanInfoFailDialogFlag.value = value
+    }
+
+    fun resetDormScanInfoData() {
+        _dormScanInfoData.value = null
+    }
+
+    fun resetResDormScanInfoSuccessFlag(value: Boolean) {
+        _resDormScanInfoSuccessFlag.value = value
+    }
+
+    // Dormitory Binding-宿舍綁定
+
+    fun dormBindingAction(qrCode: String) {
+        viewModelScope.launch {
+            if (qrCode.isEmpty()) {
+                _showDormBindingFailDialogFlag.value = true
+                _showDormBindingFailMsg.value = "QRCodeInvalid"
+                return@launch
+            }
+            _showLoadingView.value = true
+            when (val result = settingRepository.dormBinding(qrCode)) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _dormBindingData.value = result.data
+                    _resDormBindingSuccessFlag.value = true
+                }
+                is BaseRepository.Result.Error -> {
+                    Log.d("DAE_Develop", "dormBinding Res ->${result.message}")
+                    _showLoadingView.value = false
+                    _showDormBindingFailDialogFlag.value = true
+                    _showDormBindingFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showDormBindingFailDialogFlag.value = true
+                    _showDormBindingFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+    fun resetResDormBindingSuccessFlag(value: Boolean) {
+        _resDormBindingSuccessFlag.value = value
+    }
+
+    fun resetShowDormBindingFailDialogFlag(value: Boolean) {
+        _showDormBindingFailDialogFlag.value = value
+    }
+
+    // Dormitory Unbinding-宿舍解除綁定
+
+    fun dormUnBindingAction(aRoomID: Int) {
+        viewModelScope.launch {
+            _showLoadingView.value = true
+            when (val result = settingRepository.dormUnbinding(aRoomID)) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _resDormUnBindingSuccessFlag.value = true
+                    //解綁後清掉本地宿舍資料
+                    _myDormitoryData.value = null
+                    _dormBindingData.value = null
+                }
+                is BaseRepository.Result.Error -> {
+                    Log.d("DAE_Develop", "dormUnBinding Res ->${result.message}")
+                    _showLoadingView.value = false
+                    _showDormUnBindingFailDialogFlag.value = true
+                    _showDormUnBindingFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showDormUnBindingFailDialogFlag.value = true
+                    _showDormUnBindingFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+    fun resetResDormUnBindingSuccessFlag(value: Boolean) {
+        _resDormUnBindingSuccessFlag.value = value
+    }
+
+    fun resetShowDormUnBindingFailDialogFlag(value: Boolean) {
+        _showDormUnBindingFailDialogFlag.value = value
+    }
+
+    // 查詢目前綁哪房
+
+    fun getMyDormitoryDataAction(aShowLoading: Boolean = true) {
+        viewModelScope.launch {
+            if (aShowLoading) _showLoadingView.value = true
+            when (val result = settingRepository.getMyDormitoryData()) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _myDormitoryData.value = result.data
+                }
+                is BaseRepository.Result.Error -> {
+                    Log.d("DAE_Develop", "getMyDormitoryData Res ->${result.message}")
+                    _showLoadingView.value = false
+                    _myDormitoryData.value = null
+                    _showMyDormitoryFailDialogFlag.value = true
+                    _showMyDormitoryFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showMyDormitoryFailDialogFlag.value = true
+                    _showMyDormitoryFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+    fun resetShowMyDormitoryFailDialogFlag(value: Boolean) {
+        _showMyDormitoryFailDialogFlag.value = value
     }
 }

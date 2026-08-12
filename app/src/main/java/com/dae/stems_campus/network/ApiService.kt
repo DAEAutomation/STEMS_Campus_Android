@@ -315,4 +315,40 @@ interface ApiService {
     @POST("api/app/notifications")
     suspend fun getNotifications(
     ): APIResponse.ApiResponse<List<NotificationsModel.NotificationsData>>
+
+
+    /**
+     * Dormitory Scan-宿舍綁定掃描取得資訊
+     */
+    @POST("api/app/dorm/scan")
+    suspend fun dormScanInfo(
+        @Body request: SettingModel.DormitoryScanRequest
+    ): APIResponse.ApiResponse<SettingModel.DormScanInfoData>
+
+
+    /**
+     * Dormitory Binding-宿舍綁定
+     */
+    @POST("api/app/dorm/bind")
+    suspend fun dormBinding(
+        @Body request: SettingModel.DormitoryBindingRequest
+    ): APIResponse.ApiResponse<SettingModel.DormBindingData>
+
+
+    /**
+     * Dormitory Unbinding-宿舍解除綁定
+     */
+    @POST("api/app/dorm/unbind")
+    suspend fun dormUnbinding(
+        @Body request: SettingModel.DormitoryUnbindingRequest
+    ): APIResponse.ApiResponse<SettingModel.DormUnbindingData>
+
+
+    /**
+     * 查詢目前綁哪房
+     */
+    @POST("api/app/dorm/my-room")
+    suspend fun fetchMyDormitoryData (
+    ): APIResponse.ApiResponse<SettingModel.MyDormitoryData>
+
 }
