@@ -4,6 +4,7 @@ import com.dae.stems_campus.data.model.AccountModel
 import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.data.model.LoginModel
 import com.dae.stems_campus.data.model.NotificationsModel
+import com.dae.stems_campus.data.model.PayModel
 import com.dae.stems_campus.data.model.ProfileModel
 import com.dae.stems_campus.data.model.RefundModel
 import com.dae.stems_campus.data.model.ScanModel
@@ -350,5 +351,14 @@ interface ApiService {
     @POST("api/app/dorm/my-room")
     suspend fun fetchMyDormitoryData (
     ): APIResponse.ApiResponse<SettingModel.MyDormitoryData>
+
+
+    /**
+     * 撥款
+     */
+    @POST("api/app/dorm/transfer")
+    suspend fun disbursement(
+        @Body request: PayModel.DisbursementRequest
+    ): APIResponse.ApiResponse<PayModel.DisbursementData>
 
 }

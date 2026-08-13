@@ -229,4 +229,8 @@
     <string name="balance_after_disbursement">撥款後餘額</string>
     <string name="start_power_usage">開啟用電</string>
     <string name="stop_power_usage">結束用電</string>
+    <string name="remaining_hours">剩餘時數</string>
+    <string name="binding_success">綁定成功</string>
+    <string name="dormitory_left_success">已退出此宿舍</string>
+    <string name="please_select_disbursement_wallet">請選擇撥入錢包</string>
 </resources>
