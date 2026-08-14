@@ -28,18 +28,30 @@ class ScanModel {
         val isAcOpenPeriod: Boolean? = null,
         val freeMode: Boolean? = null,
         val sessionToken: String? = null,
-        val sessionTokenExpiresAt: String? = null
+        val sessionTokenExpiresAt: String? = null,
+        val bound: Boolean? = null,
+        val room: Room? = null,
+        val walletOptions: List<WalletOptions>? = null,
+        var activeSession: ActiveSessionByCurrent? = null,
     )
 
-    // 啟用用電 Request
-    data class StartPowerRequest(
+    // 啟用用電:教室 Request
+    data class StartClassroomPowerRequest(
         val device_code: String,
         val device_id: String,
         val session_token: String,
     )
 
-    // 啟用用電(學生) Request
-    data class StartPowerByStudentRequest(
+    // 啟用用電:宿舍 Request
+    data class StartDormitoryPowerRequest(
+        val device_code: String,
+        val device_id: String,
+        val walletId: Int,
+        val session_token: String,
+    )
+
+    // 啟用用電+冷氣 :教室 Request
+    data class StartClassroomPowerByAcRequest(
         val device_code: String,
         val device_id: String,
         val session_token: String,
@@ -104,5 +116,31 @@ class ScanModel {
         val command: String? = null,
         val executed: Boolean? = null,
         val message: String? = null
+    )
+
+    data class Room(
+        val roomId: Int? = null,
+        val roomNumber: String? = null,
+        val memberMax: Int? = null
+    )
+
+    data class WalletOptions(
+        val type: String? = null,
+        val walletId: Int? = null,
+        val name: String? = null,
+        val balance: Double? = null,
+        val kwh: Double? = null,
+        val available: Boolean? = null
+    )
+
+    data class ActiveSessionByCurrent(
+        val type: String? = null,
+        val mine: Boolean? = null,
+        val startedBy: StartedBy? = null
+    )
+
+    data class StartedBy(
+        val name: String? = null,
+        val uid: Int? = null
     )
 }

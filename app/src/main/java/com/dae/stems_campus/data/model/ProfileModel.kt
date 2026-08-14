@@ -109,7 +109,9 @@ class ProfileModel {
         val general: GeneralDetail? = null,
         val ac: AcDetail? = null,
         val totalCharged: Double? = null,
-        val totalKwh: Double? = null
+        val totalKwh: Double? = null,
+        val walletType: String? = null,
+        val walletLabel: String? = null,
     )
 
     data class GeneralDetail(

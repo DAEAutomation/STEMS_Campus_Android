@@ -98,6 +98,7 @@ import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.data.model.ProfileModel
 import com.dae.stems_campus.data.model.ScanModel
+import com.dae.stems_campus.data.repository.BaseRepository
 import com.dae.stems_campus.ui.components.BiometricHelper
 import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
@@ -192,6 +193,8 @@ private fun homeMainLoad(
     val showLoadingViewByStartPowerStudent by homeInfoViewModel.showLoadingViewByStartPowerStudent.collectAsState()
 
     var isAcControl by remember { mutableStateOf(false) }
+    //宿舍開電要帶錢包，記下 payListView 選到的錢包，等驗證成功才拿來開電
+    var selectedWalletID by remember { mutableStateOf(0) }
 
     val isBiometricFlag by settingViewModel.isBiometricEnabled.collectAsState()
     val biometricHelper = remember(activity) {
@@ -217,10 +220,14 @@ private fun homeMainLoad(
                 BiometricManager.BIOMETRIC_SUCCESS -> {
                     biometricHelper.authenticate(
                         onSuccess = {
-                            if (profileInfo?.role.equals("staff")) {
-                                homeInfoViewModel.startPowerAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "")
-                            }else if (profileInfo?.role.equals("student")){
-                                homeInfoViewModel.startPowerByStudentAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "", isAcControl)
+                            if (scanInfo?.spaceType.equals("dormitory")) {
+                                homeInfoViewModel.startDormitoryPowerAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "",selectedWalletID)
+                            }else if (scanInfo?.spaceType.equals("classroom")) {
+                                if (profileInfo?.role.equals("staff")) {
+                                    homeInfoViewModel.startClassroomPowerAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "")
+                                }else if (profileInfo?.role.equals("student")){
+                                    homeInfoViewModel.startClassroomPowerByAcAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "", isAcControl)
+                                }
                             }
                         },
                         onError = {
@@ -251,7 +258,10 @@ private fun homeMainLoad(
         showGetProfileInfoFailDialogFlag = showGetProfileInfoFailDialogFlag,
         showGetProfileInfoFailMsg = showGetProfileInfoFailMsg,
         onGetProfileInfoFailDismissed = { profileViewModel.resetShowGetProfileInfoFailDialogFlag(false)},
-        onScanInfoFinishHandled = { code -> homeInfoViewModel.getScanInfoAction(aQrCode = code, aDeviceID = uuid)},
+        onScanInfoFinishHandled = { code ->
+            //重新掃描就清掉上一次選的錢包，避免沿用到別台機器
+            selectedWalletID = 0
+            homeInfoViewModel.getScanInfoAction(aQrCode = code, aDeviceID = uuid)},
         scanInfo = scanInfo,
         resScanInfoSuccessFlag = resScanInfoSuccessFlag,
         showScanInfoFailDialogFlag = showScanInfoFailDialogFlag,
@@ -268,6 +278,7 @@ private fun homeMainLoad(
         isBiometricFlag = isBiometricFlag,
         biometricHelper = biometricHelper,
         onBiometricsStartPowerSupplyHandled = { handleBiometricStartPower() },
+        onWalletSelectedHandled = { value -> selectedWalletID = value.walletId ?: 0 },
         onNavigateToSetting = { onNavigateToSetting() },
         onNavigateToWallet = { onNavigateToWallet() })
 
@@ -290,10 +301,14 @@ private fun homeMainLoad(
             }
         }else{
             loginViewModel.resetResVerifyPasswordSuccessFlag(false)
-            if (profileInfo?.role.equals("staff")) {
-                homeInfoViewModel.startPowerAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "")
-            }else if (profileInfo?.role.equals("student")){
-                homeInfoViewModel.startPowerByStudentAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "", isAcControl)
+            if (scanInfo?.spaceType.equals("dormitory")) {
+                homeInfoViewModel.startDormitoryPowerAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "",selectedWalletID)
+            }else if (scanInfo?.spaceType.equals("classroom")) {
+                if (profileInfo?.role.equals("staff")) {
+                    homeInfoViewModel.startClassroomPowerAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "")
+                }else if (profileInfo?.role.equals("student")){
+                    homeInfoViewModel.startClassroomPowerByAcAction(scanInfo?.deviceCode ?: "",uuid,scanInfo?.sessionToken ?: "", isAcControl)
+                }
             }
         }
 
@@ -344,6 +359,7 @@ private fun homeContent(mainNavController: NavController,
                         isBiometricFlag: Boolean = false,
                         biometricHelper: BiometricHelper? = null,
                         onBiometricsStartPowerSupplyHandled: () -> Unit,
+                        onWalletSelectedHandled:(ScanModel.WalletOptions) -> Unit = {},
                         onNavigateToSetting: () -> Unit = {},
                         onNavigateToWallet: () -> Unit = {}) {
 
@@ -602,12 +618,7 @@ private fun homeContent(mainNavController: NavController,
                 ) {
                     dormitoryPowerSupplyByTeacherBottomSheetView(scanInfo,
                         onPowerSupplyHandled = {
-                            if (isBiometricFlag) {
-                                onBiometricsStartPowerSupplyHandled()
-                            }else{
-                                showPayBottomSheet = true
-
-                            }
+                            showPayBottomSheet = true
                     }, onCancelHandled = {
                         showDormitoryPowerSupplyByTeacherBottomSheet = false
                     })
@@ -650,12 +661,7 @@ private fun homeContent(mainNavController: NavController,
                 ) {
                     dormitoryPowerSupplyByStudentBottomSheetView(scanInfo,
                         onPowerSupplyHandled = {
-                            if (isBiometricFlag) {
-                                onBiometricsStartPowerSupplyHandled()
-                            }else{
-                                showPayBottomSheet = true
-
-                            }
+                            showPayBottomSheet = true
                     }, onCancelHandled = {
                         showDormitoryPowerSupplyByStudentBottomSheet = false
                     })
@@ -754,10 +760,19 @@ private fun homeContent(mainNavController: NavController,
                     sheetState = paySheetState,
                     containerColor = Color.White
                 ) {
-                    payListView() { value ->
-                        showPayBottomSheet = false
-                        showingInputPasswordBottomSheet = true
-                    }
+                    payListView(
+                        aWallets = scanInfo?.walletOptions ?: emptyList(),
+                        onItemClick = { value ->
+                            showPayBottomSheet = false
+                            //先把選到的錢包往上傳，再走驗證流程，避免驗證成功時還拿不到 walletId
+                            onWalletSelectedHandled(value)
+                            if (isBiometricFlag) {
+                                onBiometricsStartPowerSupplyHandled()
+                            }else{
+                                showingInputPasswordBottomSheet = true
+
+                            }
+                        })
                 }
             }
 
@@ -785,7 +800,7 @@ private fun walletHoursHeaderByTeacher(
                     tint = Color.Unspecified
                 )
                 Spacer(modifier = Modifier.width(10.dp))
-                Text(text = stringResource(id = R.string.wallet), color = Color.Black, style = MaterialTheme.typography.labelLarge)
+                Text(text = stringResource(id = R.string.personal_wallet), color = Color.Black, style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.width(30.dp))
                 Text(text = "$${aData?.balance?.toAmountString()}", color = Color(0xFF2D859D), style = MaterialTheme.typography.bodyLarge)
             }
@@ -807,7 +822,7 @@ private fun walletHoursHeaderByTeacher(
                     tint = Color.Unspecified
                 )
                 Spacer(modifier = Modifier.width(10.dp))
-                Text(text = stringResource(id = R.string.available_hours), color = Color.Black, style = MaterialTheme.typography.labelLarge)
+                Text(text = stringResource(id = R.string.remaining_hours), color = Color.Black, style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.width(30.dp))
                 Text(text = "${aData?.hoursBalance?.calculateDuration()}", color = Color(0xFFD08024), style = MaterialTheme.typography.bodyLarge)
             }
@@ -944,7 +959,7 @@ private fun walletHoursHeaderByStudent(
                     tint = Color.Unspecified
                 )
                 Spacer(modifier = Modifier.width(10.dp))
-                Text(text = stringResource(id = R.string.wallet), color = Color.Black, style = MaterialTheme.typography.labelLarge)
+                Text(text = stringResource(id = R.string.personal_wallet), color = Color.Black, style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.width(30.dp))
                 Text(text = "$${aData?.balance?.toAmountString()}", color = Color(0xFF2D859D), style = MaterialTheme.typography.bodyLarge)
             }
@@ -1356,50 +1371,47 @@ private fun scanQRBottomSheetView(onCodeScanned: (String) -> Unit) {
 }
 
 @Composable
-private fun payListView( onItemClick: (String) -> Unit = {}) {
-
-    val items = listOf(
-        HistoryModel.HistoryTypeItem(R.string.wallet_top_up_history, "WalletTopUpHistory"),
-        HistoryModel.HistoryTypeItem(R.string.hour_allocation_history, "HourAllocationHistory"),
-        HistoryModel.HistoryTypeItem(R.string.classroom_usage_history, "ClassroomUsageHistory"),
-        HistoryModel.HistoryTypeItem(R.string.dormitory_usage_history, "DormitoryUsageHistory"),
-        HistoryModel.HistoryTypeItem(R.string.refund_history, "RefundHistory"),
-    )
-
-
-    LazyColumn() {
-        items(items) { item ->
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onItemClick(item.route) }
-                    .padding(top = 3.dp),
-                color = Color.White
-            ) {
-                Column {
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(id = item.titleRes),
-                            color = Color.Black,
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        Spacer(modifier = Modifier.width(20.dp))
-                    }
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Row {
-                        Spacer(modifier = Modifier.width(30.dp))
-                        Spacer(
-                            modifier = Modifier
-                                .height(1.dp)
-                                .weight(1f)
-                                .background(color = Color(0xFF414141))
-                        )
-                        Spacer(modifier = Modifier.width(30.dp))
+private fun payListView(aWallets: List<ScanModel.WalletOptions>, onItemClick: (ScanModel.WalletOptions) -> Unit = {}) {
+    Column {
+        Row(modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.please_select_debit_wallet_type), style = MaterialTheme.typography.titleMedium)
+        }
+        Spacer(modifier = Modifier.height(15.dp))
+        LazyColumn() {
+            items(aWallets) { item ->
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onItemClick(item) }
+                        .padding(top = 3.dp),
+                    color = Color.White
+                ) {
+                    Column {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = item.name ?: "",
+                                color = Color.Black,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row {
+                            Spacer(modifier = Modifier.width(30.dp))
+                            Spacer(
+                                modifier = Modifier
+                                    .height(1.dp)
+                                    .weight(1f)
+                                    .background(color = Color(0xFF414141))
+                            )
+                            Spacer(modifier = Modifier.width(30.dp))
+                        }
                     }
                 }
             }

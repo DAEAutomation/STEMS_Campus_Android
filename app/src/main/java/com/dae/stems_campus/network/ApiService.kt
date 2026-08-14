@@ -151,20 +151,29 @@ interface ApiService {
 
 
     /**
-     * 啟用用電
+     * 啟用用電:教室
      */
     @POST("api/app/billing/start")
     suspend fun startPower(
-        @Body request: ScanModel.StartPowerRequest
+        @Body request: ScanModel.StartClassroomPowerRequest
     ): APIResponse.ApiResponse<ScanModel.StartPowerData>
 
 
     /**
-     * 啟用用電(學生)
+     * 啟用用電:宿舍
+     */
+    @POST("api/app/billing/start")
+    suspend fun startPower(
+        @Body request: ScanModel.StartDormitoryPowerRequest
+    ): APIResponse.ApiResponse<ScanModel.StartPowerData>
+
+
+    /**
+     * 啟用用電+冷氣 :教室
      */
     @POST("api/app/billing/start")
     suspend fun startPowerByStudent(
-        @Body request: ScanModel.StartPowerByStudentRequest
+        @Body request: ScanModel.StartClassroomPowerByAcRequest
     ): APIResponse.ApiResponse<ScanModel.StartPowerData>
 
 
