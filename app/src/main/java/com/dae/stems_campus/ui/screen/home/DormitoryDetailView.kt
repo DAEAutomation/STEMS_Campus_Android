@@ -273,6 +273,22 @@ private fun dormitoryDetailContent(navController: NavHostController,
                                     Spacer(modifier = Modifier.height(20.dp))
                                     Row (verticalAlignment = Alignment.CenterVertically){
                                         Spacer(modifier = Modifier.width(20.dp))
+                                        Text("${stringResource(R.string.wallet_name)}：", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                                        Spacer(modifier = Modifier.width(5.dp))
+                                        Text("${aBillingDetail?.walletName}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                                    }
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Row (verticalAlignment = Alignment.CenterVertically){
+                                        Spacer(modifier = Modifier.width(20.dp))
+                                        Text("${stringResource(R.string.remaining_amount)}：", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                                        Spacer(modifier = Modifier.width(5.dp))
+                                        Text("${aBillingDetail?.remainingAmount?.toAmountString()}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                                        Spacer(modifier = Modifier.width(5.dp))
+                                        Text("${stringResource(R.string.currency_unit)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                                    }
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Row (verticalAlignment = Alignment.CenterVertically){
+                                        Spacer(modifier = Modifier.width(20.dp))
                                         Text("${stringResource(R.string.cumulative_deduction_amount)}：", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                                         Spacer(modifier = Modifier.width(5.dp))
                                         Text("${aBillingDetail?.totalCharged}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)

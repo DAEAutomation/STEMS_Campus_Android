@@ -198,22 +198,28 @@ private fun dormitoryDetailContent(
                                             Row {
                                                 Text("${stringResource(R.string.wallet_type)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                                                 Spacer(modifier = Modifier.width(20.dp))
-                                                Text("${dormitoryHistory?.totalAmount}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                                                Text("${stringResource(R.string.currency_unit)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                                                Text("${dormitoryHistory?.walletLabel}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                                             }
                                             Spacer(modifier = Modifier.height(20.dp))
+                                            if (dormitoryHistory?.walletLabel.equals("共用錢包")) {
+                                                Row {
+                                                    Text("${stringResource(R.string.wallet_name)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
+                                                    Spacer(modifier = Modifier.width(20.dp))
+                                                    Text("${dormitoryHistory?.walletName}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                                                }
+                                                Spacer(modifier = Modifier.height(20.dp))
+                                            }
+
                                             Row {
                                                 Text("${stringResource(R.string.start_power_usage)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                                                 Spacer(modifier = Modifier.width(20.dp))
-                                                Text("${dormitoryHistory?.totalAmount}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                                                Text("${stringResource(R.string.currency_unit)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                                                Text("${dormitoryHistory?.startUser}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                                             }
                                             Spacer(modifier = Modifier.height(20.dp))
                                             Row {
                                                 Text("${stringResource(R.string.stop_power_usage)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(110.dp))
                                                 Spacer(modifier = Modifier.width(20.dp))
-                                                Text("${dormitoryHistory?.totalAmount}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-                                                Text("${stringResource(R.string.currency_unit)}", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
+                                                Text("${dormitoryHistory?.stopUser ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                                             }
                                             Spacer(modifier = Modifier.height(20.dp))
                                             Row {

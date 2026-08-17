@@ -98,7 +98,13 @@ class HistoryModel {
         val endMeter: Double? = null,
         val spaceName: String? = null,
         val buildingName: String? = null,
-        val rate: Double? = null
+        val rate: Double? = null,
+        val powerType: String? = null,
+        val walletType: String? = null,
+        val walletLabel: String? = null,
+        val walletName: String? = null,
+        val startUser: String? = null,
+        val stopUser: String? = null
     )
 
     //退款紀錄

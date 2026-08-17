@@ -1400,6 +1400,16 @@ private fun payListView(aWallets: List<ScanModel.WalletOptions>, onItemClick: (S
                                 color = Color.Black,
                                 style = MaterialTheme.typography.titleLarge
                             )
+                            Text(
+                                text = "  ",
+                                color = Color.Black,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Text(
+                                text = "$${item.balance?.toAmountString() ?: ""}",
+                                color = Color.Black,
+                                style = MaterialTheme.typography.titleLarge
+                            )
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                         Row {
