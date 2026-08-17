@@ -42,6 +42,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.HistoryModel
+import com.dae.stems_campus.utils.toAmountString
 import com.dae.stems_campus.utils.toLocalDateTimeText
 import com.dae.stems_campus.viewmodel.HistoryViewModel
 import java.time.OffsetDateTime
@@ -50,15 +51,15 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 
 @Composable
-fun disbursementHistoryScreen(navController: NavHostController, histories: List<HistoryModel.WalletHistory>, historyViewModel: HistoryViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
+fun disbursementHistoryScreen(navController: NavHostController, histories: List<HistoryModel.DisbursementHistory>, historyViewModel: HistoryViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
 
     disbursementHistoryContent(
         navController = navController,
         onShowTabBarChange = onShowTabBarChange,
         histories = histories,
         rowClickHandled = { detail ->
-            historyViewModel.walletHistoryDetail = detail
-            navController.navigate("WalletDetailHistory")
+            historyViewModel.disbursementHistoryDetail = detail
+            navController.navigate("DisbursementDetailHistory")
         }
     )
 }
@@ -69,8 +70,8 @@ fun disbursementHistoryScreen(navController: NavHostController, histories: List<
 private fun disbursementHistoryContent(
     navController: NavHostController,
     onShowTabBarChange: (Boolean) -> Unit,
-    histories: List<HistoryModel.WalletHistory> = emptyList(),
-    rowClickHandled:(HistoryModel.WalletHistory) -> Unit) {
+    histories: List<HistoryModel.DisbursementHistory> = emptyList(),
+    rowClickHandled:(HistoryModel.DisbursementHistory) -> Unit) {
 
     val grouped = remember(histories) {
         histories
@@ -88,7 +89,7 @@ private fun disbursementHistoryContent(
             contentWindowInsets = WindowInsets(0),
             topBar = {
                 TopTitleBar(
-                    navTitle = stringResource(R.string.wallet_top_up_history),
+                    navTitle = stringResource(R.string.disbursement_record),
                     navController = navController,
                     onShowTabBarChange = onShowTabBarChange
                 )
@@ -166,9 +167,9 @@ private fun disbursementHistoryContent(
 
 @Composable
 private fun disbursementHistoryRow(
-    item: HistoryModel.WalletHistory,
+    item: HistoryModel.DisbursementHistory,
     shape: RoundedCornerShape,
-    rowClick:(HistoryModel.WalletHistory) -> Unit
+    rowClick:(HistoryModel.DisbursementHistory) -> Unit
 ) {
     val dateText = item.createdAt?.toLocalDateTimeText() ?: ""
 
@@ -195,7 +196,7 @@ private fun disbursementHistoryRow(
                             Spacer(modifier = Modifier.height(20.dp))
                             Text(dateText, color = Color.Black, style = MaterialTheme.typography.bodySmall)
                             Spacer(modifier = Modifier.height(5.dp))
-                            Text("${item.amount ?: 0}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                            Text("${item.amount?.toAmountString() ?: 0} 元", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                             Spacer(modifier = Modifier.height(20.dp))
                         }
                         Spacer(modifier = Modifier.weight(1f))

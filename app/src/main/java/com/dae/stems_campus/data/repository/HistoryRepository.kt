@@ -58,6 +58,16 @@ open class HistoryRepository @Inject constructor(apiService: ApiService, tokenMa
         }
     }
 
+    // 撥款紀錄
+    suspend fun getDisbursementHistory(aStartDate: String, aEndDate: String): Result<List<HistoryModel.DisbursementHistory>> {
+        return executeAuthenticatedRequest {
+            apiService.disbursementHistory(HistoryModel.HistoryRequest(
+                start_date = aStartDate,
+                end_date = aEndDate
+            ))
+        }
+    }
+
     // 退款紀錄明細下載
     suspend fun getRefundHistoryDownload(aRefundID: Int): Result<HistoryModel.RefundHistoryDownload> {
         return executeAuthenticatedRequest {

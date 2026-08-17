@@ -55,20 +55,16 @@ import com.dae.stems_campus.viewmodel.HistoryViewModel
 import kotlinx.coroutines.delay
 
 @Composable
-fun disbursementDetailScreen(navController: NavHostController, walletHistory: HistoryModel.WalletHistory?, historyViewModel: HistoryViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
+fun disbursementDetailScreen(navController: NavHostController, disbursementHistory: HistoryModel.DisbursementHistory?, historyViewModel: HistoryViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
 
     val context = LocalContext.current
 
     val showLoadingView by historyViewModel.showLoadingView.collectAsState()
-    val topUpHistoryDownload by historyViewModel.topUpHistoryDownload.collectAsState()
-    val resTopUpHistoryDownloadSuccessFlag by historyViewModel.resTopUpHistoryDownloadSuccessFlag.collectAsState()
-    val showTopUpHistoryDownloadFailDialogFlag by historyViewModel.showTopUpHistoryDownloadFailDialogFlag.collectAsState()
-    val showTopUpHistoryDownloadFailMsg by historyViewModel.showTopUpHistoryDownloadFailMsg.collectAsState()
 
     disbursementDetailContent(
         navController = navController,
         onShowTabBarChange = {},
-        walletHistory = walletHistory,
+        disbursementHistory = disbursementHistory,
         onDownloadClick = { transactionId ->
             historyViewModel.getTopUpHistoryDownloadAction(transactionId)
         }
@@ -78,28 +74,6 @@ fun disbursementDetailScreen(navController: NavHostController, walletHistory: Hi
         LoadingView() {}
     }
 
-    if (resTopUpHistoryDownloadSuccessFlag) {
-        LaunchedEffect(Unit) {
-            topUpHistoryDownload?.download_url?.takeIf { it.isNotEmpty() }?.let { url ->
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                context.startActivity(intent)
-            }
-            historyViewModel.resetResTopUpHistoryDownloadSuccessFlag(false)
-        }
-    }
-
-    if (showTopUpHistoryDownloadFailDialogFlag) {
-        textTNoButtonAlert(
-            onDismissRequest = {},
-            dialogTitle = parseDialogMsg(showTopUpHistoryDownloadFailMsg ?: "")
-        )
-        LaunchedEffect(Unit) {
-            delay(1500)
-            historyViewModel.resetShowTopUpHistoryDownloadFailDialogFlag(false)
-        }
-    }
 }
 
 
@@ -108,7 +82,7 @@ fun disbursementDetailScreen(navController: NavHostController, walletHistory: Hi
 private fun disbursementDetailContent(
     navController: NavHostController,
     onShowTabBarChange: (Boolean) -> Unit,
-    walletHistory: HistoryModel.WalletHistory?,
+    disbursementHistory: HistoryModel.DisbursementHistory?,
     onDownloadClick: (Int) -> Unit) {
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF4F4F4))) {
@@ -117,7 +91,7 @@ private fun disbursementDetailContent(
             contentWindowInsets = WindowInsets(0),
             topBar = {
                 TopTitleBar(
-                    navTitle = stringResource(R.string.wallet_top_up_history),
+                    navTitle = stringResource(R.string.disbursement_record),
                     navController = navController,
                     onShowTabBarChange = onShowTabBarChange
                 )
@@ -149,12 +123,12 @@ private fun disbursementDetailContent(
                             ){
                                 Column (horizontalAlignment = Alignment.CenterHorizontally) {
                                     Spacer(modifier = Modifier.height(20.dp))
-                                    val createdAtText = walletHistory?.createdAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm:ss") ?: ""
+                                    val createdAtText = disbursementHistory?.createdAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm:ss") ?: ""
                                     Text(createdAtText, color = Color.White, style = MaterialTheme.typography.titleMedium)
                                     Spacer(modifier = Modifier.height(20.dp))
-                                    Text("$${walletHistory?.amount}", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                                    Text("$${disbursementHistory?.amount?.toAmountString()}", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                                     Spacer(modifier = Modifier.height(20.dp))
-                                    Text("${walletHistory?.paymentMethod}", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                                    Text("${disbursementHistory?.roomNumber}", color = Color.White, style = MaterialTheme.typography.titleMedium)
                                     Spacer(modifier = Modifier.height(20.dp))
                                 }
                             }
@@ -163,7 +137,7 @@ private fun disbursementDetailContent(
                         Spacer(modifier = Modifier.height(30.dp))
 
 
-                        infoView(walletHistory)
+                        infoView(disbursementHistory)
                     }
                 }
             }
@@ -179,7 +153,7 @@ private fun disbursementDetailContent(
 
 
 @Composable
-private fun infoView(walletHistory: HistoryModel.WalletHistory?) {
+private fun infoView(disbursementHistory: HistoryModel.DisbursementHistory?) {
     Row {
         Spacer(modifier = Modifier.width(20.dp))
         Surface (modifier = Modifier
@@ -207,13 +181,13 @@ private fun infoView(walletHistory: HistoryModel.WalletHistory?) {
                         Row {
                             Text("${stringResource(R.string.disbursement_number)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(125.dp))
                             Spacer(modifier = Modifier.width(20.dp))
-                            Text("${walletHistory?.account}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                            Text("${disbursementHistory?.serialNo}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                         Row {
                             Text("${stringResource(R.string.disbursement_time)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(125.dp))
                             Spacer(modifier = Modifier.width(20.dp))
-                            Text("${walletHistory?.topupSerial ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                            Text("${disbursementHistory?.createdAt ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                     }
@@ -254,13 +228,13 @@ private fun infoView(walletHistory: HistoryModel.WalletHistory?) {
                         Row {
                             Text("${stringResource(R.string.balance_before_disbursement)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(125.dp))
                             Spacer(modifier = Modifier.width(20.dp))
-                            Text("$${walletHistory?.balanceAfter?.toAmountString()}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                            Text("$${disbursementHistory?.dormBefore?.toAmountString()}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                         Row {
                             Text("${stringResource(R.string.balance_after_disbursement)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(125.dp))
                             Spacer(modifier = Modifier.width(20.dp))
-                            Text("${walletHistory?.kioskName ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                            Text("$${disbursementHistory?.dormAfter?.toAmountString() ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                     }
@@ -298,25 +272,26 @@ private fun infoView(walletHistory: HistoryModel.WalletHistory?) {
                         Row {
                             Text("${stringResource(R.string.disbursed_by)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(125.dp))
                             Spacer(modifier = Modifier.width(20.dp))
-                            Text("${walletHistory?.ezDeviceId}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                            Text("${disbursementHistory?.payerName}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                         Row {
                             Text("${stringResource(R.string.disburser_account)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(125.dp))
                             Spacer(modifier = Modifier.width(20.dp))
-                            Text("${walletHistory?.ezCardId}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                            Text("${disbursementHistory?.payerEmail}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                         Row {
                             Text("${stringResource(R.string.personal_wallet_balance)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(125.dp))
                             Spacer(modifier = Modifier.width(20.dp))
-                            Text("$${walletHistory?.ezBalanceAfter?.toThousandsSeparator()}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                            //有值才帶 $，沒值顯示 --
+                            Text(disbursementHistory?.personalBalanceAfter?.let { "$" + it.toAmountString() } ?: "--", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                         Row {
                             Text("${stringResource(R.string.status)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(125.dp))
                             Spacer(modifier = Modifier.width(20.dp))
-                            Text("", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                            Text("${disbursementHistory?.status}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                     }

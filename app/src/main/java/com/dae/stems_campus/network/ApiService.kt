@@ -267,6 +267,15 @@ interface ApiService {
 
 
     /**
+     * 撥款紀錄
+     */
+    @POST("api/app/records/dorm-transfers")
+    suspend fun disbursementHistory(
+        @Body request: HistoryModel.HistoryRequest
+    ): APIResponse.ApiResponse<List<HistoryModel.DisbursementHistory>>
+
+
+    /**
      * 退款紀錄明細下載
      */
     @POST("api/app/refund/receipt")

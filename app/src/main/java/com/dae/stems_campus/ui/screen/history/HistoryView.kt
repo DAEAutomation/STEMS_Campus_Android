@@ -168,6 +168,18 @@ fun historyScreen(mainNavController: NavController, historyViewModel: HistoryVie
             val refundDetail = historyViewModel.refundHistoryDetail
             refundDetailScreen(navController = historyNavController, refundDetail, onShowTabBarChange = {})
         }
+        composable("DisbursementHistory") {
+            val disbursementHistoryList = historyViewModel.disbursementHistoryList
+            disbursementHistoryScreen(
+                navController = historyNavController,
+                histories = disbursementHistoryList.value ?: emptyList(),
+                historyViewModel = historyViewModel,
+                onShowTabBarChange = {})
+        }
+        composable("DisbursementDetailHistory") {
+            val disbursementDetail = historyViewModel.disbursementHistoryDetail
+            disbursementDetailScreen(navController = historyNavController, disbursementDetail, onShowTabBarChange = {})
+        }
     }
 
 }
@@ -230,6 +242,11 @@ private fun historyMainLoad(mainNavController: NavController, navController: Nav
                     historyViewModel.getRefundHistoryAction(dateValue.first, dateValue.second)
                     historyViewModel.saveSearchHistoryConditionToDataStore(value, dateValue.first, dateValue.second)
                 }
+                "DisbursementHistory" -> {
+                    selectQueryType = value
+                    historyViewModel.getDisbursementHistoryAction(dateValue.first, dateValue.second)
+                    historyViewModel.saveSearchHistoryConditionToDataStore(value, dateValue.first, dateValue.second)
+                }
             }
         },
         lastSevenDaysClick = {
@@ -265,6 +282,9 @@ private fun historyMainLoad(mainNavController: NavController, navController: Nav
             }
             "RefundHistory" -> {
                 navController.navigate("RefundHistory")
+            }
+            "DisbursementHistory" -> {
+                navController.navigate("DisbursementHistory")
             }
         }
     }
@@ -412,6 +432,7 @@ private fun historyContent(
                                             "ClassroomUsageHistory" -> stringResource(R.string.classroom_usage_history)
                                             "DormitoryUsageHistory" -> stringResource(R.string.dormitory_usage_history)
                                             "RefundHistory" -> stringResource(R.string.refund_history)
+                                            "DisbursementHistory" -> stringResource(R.string.disbursement_record)
                                             else -> ""}, color = Color.Black, style = MaterialTheme.typography.titleMedium)
                                         Spacer(modifier = Modifier.height(10.dp))
                                     }
@@ -689,12 +710,14 @@ private fun historyTypeListView(role: String, onItemClick: (String) -> Unit = {}
             HistoryModel.HistoryTypeItem(R.string.classroom_usage_history, "ClassroomUsageHistory"),
             HistoryModel.HistoryTypeItem(R.string.dormitory_usage_history, "DormitoryUsageHistory"),
             HistoryModel.HistoryTypeItem(R.string.refund_history, "RefundHistory"),
+            HistoryModel.HistoryTypeItem(R.string.disbursement_record, "DisbursementHistory")
         )
         "student" -> listOf(
             HistoryModel.HistoryTypeItem(R.string.wallet_top_up_history, "WalletTopUpHistory"),
             HistoryModel.HistoryTypeItem(R.string.classroom_usage_history, "ClassroomUsageHistory"),
             HistoryModel.HistoryTypeItem(R.string.dormitory_usage_history, "DormitoryUsageHistory"),
             HistoryModel.HistoryTypeItem(R.string.refund_history, "RefundHistory"),
+            HistoryModel.HistoryTypeItem(R.string.disbursement_record, "DisbursementHistory")
         )
         else -> emptyList()
     }
