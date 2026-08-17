@@ -44,6 +44,9 @@ class LoginViewModel @Inject constructor(private var loginRepository: LoginRepos
     private val _UUID = MutableStateFlow("")
     val UUID: StateFlow<String> = _UUID
 
+    private val _apiDomainValue = MutableStateFlow("")
+    val apiDomainValue: StateFlow<String> = _apiDomainValue
+
     //密碼驗證
     private val _resVerifyPasswordSuccessFlag = MutableStateFlow(false)
     val resVerifyPasswordSuccessFlag: StateFlow<Boolean> get() = _resVerifyPasswordSuccessFlag
@@ -81,13 +84,22 @@ class LoginViewModel @Inject constructor(private var loginRepository: LoginRepos
 //                _email.value = credentialRepository.getUsername() ?: ""
 //                _rToken.value = credentialRepository.getRefreshToken() ?: ""
             }
+            // 三個都是 DataStore 的無限 Flow，collectLatest 不會返回，必須各自 launch
             launch {
                 userPreferences.getRememberLoginInfoCheckedFlow.collectLatest { isChecked ->
                     _rememberLoginInfoChecked.value = isChecked
                 }
+            }
 
+            launch {
                 userPreferences.getUUIDValue.collectLatest { value ->
                     _UUID.value = value
+                }
+            }
+
+            launch {
+                userPreferences.getApiDomainValue.collectLatest { value ->
+                    _apiDomainValue.value = value
                 }
             }
         }

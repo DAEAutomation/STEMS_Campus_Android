@@ -65,6 +65,10 @@ class HistoryViewModel @Inject constructor(private var historyRepository: Histor
     val refundHistoryList: StateFlow<List<HistoryModel.RefundHistory>> = _refundHistoryList
     var refundHistoryDetail: HistoryModel.RefundHistory? = null
 
+    private val _disbursementHistoryList = MutableStateFlow<List<HistoryModel.DisbursementHistory>>(emptyList())
+    val disbursementHistoryList: StateFlow<List<HistoryModel.DisbursementHistory>> = _disbursementHistoryList
+    var disbursementHistoryDetail: HistoryModel.DisbursementHistory? = null
+
     // 退款紀錄明細下載
     private val _refundHistoryDownload = MutableStateFlow<HistoryModel.RefundHistoryDownload?>(null)
     val refundHistoryDownload: StateFlow<HistoryModel.RefundHistoryDownload?> = _refundHistoryDownload
@@ -196,6 +200,30 @@ class HistoryViewModel @Inject constructor(private var historyRepository: Histor
                     _showLoadingView.value = false
                     _resHistorySuccessFlag.value = true
                     _refundHistoryList.value = result.data
+                }
+                is BaseRepository.Result.Error -> {
+                    _showLoadingView.value = false
+                    _showHistoryFailDialogFlag.value = true
+                    _showHistoryFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showHistoryFailDialogFlag.value = true
+                    _showHistoryFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+    // 查詢 撥款紀錄
+    fun getDisbursementHistoryAction(startDate: String, endDate: String) {
+        viewModelScope.launch {
+            _showLoadingView.value = true
+            when (val result = historyRepository.getDisbursementHistory(startDate,endDate)) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _resHistorySuccessFlag.value = true
+                    _disbursementHistoryList.value = result.data
                 }
                 is BaseRepository.Result.Error -> {
                     _showLoadingView.value = false

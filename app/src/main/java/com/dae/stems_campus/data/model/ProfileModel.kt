@@ -28,7 +28,11 @@ class ProfileModel {
         val studentType: String? = null,
         val pointsExpiresAt: String? = null,
         val hoursExpiresAt: String? = null,
-        val hoursExpireDetail: List<HoursExpireDetail>? = null
+        val hoursExpireDetail: List<HoursExpireDetail>? = null,
+        val dormRoomSession: DormRoomSession? = null,
+        val pendingRefund: Boolean? = null,
+        val lockdownActive: Boolean? = null,
+        val wallets: List<Wallets>? = null
     )
 
     data class HoursExpireDetail(
@@ -105,7 +109,9 @@ class ProfileModel {
         val general: GeneralDetail? = null,
         val ac: AcDetail? = null,
         val totalCharged: Double? = null,
-        val totalKwh: Double? = null
+        val totalKwh: Double? = null,
+        val walletType: String? = null,
+        val walletLabel: String? = null,
     )
 
     data class GeneralDetail(
@@ -130,6 +136,28 @@ class ProfileModel {
         val controlToken: String? = null,
         val controlTokenExpiresAt: String? = null,
         val availableCommands: List<String>? = null
+    )
+
+    data class DormRoomSession(
+        val sessionId: Int? = null,
+        val startedBy: StartedBy? = null,
+        val startedAt: String? = null,
+        val mode: String? = null,
+    )
+
+    data class StartedBy(
+        val name: String? = null,
+        val uid: String? = null,
+    )
+
+    data class Wallets(
+        val type: String? = null,
+        val walletId: Int? = null,
+        val name: String? = null,
+        val balance: Double? = null,
+        val kwh: Double? = null,
+        val rate: Double? = null,
+        val max: Double? = null
     )
 
     // 使用中裝置內容 Request

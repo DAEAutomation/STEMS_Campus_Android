@@ -75,6 +75,7 @@ import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.BuildConfig
 import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.ProfileModel
+import com.dae.stems_campus.data.model.SettingModel
 import com.dae.stems_campus.ui.components.BiometricHelper
 import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
@@ -120,6 +121,18 @@ fun settingScreen(mainNavController: NavController, loginViewModel: LoginViewMod
                 profileViewModel = profileViewModel
             )
         }
+        composable("DormitoryBinding") {
+            dormitoryBindingScreen(
+                navController = settingNavController,
+                settingViewModel = settingViewModel
+            )
+        }
+        composable("DormitoryInfo") {
+            dormitoryInfoScreen (
+                navController = settingNavController,
+                settingViewModel = settingViewModel
+            )
+        }
 
     }
 
@@ -150,25 +163,27 @@ private fun settingMainLoad(mainNavController: NavController, navController: Nav
     val resVerifyPasswordSuccessFlag by loginViewModel.resVerifyPasswordSuccessFlag.collectAsState()
     val showVerifyPasswordFailDialogFlag by loginViewModel.showVerifyPasswordFailDialogFlag.collectAsState()
     val showVerifyPasswordFailMsg by loginViewModel.showVerifyPasswordFailMsg.collectAsState()
-//
+
 //    val showLoadingView by settingViewModel.showLoadingView.collectAsState()
 
-//
     val isBiometric by settingViewModel.isBiometricEnabled.collectAsState()
 
 
-//
+
 //    val resPwAuthenticationSuccessFlag by settingViewModel.resPwAuthenticationSuccessFlag.collectAsState()
 //    val showPwAuthenticationFailMsgDialogFlag by settingViewModel.showPwAuthenticationFailMsgDialogFlag.collectAsState()
 //    val showPwAuthenticationFailMsg by settingViewModel.showPwAuthenticationFailMsg.collectAsState()
 //    val showPwAuthenticationInputFailFlag by settingViewModel.showPwAuthenticationInputFailFlag.collectAsState()
 //    val showPwAuthenticationInputFailMsg by settingViewModel.showPwAuthenticationInputFailMsg.collectAsState()
-//
+
 //    val currentLanguageCode by settingViewModel.currentLanguageCode.collectAsState()
+
+    val myDormitoryData by settingViewModel.myDormitoryData.collectAsState()
 
     LaunchedEffect(Unit) {
         profileViewModel.getProfileInfoAction()
         settingViewModel.getBiometricValue()
+        settingViewModel.getMyDormitoryDataAction(true)
     }
 
     settingContent(mainNavController = mainNavController,
@@ -183,7 +198,8 @@ private fun settingMainLoad(mainNavController: NavController, navController: Nav
         onVerifyPasswordFailDismissed = { loginViewModel.resetShowVerifyPasswordFailDialogFlag(false)},
         isBiometric = isBiometric,
         updateBiometricValue = { value -> settingViewModel.updateBiometricValue(value)},
-        onResVerifyPasswordSuccessFlagDismissed = { loginViewModel.resetResVerifyPasswordSuccessFlag(false) })
+        onResVerifyPasswordSuccessFlagDismissed = { loginViewModel.resetResVerifyPasswordSuccessFlag(false) },
+        myDormitoryData = myDormitoryData)
 
 
     if (profileShowLoadingView) {
@@ -240,7 +256,8 @@ private fun settingContent(
     onVerifyPasswordFailDismissed: () -> Unit = {},
     isBiometric: Boolean = false,
     updateBiometricValue:(Boolean) -> Unit = {},
-    onResVerifyPasswordSuccessFlagDismissed: () -> Unit = {}) {
+    onResVerifyPasswordSuccessFlagDismissed: () -> Unit = {},
+    myDormitoryData: SettingModel.MyDormitoryData? = null) {
 
     val context = LocalContext.current
     val activity = context as? FragmentActivity
@@ -318,9 +335,23 @@ private fun settingContent(
                     Spacer(modifier = Modifier.height(20.dp))
 
                     if (profileInfo?.role.equals("staff")) {
-                        userInfoByTeacherView(profileInfo = profileInfo)
+                        userInfoByTeacherView(profileInfo = profileInfo, myDormitoryData = myDormitoryData, onUserCardClick = { navController.navigate("UserCard")},
+                            onDormitoryClick = {
+                                if (myDormitoryData?.bound == false) {
+                                    navController.navigate("DormitoryBinding")
+                                }else{
+                                    navController.navigate("DormitoryInfo")
+                                }
+                            })
                     }else if (profileInfo?.role.equals("student")){
-                        userInfoByStudentView(profileInfo = profileInfo, onClick = { navController.navigate("UserCard")})
+                        userInfoByStudentView(profileInfo = profileInfo, myDormitoryData = myDormitoryData, onUserCardClick = { navController.navigate("UserCard")},
+                            onDormitoryClick = {
+                                if (myDormitoryData?.bound == false) {
+                                    navController.navigate("DormitoryBinding")
+                                }else{
+                                    navController.navigate("DormitoryInfo")
+                                }
+                            })
                     }
 
 
@@ -804,7 +835,7 @@ private fun settingContent(
 }
 
 @Composable
-private fun userInfoByTeacherView(profileInfo: ProfileModel.ProfileData? = null) {
+private fun userInfoByTeacherView(profileInfo: ProfileModel.ProfileData? = null, myDormitoryData: SettingModel.MyDormitoryData? = null, onUserCardClick:() -> Unit , onDormitoryClick:() -> Unit) {
     Column{
         // <-----姓名----->
         Row {
@@ -961,6 +992,58 @@ private fun userInfoByTeacherView(profileInfo: ProfileModel.ProfileData? = null)
             Spacer(modifier = Modifier.width(20.dp))
         }
         Spacer(modifier = Modifier.height(2.dp))
+        // <-----宿舍綁定----->
+        Row {
+            Spacer(modifier = Modifier.width(20.dp))
+            Surface (modifier = Modifier
+                .weight(1f)
+                .clickable {
+                    onDormitoryClick()
+                },
+
+                color = Color.White,
+                shape = RoundedCornerShape(0.dp)){
+
+                Row (verticalAlignment = Alignment.CenterVertically){
+                    Spacer(modifier = Modifier.width(20.dp))
+
+                    Surface (
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .weight(0.9f),
+                        color = Color.Unspecified
+                    ){
+                        Column {
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Text(stringResource(R.string.dormitory_binding), color = Color(0xFF303236), style = MaterialTheme.typography.bodyLarge)
+                            Spacer(modifier = Modifier.height(10.dp))
+                            if (myDormitoryData?.bound == false){
+                                Text("尚未綁定", color = Color(0xFFE54343), style = MaterialTheme.typography.titleLarge)
+                            }else{
+                                Text(myDormitoryData?.roomNumber ?: "", color = Color.Black, style = MaterialTheme.typography.titleLarge)
+                            }
+                            Spacer(modifier = Modifier.height(20.dp))
+                        }
+                    }
+                    Surface (
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .weight(0.1f),
+                        color = Color.Unspecified
+                    ){
+                        Icon(
+                            painter = painterResource(id = R.drawable.caretright),
+                            tint = Color.Black,
+                            contentDescription = "Localized description"
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(20.dp))
+                }
+            }
+            Spacer(modifier = Modifier.width(20.dp))
+        }
+        Spacer(modifier = Modifier.height(2.dp))
         // <-----信箱----->
         Row {
             Spacer(modifier = Modifier.width(20.dp))
@@ -1004,7 +1087,7 @@ private fun userInfoByTeacherView(profileInfo: ProfileModel.ProfileData? = null)
 }
 
 @Composable
-private fun userInfoByStudentView(profileInfo: ProfileModel.ProfileData? = null, onClick:() -> Unit ) {
+private fun userInfoByStudentView(profileInfo: ProfileModel.ProfileData? = null, myDormitoryData: SettingModel.MyDormitoryData? = null, onUserCardClick:() -> Unit , onDormitoryClick:() -> Unit) {
     Column{
         // <-----姓名----->
         Row {
@@ -1113,7 +1196,7 @@ private fun userInfoByStudentView(profileInfo: ProfileModel.ProfileData? = null,
             Surface (modifier = Modifier
                 .weight(1f)
                 .clickable {
-                    onClick()
+                    onUserCardClick()
                 },
 
                 color = Color.White,
@@ -1136,6 +1219,58 @@ private fun userInfoByStudentView(profileInfo: ProfileModel.ProfileData? = null,
                                 Text("尚未綁定", color = Color(0xFFE54343), style = MaterialTheme.typography.titleLarge)
                             }else{
                                 Text(profileInfo?.uid ?: "", color = Color.Black, style = MaterialTheme.typography.titleLarge)
+                            }
+                            Spacer(modifier = Modifier.height(20.dp))
+                        }
+                    }
+                    Surface (
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .weight(0.1f),
+                        color = Color.Unspecified
+                    ){
+                        Icon(
+                            painter = painterResource(id = R.drawable.caretright),
+                            tint = Color.Black,
+                            contentDescription = "Localized description"
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(20.dp))
+                }
+            }
+            Spacer(modifier = Modifier.width(20.dp))
+        }
+        Spacer(modifier = Modifier.height(2.dp))
+        // <-----宿舍綁定----->
+        Row {
+            Spacer(modifier = Modifier.width(20.dp))
+            Surface (modifier = Modifier
+                .weight(1f)
+                .clickable {
+                    onDormitoryClick()
+                },
+
+                color = Color.White,
+                shape = RoundedCornerShape(0.dp)){
+
+                Row (verticalAlignment = Alignment.CenterVertically){
+                    Spacer(modifier = Modifier.width(20.dp))
+
+                    Surface (
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .weight(0.9f),
+                        color = Color.Unspecified
+                    ){
+                        Column {
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Text(stringResource(R.string.dormitory_binding), color = Color(0xFF303236), style = MaterialTheme.typography.bodyLarge)
+                            Spacer(modifier = Modifier.height(10.dp))
+                            if (myDormitoryData?.bound == false){
+                                Text("尚未綁定", color = Color(0xFFE54343), style = MaterialTheme.typography.titleLarge)
+                            }else{
+                                Text(myDormitoryData?.roomNumber ?: "", color = Color.Black, style = MaterialTheme.typography.titleLarge)
                             }
                             Spacer(modifier = Modifier.height(20.dp))
                         }

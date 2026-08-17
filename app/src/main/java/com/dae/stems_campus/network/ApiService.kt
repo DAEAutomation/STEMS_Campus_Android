@@ -4,6 +4,7 @@ import com.dae.stems_campus.data.model.AccountModel
 import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.data.model.LoginModel
 import com.dae.stems_campus.data.model.NotificationsModel
+import com.dae.stems_campus.data.model.PayModel
 import com.dae.stems_campus.data.model.ProfileModel
 import com.dae.stems_campus.data.model.RefundModel
 import com.dae.stems_campus.data.model.ScanModel
@@ -150,20 +151,29 @@ interface ApiService {
 
 
     /**
-     * 啟用用電
+     * 啟用用電:教室
      */
     @POST("api/app/billing/start")
     suspend fun startPower(
-        @Body request: ScanModel.StartPowerRequest
+        @Body request: ScanModel.StartClassroomPowerRequest
     ): APIResponse.ApiResponse<ScanModel.StartPowerData>
 
 
     /**
-     * 啟用用電(學生)
+     * 啟用用電:宿舍
+     */
+    @POST("api/app/billing/start")
+    suspend fun startPower(
+        @Body request: ScanModel.StartDormitoryPowerRequest
+    ): APIResponse.ApiResponse<ScanModel.StartPowerData>
+
+
+    /**
+     * 啟用用電+冷氣 :教室
      */
     @POST("api/app/billing/start")
     suspend fun startPowerByStudent(
-        @Body request: ScanModel.StartPowerByStudentRequest
+        @Body request: ScanModel.StartClassroomPowerByAcRequest
     ): APIResponse.ApiResponse<ScanModel.StartPowerData>
 
 
@@ -257,6 +267,15 @@ interface ApiService {
 
 
     /**
+     * 撥款紀錄
+     */
+    @POST("api/app/records/dorm-transfers")
+    suspend fun disbursementHistory(
+        @Body request: HistoryModel.HistoryRequest
+    ): APIResponse.ApiResponse<List<HistoryModel.DisbursementHistory>>
+
+
+    /**
      * 退款紀錄明細下載
      */
     @POST("api/app/refund/receipt")
@@ -315,4 +334,49 @@ interface ApiService {
     @POST("api/app/notifications")
     suspend fun getNotifications(
     ): APIResponse.ApiResponse<List<NotificationsModel.NotificationsData>>
+
+
+    /**
+     * Dormitory Scan-宿舍綁定掃描取得資訊
+     */
+    @POST("api/app/dorm/scan")
+    suspend fun dormScanInfo(
+        @Body request: SettingModel.DormitoryScanRequest
+    ): APIResponse.ApiResponse<SettingModel.DormScanInfoData>
+
+
+    /**
+     * Dormitory Binding-宿舍綁定
+     */
+    @POST("api/app/dorm/bind")
+    suspend fun dormBinding(
+        @Body request: SettingModel.DormitoryBindingRequest
+    ): APIResponse.ApiResponse<SettingModel.DormBindingData>
+
+
+    /**
+     * Dormitory Unbinding-宿舍解除綁定
+     */
+    @POST("api/app/dorm/unbind")
+    suspend fun dormUnbinding(
+        @Body request: SettingModel.DormitoryUnbindingRequest
+    ): APIResponse.ApiResponse<SettingModel.DormUnbindingData>
+
+
+    /**
+     * 查詢目前綁哪房
+     */
+    @POST("api/app/dorm/my-room")
+    suspend fun fetchMyDormitoryData (
+    ): APIResponse.ApiResponse<SettingModel.MyDormitoryData>
+
+
+    /**
+     * 撥款
+     */
+    @POST("api/app/dorm/transfer")
+    suspend fun disbursement(
+        @Body request: PayModel.DisbursementRequest
+    ): APIResponse.ApiResponse<PayModel.DisbursementData>
+
 }

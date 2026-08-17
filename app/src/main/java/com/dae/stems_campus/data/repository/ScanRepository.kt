@@ -17,9 +17,9 @@ open class ScanRepository @Inject constructor(apiService: ApiService, tokenManag
         }
     }
 
-    suspend fun startPower(aDeviceCode: String, aDeviceID: String, aSessionToken: String): Result<ScanModel.StartPowerData> {
+    suspend fun startClassroomPower(aDeviceCode: String, aDeviceID: String, aSessionToken: String): Result<ScanModel.StartPowerData> {
         return executeAuthenticatedRequest {
-            apiService.startPower(ScanModel.StartPowerRequest(
+            apiService.startPower(ScanModel.StartClassroomPowerRequest(
                 device_code = aDeviceCode,
                 device_id = aDeviceID,
                 session_token = aSessionToken
@@ -27,9 +27,20 @@ open class ScanRepository @Inject constructor(apiService: ApiService, tokenManag
         }
     }
 
-    suspend fun startPowerByStudent(aDeviceCode: String, aDeviceID: String, aSessionToken: String, aAc: Boolean): Result<ScanModel.StartPowerData> {
+    suspend fun startDormitoryPower(aDeviceCode: String, aDeviceID: String, aSessionToken: String, aWalletId: Int): Result<ScanModel.StartPowerData> {
         return executeAuthenticatedRequest {
-            apiService.startPowerByStudent(ScanModel.StartPowerByStudentRequest(
+            apiService.startPower(ScanModel.StartDormitoryPowerRequest(
+                device_code = aDeviceCode,
+                device_id = aDeviceID,
+                walletId = aWalletId,
+                session_token = aSessionToken
+            ))
+        }
+    }
+
+    suspend fun startClassroomPowerByAc(aDeviceCode: String, aDeviceID: String, aSessionToken: String, aAc: Boolean): Result<ScanModel.StartPowerData> {
+        return executeAuthenticatedRequest {
+            apiService.startPowerByStudent(ScanModel.StartClassroomPowerByAcRequest(
                 device_code = aDeviceCode,
                 device_id = aDeviceID,
                 session_token = aSessionToken,

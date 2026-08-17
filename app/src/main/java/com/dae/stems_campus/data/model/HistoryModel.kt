@@ -129,6 +129,22 @@ class HistoryModel {
         val ezBalanceAfter: Int? = null,
     )
 
+    data class DisbursementHistory(
+        val serialNo: String? = null,
+        val createdAt: String? = null,
+        val roomNumber: String? = null,
+        val payerName: String? = null,
+        val payerEmail: String? = null,
+        val amount: Double? = null,
+        val dormBefore: Double? = null,
+        val dormAfter: Double? = null,
+        val personalBalanceAfter: Double? = null,
+        val status: String? = null,
+        val walletLabel: String? = null,
+        val failReason: String? = null,
+        val grantedBy: String? = null
+    )
+
     data class RefundHistoryDownloadRequest(
         val refund_id: Int
     )

@@ -133,11 +133,11 @@ class HomeInfoViewModel @Inject constructor(private var scanRepository: ScanRepo
         }
     }
 
-    // 啟用用電
-    fun startPowerAction(deviceCode: String, deviceID: String, sessionID: String) {
+    // 啟用用電:教室
+    fun startClassroomPowerAction(deviceCode: String, deviceID: String, sessionID: String) {
         viewModelScope.launch {
             _showLoadingView.value = true
-            when (val result = scanRepository.startPower(deviceCode,deviceID,sessionID)) {
+            when (val result = scanRepository.startClassroomPower(deviceCode,deviceID,sessionID)) {
                 is BaseRepository.Result.Success -> {
                     _showLoadingView.value = false
                     _resStartPowerSuccessFlag.value = true
@@ -156,11 +156,34 @@ class HomeInfoViewModel @Inject constructor(private var scanRepository: ScanRepo
         }
     }
 
-    // 啟用用電(學生)
-    fun startPowerByStudentAction(deviceCode: String, deviceID: String, sessionID: String, acValue: Boolean) {
+    // 啟用用電:宿舍
+    fun startDormitoryPowerAction(deviceCode: String, deviceID: String, sessionID: String, walletID: Int ) {
+        viewModelScope.launch {
+            _showLoadingView.value = true
+            when (val result = scanRepository.startDormitoryPower(deviceCode,deviceID,sessionID, walletID)) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _resStartPowerSuccessFlag.value = true
+                }
+                is BaseRepository.Result.Error -> {
+                    _showLoadingView.value = false
+                    _showStartPowerFailDialogFlag.value = true
+                    _showStartPowerFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showStartPowerFailDialogFlag.value = true
+                    _showStartPowerFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+    // 啟用用電+冷氣 :教室
+    fun startClassroomPowerByAcAction(deviceCode: String, deviceID: String, sessionID: String, acValue: Boolean) {
         viewModelScope.launch {
             _showLoadingViewByStartPowerStudent.value = true
-            when (val result = scanRepository.startPowerByStudent(deviceCode,deviceID,sessionID, acValue)) {
+            when (val result = scanRepository.startClassroomPowerByAc(deviceCode,deviceID,sessionID, acValue)) {
                 is BaseRepository.Result.Success -> {
                     _showLoadingViewByStartPowerStudent.value = false
                     _resStartPowerSuccessFlag.value = true
