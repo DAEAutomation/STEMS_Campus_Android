@@ -31,6 +31,12 @@ class TopUpViewModel @Inject constructor(private var topUpRepository: TopUpRepos
     private val _showScanDepositFailMsg = MutableStateFlow<String?>("")
     val showScanDepositFailMsg: StateFlow<String?> = _showScanDepositFailMsg
 
+    private val _canDeposit = MutableStateFlow(false)
+    val canDeposit: StateFlow<Boolean> get() = _canDeposit
+
+    private val _canDepositReason = MutableStateFlow("")
+    val canDepositReason: StateFlow<String> get() = _canDepositReason
+
 
     //發起儲值
     private val _resStartTopUpSuccessFlag = MutableStateFlow(false)
@@ -69,6 +75,8 @@ class TopUpViewModel @Inject constructor(private var topUpRepository: TopUpRepos
                 is BaseRepository.Result.Success -> {
                     _showLoadingView.value = false
                     _resScanDepositSuccessFlag.value = true
+                    _canDeposit.value = result.data.canDeposit ?: false
+                    _canDepositReason.value = result.data.reason ?: ""
 
                     val hostUUID = result.data.mqtt?.hostUuid ?: ""
                     val depositMac = result.data.mqtt?.depositMac ?: ""
