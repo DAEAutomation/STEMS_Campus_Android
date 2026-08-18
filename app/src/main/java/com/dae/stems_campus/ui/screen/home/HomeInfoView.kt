@@ -532,6 +532,7 @@ private fun homeContent(mainNavController: NavController,
             }
 
             if (resScanInfoSuccessFlag) {
+                val walletArray = scanInfo?.walletOptions
                 when (scanInfo?.usageStatus) {
                     0 -> {
                         if (profileInfo?.role.equals("staff")) {
@@ -550,8 +551,20 @@ private fun homeContent(mainNavController: NavController,
                         onScanInfoSuccessFlagReset()
                     }
                     1 -> {
-                        showingInUseBottomSheet = true
-                        onScanInfoSuccessFlagReset()
+                        if (scanInfo?.spaceType.equals("classroom")) {
+                            showingInUseBottomSheet = true
+                            onScanInfoSuccessFlagReset()
+                        }else if (scanInfo?.spaceType.equals("dormitory")){
+                            if (walletArray?.size == 1) {
+                                if (scanInfo.walletOptions[0].available == false) {
+                                    showingInUseBottomSheet = true
+                                    onScanInfoSuccessFlagReset()
+                                }
+                            }else if (walletArray?.size == 2) {
+                                showDormitoryPowerSupplyByStudentBottomSheet = true
+                                onScanInfoSuccessFlagReset()
+                            }
+                        }
                     }
                     2 -> {
                         showingPowerEnableBottomSheet = true
@@ -567,6 +580,10 @@ private fun homeContent(mainNavController: NavController,
                             delay(1500) // 延遲 1.5 秒
                             onScanInfoSuccessFlagReset()
                         }
+                    }
+                    4 -> {
+                        showingInUseBottomSheet = true
+                        onScanInfoSuccessFlagReset()
                     }
                 }
 
@@ -761,7 +778,7 @@ private fun homeContent(mainNavController: NavController,
                     containerColor = Color.White
                 ) {
                     payListView(
-                        aWallets = scanInfo?.walletOptions ?: emptyList(),
+                        aWallets = (scanInfo?.walletOptions ?: emptyList()).filter { it.available != false },
                         onItemClick = { value ->
                             showPayBottomSheet = false
                             //先把選到的錢包往上傳，再走驗證流程，避免驗證成功時還拿不到 walletId
