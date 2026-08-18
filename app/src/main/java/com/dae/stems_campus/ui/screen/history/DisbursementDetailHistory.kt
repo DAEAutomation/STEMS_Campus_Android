@@ -185,9 +185,10 @@ private fun infoView(disbursementHistory: HistoryModel.DisbursementHistory?) {
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                         Row {
+                            val dateTimeText = disbursementHistory?.createdAt?.toLocalDateTimeText("yyyy-MM-dd HH:mm") ?: "--"
                             Text("${stringResource(R.string.disbursement_time)}：", color = Color.Black, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(125.dp))
                             Spacer(modifier = Modifier.width(20.dp))
-                            Text("${disbursementHistory?.createdAt ?: "--"}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                            Text(dateTimeText, color = Color.Black, style = MaterialTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(20.dp))
                     }

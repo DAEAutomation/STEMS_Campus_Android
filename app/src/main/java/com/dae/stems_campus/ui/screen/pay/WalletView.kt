@@ -513,6 +513,9 @@ private fun walletContent(
                         }else if (value == "0") {
                             showDisbursementInputFieldFlag = true
                             showDisbursementInputFieldMsg = "請勿輸入0元"
+                        }else if (value.toDoubleOrNull() ?: 0.0 == 0.0) {
+                            showDisbursementInputFieldFlag = true
+                            showDisbursementInputFieldMsg = "請勿輸入0元"
                         }else if ((value.toDoubleOrNull() ?: 0.0) > Math.round(profileInfo?.balance ?: 0.0)) {
                             //撥款金額不可超過個人錢包餘額，比的是畫面上四捨五入後的數字（同 toAmountString 的 HALF_UP 0 位小數）
                             showDisbursementInputFieldFlag = true

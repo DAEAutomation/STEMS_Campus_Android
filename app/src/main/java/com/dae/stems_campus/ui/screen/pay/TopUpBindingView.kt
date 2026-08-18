@@ -80,6 +80,8 @@ fun topUpBindingScreen(navController: NavHostController, topUpViewModel: TopUpVi
     val resScanDepositSuccessFlag by topUpViewModel.resScanDepositSuccessFlag.collectAsState()
     val showScanDepositFailDialogFlag by topUpViewModel.showScanDepositFailDialogFlag.collectAsState()
     val showScanDepositFailMsg by topUpViewModel.showScanDepositFailMsg.collectAsState()
+    val canDeposit by topUpViewModel.canDeposit.collectAsState()
+    val canDepositReason by topUpViewModel.canDepositReason.collectAsState()
 
     val resStartTopUpSuccessFlag by topUpViewModel.resStartTopUpSuccessFlag.collectAsState()
     val startTopUpData by topUpViewModel.startTopUpData.collectAsState()
@@ -94,8 +96,20 @@ fun topUpBindingScreen(navController: NavHostController, topUpViewModel: TopUpVi
             topUpViewModel.scanDepositAction(value)})
 
     if (resScanDepositSuccessFlag) {
-        topUpViewModel.resetScanDepositSuccessFlag(false)
-        navController.navigate("TopUpInfo/${depositCode}")
+        if (canDeposit) {
+            topUpViewModel.resetScanDepositSuccessFlag(false)
+            navController.navigate("TopUpInfo/${depositCode}")
+        }else{
+            textTNoButtonAlert(
+                onDismissRequest = {},
+                dialogTitle = canDepositReason
+            )
+            // 在 Dialog 顯示後啟動計時器
+            LaunchedEffect(Unit) {
+                delay(1500) // 延遲 1.5 秒
+                topUpViewModel.resetScanDepositSuccessFlag(false)
+            }
+        }
     }
 
     if (showScanDepositFailDialogFlag) {

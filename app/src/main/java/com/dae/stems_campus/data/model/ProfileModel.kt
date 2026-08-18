@@ -112,6 +112,9 @@ class ProfileModel {
         val totalKwh: Double? = null,
         val walletType: String? = null,
         val walletLabel: String? = null,
+        val walletName: String? = null,
+        val remainingAmount: Double? = null,
+        val remainingKwh: Double? = null
     )
 
     data class GeneralDetail(

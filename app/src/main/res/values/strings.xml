@@ -212,6 +212,7 @@
     <string name="dormitory_list_7">名單7</string>
     <string name="dormitory_list_8">名單8</string>
     <string name="wallet_type">錢包類型</string>
+    <string name="wallet_name">錢包名稱</string>
     <string name="disbursement">撥款</string>
     <string name="disbursement_record">撥款紀錄</string>
     <string name="disbursement_number">撥款單號</string>
@@ -221,7 +222,7 @@
     <string name="dormitory_wallet_balance">宿舍錢包餘額</string>
     <string name="disbursed_by">撥款人</string>
     <string name="disburser_account">撥款人帳號</string>
-    <string name="please_select_debit_wallet_type">請選擇扣款錢包類型</string>
+    <string name="please_select_debit_wallet_type">請選擇扣款錢包</string>
     <string name="personal_wallet">個人錢包</string>
     <string name="dormitory_wallet">宿舍錢包</string>
     <string name="shared_wallet">共用錢包</string>
@@ -230,6 +231,7 @@
     <string name="start_power_usage">開啟用電</string>
     <string name="stop_power_usage">結束用電</string>
     <string name="remaining_hours">剩餘時數</string>
+    <string name="remaining_amount">剩餘金額</string>
     <string name="binding_success">綁定成功</string>
     <string name="dormitory_left_success">已退出此宿舍</string>
     <string name="please_select_disbursement_wallet">請選擇撥入錢包</string>

@@ -141,6 +141,6 @@ class ScanModel {
 
     data class StartedBy(
         val name: String? = null,
-        val uid: Int? = null
+        val uid: String? = null
     )
 }
