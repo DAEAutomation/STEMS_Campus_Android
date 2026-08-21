@@ -16,3 +16,9 @@
 local.properties
 keystore.properties
 *.jks
+
+# Release / build 產出物
+*.aab
+*.apk
+/app/release/
+/app/build/
