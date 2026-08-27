@@ -19,7 +19,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -42,9 +44,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -505,7 +515,7 @@ private fun walletContent(
                 containerColor = Color.White
             ) {
                 disbursementBottomSheetView(
-                    selectPayType = selectedWallet.value?.name ?: "",
+                    selectWallet = selectedWallet.value,
                     onInputText = { value ->
                         if (value.isEmpty()) {
                             showDisbursementInputFieldFlag = true
@@ -737,7 +747,54 @@ private fun infoViewByTeacher(profileInfo: ProfileModel.ProfileData?) {
                                     tint = Color.Black
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
-                                Text("${item.name}", color = Color.Black,style = MaterialTheme.typography.bodyLarge)
+                                val tagText = when {
+                                    item.type.equals("dorm") -> stringResource(R.string.dormitory)
+                                    item.type.equals("classroom") -> stringResource(R.string.classroom)
+                                    item.type.equals("other") -> stringResource(R.string.other)
+                                    else -> null
+                                }
+                                val tagColor = when {
+                                    item.type.equals("dorm") -> Color(0xFF2D859D)
+                                    item.type.equals("classroom") -> Color(0xFFD08024)
+                                    else -> Color(0xFF303236)
+                                }
+                                val nameStyle = MaterialTheme.typography.bodyLarge
+                                val textMeasurer = rememberTextMeasurer()
+                                val density = LocalDensity.current
+                                val tagPlaceholder = remember(tagText, nameStyle, density) {
+                                    tagText?.let {
+                                        val measured = textMeasurer.measure(AnnotatedString(it), nameStyle)
+                                        with(density) {
+                                            Placeholder(
+                                                width = (measured.size.width.toDp() + 6.dp).toSp(),
+                                                height = (measured.size.height.toDp() + 6.dp).toSp(),
+                                                placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+                                            )
+                                        }
+                                    }
+                                }
+                                Text(
+                                    text = buildAnnotatedString {
+                                        if (tagText != null) {
+                                            appendInlineContent("tag", tagText)
+                                            append(" ")
+                                        }
+                                        append("${item.name}")
+                                    },
+                                    inlineContent = if (tagText != null && tagPlaceholder != null) {
+                                        mapOf("tag" to InlineTextContent(tagPlaceholder) {
+                                            Box(
+                                                modifier = Modifier.fillMaxSize().border(1.dp, tagColor),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(tagText, color = tagColor, style = nameStyle)
+                                            }
+                                        })
+                                    } else emptyMap(),
+                                    color = Color.Black,
+                                    style = nameStyle,
+                                    modifier = Modifier.weight(1f, fill = false)
+                                )
                                 Row (verticalAlignment = Alignment.Bottom){
                                     Spacer(modifier = Modifier.width(20.dp))
                                     Text("${item?.balance?.toAmountString()}", color = Color(0xFF2D859D), style = MaterialTheme.typography.headlineLarge,fontWeight = FontWeight.Bold)
@@ -803,16 +860,16 @@ private fun infoViewByStudent(profileInfo: ProfileModel.ProfileData?) {
                     Column (){
                         Spacer(modifier = Modifier.height(20.dp))
                         Row (verticalAlignment = Alignment.CenterVertically){
-                            Spacer(modifier = Modifier.width(20.dp))
+                            Spacer(modifier = Modifier.width(15.dp))
                             Icon(
                                 painter = painterResource(id = R.drawable.wallet_w),
                                 contentDescription = "",
                                 tint = Color.Unspecified
                             )
                             Spacer(modifier = Modifier.width(10.dp))
-                            Text(stringResource(R.string.wallet), color = Color.White,style = MaterialTheme.typography.bodyLarge)
+                            Text(stringResource(R.string.personal_wallet), color = Color.White,style = MaterialTheme.typography.bodyLarge)
                             Row (verticalAlignment = Alignment.Bottom){
-                                Spacer(modifier = Modifier.width(20.dp))
+                                Spacer(modifier = Modifier.width(15.dp))
                                 Text("${profileInfo?.balance?.toAmountString()}", color = Color.White, style = MaterialTheme.typography.headlineLarge,fontWeight = FontWeight.Bold)
                                 Spacer(modifier = Modifier.width(15.dp))
                                 Text(stringResource(R.string.currency_unit), color = Color.White, style = MaterialTheme.typography.bodyLarge)
@@ -861,9 +918,56 @@ private fun infoViewByStudent(profileInfo: ProfileModel.ProfileData?) {
                                     tint = Color.Black
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
-                                Text("${item.name}", color = Color.Black,style = MaterialTheme.typography.bodyLarge)
+                                val tagText = when {
+                                    item.type.equals("dorm") -> stringResource(R.string.dormitory)
+                                    item.type.equals("classroom") -> stringResource(R.string.classroom)
+                                    item.type.equals("other") -> stringResource(R.string.other)
+                                    else -> null
+                                }
+                                val tagColor = when {
+                                    item.type.equals("dorm") -> Color(0xFF2D859D)
+                                    item.type.equals("classroom") -> Color(0xFFD08024)
+                                    else -> Color(0xFF303236)
+                                }
+                                val nameStyle = MaterialTheme.typography.bodyLarge
+                                val textMeasurer = rememberTextMeasurer()
+                                val density = LocalDensity.current
+                                val tagPlaceholder = remember(tagText, nameStyle, density) {
+                                    tagText?.let {
+                                        val measured = textMeasurer.measure(AnnotatedString(it), nameStyle)
+                                        with(density) {
+                                            Placeholder(
+                                                width = (measured.size.width.toDp() + 6.dp).toSp(),
+                                                height = (measured.size.height.toDp() + 6.dp).toSp(),
+                                                placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+                                            )
+                                        }
+                                    }
+                                }
+                                Text(
+                                    text = buildAnnotatedString {
+                                        if (tagText != null) {
+                                            appendInlineContent("tag", tagText)
+                                            append(" ")
+                                        }
+                                        append("${item.name}")
+                                    },
+                                    inlineContent = if (tagText != null && tagPlaceholder != null) {
+                                        mapOf("tag" to InlineTextContent(tagPlaceholder) {
+                                            Box(
+                                                modifier = Modifier.fillMaxSize().border(1.dp, tagColor),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(tagText, color = tagColor, style = nameStyle)
+                                            }
+                                        })
+                                    } else emptyMap(),
+                                    color = Color.Black,
+                                    style = nameStyle,
+                                    modifier = Modifier.weight(1f, fill = false)
+                                )
                                 Row (verticalAlignment = Alignment.Bottom){
-                                    Spacer(modifier = Modifier.width(20.dp))
+                                    Spacer(modifier = Modifier.width(15.dp))
                                     Text("${item?.balance?.toAmountString()}", color = Color(0xFF2D859D), style = MaterialTheme.typography.headlineLarge,fontWeight = FontWeight.Bold)
                                     Spacer(modifier = Modifier.width(15.dp))
                                     Text(stringResource(R.string.currency_unit), color = Color.Black, style = MaterialTheme.typography.bodyLarge)
@@ -923,6 +1027,14 @@ private fun payListView(aWallets: List<ProfileModel.Wallets>,onItemClick: (Profi
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            if (item.type.equals("dorm")){
+                                Text(stringResource(R.string.dormitory), color = Color(0xFF2D859D), style = MaterialTheme.typography.titleLarge, modifier = Modifier.background(Color.Unspecified).border(1.dp, Color(0xFF2D859D)).padding(2.dp))
+                            }else if (item.type.equals("classroom")) {
+                                Text(stringResource(R.string.classroom), color = Color(0xFFD08024), style = MaterialTheme.typography.titleLarge, modifier = Modifier.background(Color.Unspecified).border(1.dp, Color(0xFFD08024)).padding(2.dp))
+                            }else if (item.type.equals("other")) {
+                                Text(stringResource(R.string.other), color = Color(0xFF303236), style = MaterialTheme.typography.titleLarge, modifier = Modifier.background(Color.Unspecified).border(1.dp, Color(0xFF303236)).padding(2.dp))
+                            }
+                            Spacer(modifier = Modifier.width(5.dp))
                             Text(
                                 text = item.name ?: "",
                                 color = Color.Black,
@@ -949,15 +1061,63 @@ private fun payListView(aWallets: List<ProfileModel.Wallets>,onItemClick: (Profi
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun disbursementBottomSheetView(selectPayType: String, onInputText:(String) -> Unit, onCancelHandled: () -> Unit, showInputFailDialogFlag: Boolean, showInputFailMsg: String?, onInputFailDismissed: () -> Unit) {
+private fun disbursementBottomSheetView(selectWallet: ProfileModel.Wallets?, onInputText:(String) -> Unit, onCancelHandled: () -> Unit, showInputFailDialogFlag: Boolean, showInputFailMsg: String?, onInputFailDismissed: () -> Unit) {
     var inputPasswordText by remember { mutableStateOf("") }
     Column {
         Spacer(modifier = Modifier.height(40.dp))
         Row {
             Spacer(modifier = Modifier.width(20.dp))
-            Text("${stringResource(R.string.personal_wallet)}", color = Color(0xFF2D859D), style = MaterialTheme.typography.titleLarge)
-            Text("撥款至", color = Color.Black, style = MaterialTheme.typography.titleLarge)
-            Text(selectPayType, color = Color(0xFF2D859D), style = MaterialTheme.typography.titleLarge)
+            val titleStyle = MaterialTheme.typography.titleLarge
+            val tagStyle = MaterialTheme.typography.bodyLarge
+            val personalWalletText = stringResource(R.string.personal_wallet)
+            val tagText = when (selectWallet?.type) {
+                "dorm" -> stringResource(R.string.dormitory)
+                "classroom" -> stringResource(R.string.classroom)
+                "other" -> stringResource(R.string.other)
+                else -> null
+            }
+            val tagColor = when (selectWallet?.type) {
+                "dorm" -> Color(0xFF2D859D)
+                "classroom" -> Color(0xFFD08024)
+                else -> Color(0xFF303236)
+            }
+            val textMeasurer = rememberTextMeasurer()
+            val density = LocalDensity.current
+            val tagPlaceholder = remember(tagText, tagStyle, density) {
+                tagText?.let {
+                    val measured = textMeasurer.measure(AnnotatedString(it), tagStyle)
+                    with(density) {
+                        Placeholder(
+                            width = (measured.size.width.toDp() + 6.dp).toSp(),
+                            height = (measured.size.height.toDp() + 6.dp).toSp(),
+                            placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+                        )
+                    }
+                }
+            }
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(SpanStyle(color = Color(0xFF2D859D))) { append(personalWalletText) }
+                    withStyle(SpanStyle(color = Color.Black)) { append("撥款至") }
+                    if (tagText != null) {
+                        appendInlineContent("tag", tagText)
+                        append(" ")
+                    }
+                    withStyle(SpanStyle(color = Color(0xFF2D859D))) { append(selectWallet?.name ?: "") }
+                },
+                inlineContent = if (tagText != null && tagPlaceholder != null) {
+                    mapOf("tag" to InlineTextContent(tagPlaceholder) {
+                        Box(
+                            modifier = Modifier.fillMaxSize().border(1.dp, tagColor),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(tagText, color = tagColor, style = tagStyle)
+                        }
+                    })
+                } else emptyMap(),
+                style = titleStyle,
+                modifier = Modifier.weight(1f)
+            )
             Spacer(modifier = Modifier.width(20.dp))
         }
         Spacer(modifier = Modifier.height(10.dp))

@@ -1412,6 +1412,14 @@ private fun payListView(aWallets: List<ScanModel.WalletOptions>, onItemClick: (S
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            if (item.type.equals("dorm")){
+                                Text(stringResource(R.string.dormitory), color = Color(0xFF2D859D), style = MaterialTheme.typography.titleLarge, modifier = Modifier.background(Color.Unspecified).border(1.dp, Color(0xFF2D859D)).padding(2.dp))
+                            }else if (item.type.equals("classroom")) {
+                                Text(stringResource(R.string.classroom), color = Color(0xFFD08024), style = MaterialTheme.typography.titleLarge, modifier = Modifier.background(Color.Unspecified).border(1.dp, Color(0xFFD08024)).padding(2.dp))
+                            }else if (item.type.equals("other")) {
+                                Text(stringResource(R.string.other), color = Color(0xFF303236), style = MaterialTheme.typography.titleLarge, modifier = Modifier.background(Color.Unspecified).border(1.dp, Color(0xFF303236)).padding(2.dp))
+                            }
+                            Spacer(modifier = Modifier.width(5.dp))
                             Text(
                                 text = item.name ?: "",
                                 color = Color.Black,
