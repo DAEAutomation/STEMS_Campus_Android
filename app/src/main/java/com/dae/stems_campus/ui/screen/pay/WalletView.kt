@@ -1,5 +1,7 @@
 package com.dae.stems_campus.ui.screen.pay
 
+import android.widget.Toast
+import androidx.biometric.BiometricManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -63,6 +65,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -76,13 +79,16 @@ import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.HistoryModel
 import com.dae.stems_campus.data.model.ProfileModel
+import com.dae.stems_campus.ui.components.BiometricHelper
 import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.utils.calculateDuration
 import com.dae.stems_campus.utils.toLocalDateTimeText
 import com.dae.stems_campus.utils.toAmountString
+import com.dae.stems_campus.viewmodel.LoginViewModel
 import com.dae.stems_campus.viewmodel.PayViewModel
 import com.dae.stems_campus.viewmodel.ProfileViewModel
+import com.dae.stems_campus.viewmodel.SettingViewModel
 import kotlinx.coroutines.delay
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -90,7 +96,7 @@ import kotlin.collections.listOf
 
 
 @Composable
-fun walletScreen(mainNavController: NavController, profileViewModel: ProfileViewModel = hiltViewModel(), payViewModel: PayViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
+fun walletScreen(mainNavController: NavController, onNavigateToSetting: () -> Unit = {}, profileViewModel: ProfileViewModel = hiltViewModel(), payViewModel: PayViewModel = hiltViewModel(), loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), onShowTabBarChange: (Boolean) -> Unit) {
     val walletNavController = rememberNavController()
 
     val backStackEntry by walletNavController.currentBackStackEntryAsState()
@@ -101,7 +107,7 @@ fun walletScreen(mainNavController: NavController, profileViewModel: ProfileView
 
     NavHost(navController = walletNavController, startDestination = "Wallet") {
         composable("Wallet") {
-            walletMainLoad(mainNavController = mainNavController, navController = walletNavController, profileViewModel, payViewModel, onShowTabBarChange = {})
+            walletMainLoad(mainNavController = mainNavController, navController = walletNavController, profileViewModel, payViewModel,loginViewModel,settingViewModel, onNavigateToSetting, onShowTabBarChange = {})
         }
         composable("TopUpBinding") {
             topUpBindingScreen(navController = walletNavController, onShowTabBarChange = {})
@@ -143,8 +149,12 @@ fun walletScreen(mainNavController: NavController, profileViewModel: ProfileView
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun walletMainLoad(mainNavController: NavController, navController: NavHostController, profileViewModel: ProfileViewModel, payViewModel: PayViewModel,  onShowTabBarChange: (Boolean) -> Unit) {
+private fun walletMainLoad(mainNavController: NavController, navController: NavHostController, profileViewModel: ProfileViewModel, payViewModel: PayViewModel, loginViewModel: LoginViewModel, settingViewModel: SettingViewModel, onNavigateToSetting: () -> Unit,  onShowTabBarChange: (Boolean) -> Unit) {
 
+    val context = LocalContext.current
+    val activity = context as? FragmentActivity
+
+    val uuid by loginViewModel.UUID.collectAsState()
     val profileInfo by profileViewModel.profileInfo.collectAsState()
     val showLoadingView by profileViewModel.showLoadingView.collectAsState()
     val resGetProfileInfoSuccessFlag by profileViewModel.resGetProfileInfoSuccessFlag.collectAsState()
@@ -155,8 +165,57 @@ private fun walletMainLoad(mainNavController: NavController, navController: NavH
     val showDisbursementFailDialogFlag by payViewModel.showDisbursementFailDialogFlag.collectAsState()
     val showDisbursementFailMsg by payViewModel.showDisbursementFailMsg.collectAsState()
 
+    val resVerifyPasswordSuccessFlag by loginViewModel.resVerifyPasswordSuccessFlag.collectAsState()
+    val showVerifyPasswordFailDialogFlag by loginViewModel.showVerifyPasswordFailDialogFlag.collectAsState()
+    val showVerifyPasswordFailMsg by loginViewModel.showVerifyPasswordFailMsg.collectAsState()
+
+    val isBiometricFlag by settingViewModel.isBiometricEnabled.collectAsState()
+
+    // 生物辨識驗證通過（純本地訊號，這條路徑不打 verifyPassword API）
+    var biometricVerifiedFlag by remember { mutableStateOf(false) }
+
+    val biometricHelper = remember(activity) {
+        activity?.let { BiometricHelper(it) }
+    }
+
+    // Toast 在非 composable 的 lambda 裡顯示，文字先在這裡取好
+    val msgLoginNotEnabled = stringResource(R.string.biometric_login_not_enabled)
+    val msgNotSupported = stringResource(R.string.biometric_not_supported)
+    val msgNoneEnrolled = stringResource(R.string.biometric_none_enrolled)
+    val msgUnavailable = stringResource(R.string.biometric_unavailable)
+    val msgNotSupportedOrDisabled = stringResource(R.string.biometric_not_supported_or_disabled)
+
+    //生物辨識判斷（含裝置密碼，密碼入口由系統辨識畫面自帶）
+    val handleBiometricStartPower = {
+        if (!isBiometricFlag) {
+            Toast.makeText(context, msgLoginNotEnabled, Toast.LENGTH_SHORT).show()
+        } else if (biometricHelper == null) {
+            Toast.makeText(context, msgNotSupported, Toast.LENGTH_SHORT).show()
+        } else {
+            when (biometricHelper.canAuthenticate()) {
+                BiometricManager.BIOMETRIC_SUCCESS -> {
+                    biometricHelper.authenticate(
+                        onSuccess = {
+                            biometricVerifiedFlag = true
+                        },
+                        onError = {
+                            Toast.makeText(context, "$it", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
+                BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED ->
+                    Toast.makeText(context, msgNoneEnrolled, Toast.LENGTH_SHORT).show()
+                BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE ->
+                    Toast.makeText(context, msgUnavailable, Toast.LENGTH_SHORT).show()
+                else ->
+                    Toast.makeText(context, msgNotSupportedOrDisabled, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     LaunchedEffect(Unit) {
         profileViewModel.getProfileInfoAction()
+        settingViewModel.getBiometricValue()
     }
 
     walletContent(mainNavController = mainNavController,
@@ -174,7 +233,24 @@ private fun walletMainLoad(mainNavController: NavController, navController: NavH
         },
         onDisbursementFailDismissed = {
             payViewModel.resetShowDisbursementFailDialogFlag(false)
-        })
+        },
+        showVerifyPasswordFailDialogFlag = showVerifyPasswordFailDialogFlag,
+        showVerifyPasswordFailMsg = showVerifyPasswordFailMsg,
+        onVerifyPasswordFailDismissed = { loginViewModel.resetShowVerifyPasswordFailDialogFlag(false) },
+        onVerifyPasswordHandled = { value ->
+            loginViewModel.verifyPasswordAction(value,"bind_device",uuid)
+        },
+        // 輸入密碼與生物辨識兩條路徑成功後要做的事完全一樣，合併成單一訊號
+        verifiedFlag = resVerifyPasswordSuccessFlag || biometricVerifiedFlag,
+        onVerifiedHandled = {
+            loginViewModel.resetResVerifyPasswordSuccessFlag(false)
+            biometricVerifiedFlag = false
+        },
+        onNavigateToSetting = {
+            onNavigateToSetting()
+        },
+        isBiometricFlag = isBiometricFlag,
+        onBiometricsStartPowerSupplyHandled = { handleBiometricStartPower() })
 
 
     if (showLoadingView) {
@@ -206,7 +282,16 @@ private fun walletContent(
     showDisbursementFailDialogFlag: Boolean = false,
     showDisbursementFailMsg: String? = null,
     onResDisbursementSuccessDismissed: () -> Unit = {},
-    onDisbursementFailDismissed: () -> Unit = {},) {
+    onDisbursementFailDismissed: () -> Unit = {},
+    showVerifyPasswordFailDialogFlag: Boolean = false,
+    showVerifyPasswordFailMsg: String? = null,
+    onVerifyPasswordFailDismissed: () -> Unit = {},
+    onVerifyPasswordHandled:(String) -> Unit = {},
+    verifiedFlag: Boolean = false,
+    onVerifiedHandled: () -> Unit = {},
+    onNavigateToSetting: () -> Unit = {},
+    isBiometricFlag: Boolean = false,
+    onBiometricsStartPowerSupplyHandled: () -> Unit) {
 
     var showPayBottomSheet by remember { mutableStateOf(false) }
 
@@ -216,9 +301,12 @@ private fun walletContent(
     var showDisbursementInputFieldFlag by remember { mutableStateOf(false) }
     var showDisbursementInputFieldMsg by remember { mutableStateOf("") }
 
+    var showingInputPasswordBottomSheet by remember { mutableStateOf(false) }
+
     val paySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val disbursementSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val disbursementConfirmSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val inputPasswordSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val selectedWallet = remember { mutableStateOf<ProfileModel.Wallets?>(null) }
     val inputAmountValue = remember { mutableStateOf("") }
@@ -531,8 +619,12 @@ private fun walletContent(
                             showDisbursementInputFieldFlag = true
                             showDisbursementInputFieldMsg = "已超過個人錢包金額"
                         }else {
-                            showDisbursementConfirmBottomSheet = true
                             inputAmountValue.value = value
+                            if (isBiometricFlag) {
+                                onBiometricsStartPowerSupplyHandled()
+                            }else{
+                                showingInputPasswordBottomSheet = true
+                            }
                         }
                     },
                     onCancelHandled = {
@@ -544,6 +636,39 @@ private fun walletContent(
                         showDisbursementInputFieldFlag = false
                     }
                 )
+            }
+        }
+
+        //輸入密碼
+        if (showingInputPasswordBottomSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showingInputPasswordBottomSheet = false
+                },
+                sheetState = inputPasswordSheetState,
+                containerColor = Color.White
+            ) {
+                inputPasswordAndLinkBottomSheetView(
+                    onInputText = { value ->
+                    onVerifyPasswordHandled(value)
+                }, onCancelHandled = {
+                    showingInputPasswordBottomSheet = false
+                }, showVerifyPasswordFailDialogFlag = showVerifyPasswordFailDialogFlag,
+                    showVerifyPasswordFailMsg = showVerifyPasswordFailMsg,
+                    onVerifyPasswordFailDismissed = {
+                        onVerifyPasswordFailDismissed()
+                    }, onNavigateToSetting = {
+                        onNavigateToSetting()
+                    })
+            }
+        }
+
+        //密碼或生物辨識驗證成功 → 收掉密碼輸入、打開確認撥款，並把 flag 歸零避免重複觸發
+        LaunchedEffect(verifiedFlag) {
+            if (verifiedFlag) {
+                showingInputPasswordBottomSheet = false
+                showDisbursementConfirmBottomSheet = true
+                onVerifiedHandled()
             }
         }
 
@@ -1229,6 +1354,143 @@ private fun disbursementBottomSheetView(selectWallet: ProfileModel.Wallets?, onI
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+private fun inputPasswordAndLinkBottomSheetView(onInputText:(String) -> Unit, onCancelHandled: () -> Unit, showVerifyPasswordFailDialogFlag: Boolean, showVerifyPasswordFailMsg: String?, onVerifyPasswordFailDismissed: () -> Unit, onNavigateToSetting: () -> Unit) {
+    var inputPasswordText by remember { mutableStateOf("") }
+    Column {
+        Spacer(modifier = Modifier.height(40.dp))
+        Row {
+            Spacer(modifier = Modifier.width(20.dp))
+            Text("${stringResource(R.string.enter_password)}", color = Color.Black, style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.width(20.dp))
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Row {
+            BasicTextField(
+                value = inputPasswordText,
+                onValueChange = { inputPasswordText = it },
+                textStyle = TextStyle( color = Color.Black),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                modifier = Modifier
+                    .fillMaxWidth().padding(start = 20.dp, end = 20.dp) ,
+                decorationBox = { innerTextField ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(
+                                width = 2.dp,
+                                color = if (showVerifyPasswordFailDialogFlag) Color(0xFFE54343) else Color(0xFF999999),
+                                shape = RoundedCornerShape(10.dp)
+                            ).padding(15.dp)
+                    ) {
+                        if (inputPasswordText.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.enter_password),
+                                color = Color(0xFFAAAAAA)
+                            )
+                        }else{
+                            onVerifyPasswordFailDismissed()
+                        }
+                        innerTextField()
+                    }
+                },
+                visualTransformation = PasswordVisualTransformation()
+            )
+
+        }
+
+        //處理錯誤輸入顯示
+        if (showVerifyPasswordFailDialogFlag) {
+            Spacer(modifier = Modifier.height( 10.dp))
+            Row {
+                Spacer(modifier = Modifier.width(20.dp))
+                Text(
+                    text = stringResource(R.string.go_to_enable_biometric),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.wrapContentHeight().clickable{ onNavigateToSetting() },
+                    color = Color.Black,
+                    style = TextStyle(textDecoration = TextDecoration.Underline)
+                )
+                Spacer(Modifier.weight(1f))
+                Text(parseDialogMsg(showVerifyPasswordFailMsg ?: ""), color = Color(0xFFE54343))
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }else {
+            Spacer(modifier = Modifier.height( 10.dp))
+            Row {
+                Spacer(modifier = Modifier.width(20.dp))
+                Text(
+                    text = stringResource(R.string.go_to_enable_biometric),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.wrapContentHeight().clickable{ onNavigateToSetting() },
+                    color = Color.Black,
+                    style = TextStyle(textDecoration = TextDecoration.Underline)
+                )
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }
+        Spacer(modifier = Modifier.height( 35.dp))
+        Row {
+            Spacer(modifier = Modifier.width(30.dp))
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .align(Alignment.CenterVertically)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(
+                        color = Color(0xFF2D859D)
+                    )
+                    .clickable {
+//                        settingViewModel.passwordAuthenticationAction(inputPasswordText)
+                        onInputText(inputPasswordText)
+                        inputPasswordText = ""
+                    },
+
+                color = Color.Transparent
+            ) {
+                Text(
+                    text = stringResource(R.string.submit),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.wrapContentHeight(),
+                    color = Color.White
+                )
+            }
+            Spacer(modifier = Modifier.width(30.dp))
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+        Row {
+            Spacer(modifier = Modifier.width(50.dp))
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .align(Alignment.CenterVertically)
+                    .clickable {
+                        onCancelHandled()
+                    },
+                color = Color.Transparent
+            ) {
+                Text(
+                    text = stringResource(R.string.previous_step),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.wrapContentHeight(),
+                    color = Color.Black,
+                    style = TextStyle(textDecoration = TextDecoration.Underline)
+                )
+            }
+            Spacer(modifier = Modifier.width(50.dp))
+        }
+        Spacer(modifier = Modifier.height(40.dp))
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 private fun disbursementConfirmBottomSheetView(amount: String, onDisbursementHandled: () -> Unit, onCancelHandled: () -> Unit) {
     Column (modifier = Modifier.background(Color.White)){
         Row (verticalAlignment = Alignment.CenterVertically){
@@ -1300,6 +1562,8 @@ private fun disbursementConfirmBottomSheetView(amount: String, onDisbursementHan
 }
 
 
+
+
 @Composable
 private fun parseDialogMsg(aMsg: String):(String){
     var msg: String = ""
@@ -1332,5 +1596,8 @@ private fun WalletPreview() {
 
 // 創建一個模擬的 NavController
     val navController = TestNavHostController(LocalContext.current)
-    walletContent (navController,navController,null,{_,_ ->})
+    walletContent(
+        navController, navController, null, { _, _ -> },
+        onBiometricsStartPowerSupplyHandled = {}
+    )
 }

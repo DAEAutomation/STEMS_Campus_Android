@@ -184,7 +184,12 @@ private fun Navigation(
             )
         }
         composable(NavigationItem.Wallet.route) {
-            walletScreen(mainNavController = mainNavController, onShowTabBarChange = onShowTabBarChange)
+            walletScreen(mainNavController = mainNavController, onNavigateToSetting = {
+                bottomBarNavHostController.navigate(NavigationItem.Setting.route) {
+                    popUpTo(NavigationItem.Setting.route) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }, onShowTabBarChange = onShowTabBarChange)
         }
         composable(NavigationItem.History.route) {
             historyScreen(mainNavController = mainNavController, onShowTabBarChange = onShowTabBarChange)
