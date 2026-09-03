@@ -153,7 +153,7 @@ fun login(navController: NavHostController, authViewModel: AuthViewModel, loginV
         isBiometricFlag = isBiometricFlag,
         onBiometricLoginHandled = {
             authViewModel.checkBeforeLogin {
-                loginViewModel.loginAction(userNameText, passwordText, uuidText)
+                loginViewModel.biometricLoginAction()
             }
         },
         registerEmail = registerEmail,
@@ -1119,6 +1119,8 @@ private fun parseDialogMsg(aMsg: String):(String){
         msg = stringResource(id = R.string.password_not_entered)
     }else if (aMsg == "PasswordInvalidFormat") {
         msg = "僅能輸入數字及英文字母"
+    }else if (aMsg == "CredentialNotSaved") {
+        msg = stringResource(id = R.string.credential_not_saved)
     }else if (aMsg == "BiometricLoginNotEnabled") {
         msg = stringResource(R.string.biometric_login_not_enabled)
     }else if (aMsg == "BiometricNotSupportedOrDisabled") {
