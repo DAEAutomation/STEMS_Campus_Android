@@ -67,7 +67,8 @@ class AuthViewModel @Inject constructor(
                     // 服務維護中
                     if (data.serviceState == false) {
                         _authState.value = AuthState.ServiceUnavailable(
-                            message = data.serviceMessage.orEmpty()
+                            message = data.serviceMessage.orEmpty(),
+                            endTime = data.serviceEndTime.orEmpty()
                         )
                         return@launch
                     }
@@ -100,12 +101,45 @@ class AuthViewModel @Inject constructor(
 
         }
     }
+
+    /**
+     * 只重查服務維護狀態，不碰 token。
+     * 給「切回前景」與「停在維護畫面時輪詢」用；
+     * 刻意不複用 checkToken()，避免每次回前景都重驗 token 把使用者踢回登入頁。
+     */
+    fun recheckServiceState() {
+        viewModelScope.launch {
+            try {
+                val storedBaseUrl = userPreferences.getApiDomainValue.firstOrNull().orEmpty()
+                if (storedBaseUrl.isEmpty()) return@launch
+                baseUrlHolder.baseUrl = storedBaseUrl
+
+                val result = serviceCheckRepository.getServiceCheckData()
+                if (result !is BaseRepository.Result.Success) return@launch
+
+                val data = result.data
+                when {
+                    // 維護中 → 不管目前在哪一頁都切到維護畫面
+                    data.serviceState == false -> {
+                        _authState.value = AuthState.ServiceUnavailable(
+                            message = data.serviceMessage.orEmpty(),
+                            endTime = data.serviceEndTime.orEmpty()
+                        )
+                    }
+                    // 維護結束且正卡在維護畫面 → 走完整啟動流程回到 App
+                    _authState.value is AuthState.ServiceUnavailable -> checkToken()
+                }
+            } catch (e: Exception) {
+                Log.e("DAE_Develop", "重查服務狀態錯誤", e)
+            }
+        }
+    }
 }
 
 sealed class AuthState {
     object Loading : AuthState()
     object NeedSchoolSelection : AuthState()
-    data class ServiceUnavailable(val message: String) : AuthState()
+    data class ServiceUnavailable(val message: String, val endTime: String) : AuthState()
     data class NeedAppUpdate(val currentVersion: String, val requiredVersion: String) : AuthState()
     object Authenticated : AuthState()
     object Unauthenticated : AuthState()

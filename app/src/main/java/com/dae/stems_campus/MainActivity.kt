@@ -16,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,6 +25,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -93,6 +98,35 @@ fun AppContent () {
         }
     }
 
+    // 切回前景時重查維護狀態；冷啟動那次 ON_RESUME 跳過，避免跟上面的 checkToken() 重複打 API
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        var skipFirstResume = true
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                if (skipFirstResume) {
+                    skipFirstResume = false
+                } else {
+                    viewModel.recheckServiceState()
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // 全域輪詢：不分畫面每 10 分鐘重查一次維護狀態，
+    // 讓維護開始時「一直開著 App 沒切背景」的使用者也會被切到維護畫面。
+    // 用 repeatOnLifecycle 限制在前景才跑，切背景就停，避免背景發請求
+    LaunchedEffect(Unit) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            while (true) {
+                delay(600_000)
+                viewModel.recheckServiceState()
+            }
+        }
+    }
+
     // 已登入狀態下才主動同步 FCM token；避免未登入時送 token 觸發 401 / forceLogout flash
     LaunchedEffect(authState) {
         if (authState is AuthState.Authenticated) {
@@ -159,7 +193,7 @@ fun AppContent () {
             }
         }
         is AuthState.ServiceUnavailable -> {
-            serviceUnavailableScreen(message = (authState as AuthState.ServiceUnavailable).message)
+            serviceUnavailableScreen(message = (authState as AuthState.ServiceUnavailable).message, endTime = (authState as AuthState.ServiceUnavailable).endTime)
         }
         is AuthState.NeedAppUpdate -> {
             val state = authState as AuthState.NeedAppUpdate
