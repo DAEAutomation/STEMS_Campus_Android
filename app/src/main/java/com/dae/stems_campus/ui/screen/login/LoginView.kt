@@ -75,6 +75,7 @@ import com.dae.stems_campus.ui.components.BiometricHelper
 import com.dae.stems_campus.ui.components.LoadingView
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.viewmodel.AccountViewModel
+import com.dae.stems_campus.viewmodel.AuthViewModel
 import com.dae.stems_campus.viewmodel.LoginViewModel
 import com.dae.stems_campus.viewmodel.PushNotificationViewModel
 import com.dae.stems_campus.viewmodel.SelectSchoolViewModel
@@ -84,7 +85,10 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun login(navController: NavHostController, loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), accountViewModel: AccountViewModel = hiltViewModel(), pushNotificationViewModel: PushNotificationViewModel = hiltViewModel(), selectSchoolViewModel: SelectSchoolViewModel = hiltViewModel()) {
+// authViewModel 刻意不給 hiltViewModel() 預設值：這裡在 NavHost 內，
+// hiltViewModel() 會拿到 NavBackStackEntry scope 的另一個實例，
+// 它改的 authState 不是 AppContent 在 collect 的那份，維護畫面不會切過去。
+fun login(navController: NavHostController, authViewModel: AuthViewModel, loginViewModel: LoginViewModel = hiltViewModel(), settingViewModel: SettingViewModel = hiltViewModel(), accountViewModel: AccountViewModel = hiltViewModel(), pushNotificationViewModel: PushNotificationViewModel = hiltViewModel(), selectSchoolViewModel: SelectSchoolViewModel = hiltViewModel()) {
 
     var loginOrRegister by remember { mutableStateOf(true) }
     var pwVisibility by remember { mutableStateOf(false) }
@@ -114,6 +118,8 @@ fun login(navController: NavHostController, loginViewModel: LoginViewModel = hil
     val apiDomainValue by loginViewModel.apiDomainValue.collectAsState()
     val schoolList by selectSchoolViewModel.schools.collectAsState()
 
+    val checkingBeforeLogin by authViewModel.checkingBeforeLogin.collectAsState()
+
 
     LaunchedEffect(Unit) {
         settingViewModel.getBiometricValue()
@@ -124,13 +130,18 @@ fun login(navController: NavHostController, loginViewModel: LoginViewModel = hil
         userNameText = userNameText,
         passwordText = passwordText,
         rememberLoginInfoChecked = rememberLoginInfoChecked,
-        showLoadingView = showLoadingView || accountShowLoadingView,
+        showLoadingView = showLoadingView || accountShowLoadingView || checkingBeforeLogin,
         resLoginSuccessFlag = resLoginSuccessFlag,
         showLoginFailMsgDialogFlag = showLoginFailMsgDialogFlag,
         showLoginFailMsg = showLoginFailMsg,
         onUserNameChange = { loginViewModel.updateInputAccount(it) },
         onPasswordChange = { loginViewModel.updateInputPassword(it) },
-        onLoginClick = { loginViewModel.loginAction(userNameText, passwordText, uuidText) },
+        // 先確認服務未在維護、版本沒過期，通過才真的送登入請求
+        onLoginClick = {
+            authViewModel.checkBeforeLogin {
+                loginViewModel.loginAction(userNameText, passwordText, uuidText)
+            }
+        },
         onRememberCheckedChange = { loginViewModel.updateRememberLoginInfoChecked(it)},
         onLoginSuccessHandled = {
             loginViewModel.resetLoginSuccessFlag(false)
@@ -140,7 +151,11 @@ fun login(navController: NavHostController, loginViewModel: LoginViewModel = hil
         onLoginFailDismissed = { loginViewModel.resetShowLoginFailMsgDialogFlag(false)
         },
         isBiometricFlag = isBiometricFlag,
-        onBiometricLoginHandled = { loginViewModel.loginAction(userNameText, passwordText, uuidText)},
+        onBiometricLoginHandled = {
+            authViewModel.checkBeforeLogin {
+                loginViewModel.loginAction(userNameText, passwordText, uuidText)
+            }
+        },
         registerEmail = registerEmail,
         showRegisterEmailInputFailFlag = showRegisterEmailInputFailFlag,
         showRegisterEmailInputFailMsg = showRegisterEmailInputFailMsg,

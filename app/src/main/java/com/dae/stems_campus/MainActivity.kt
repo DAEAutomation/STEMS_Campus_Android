@@ -205,7 +205,7 @@ fun AppContent () {
         is AuthState.Authenticated -> {
             NavHost(navController = navController, startDestination = "first") {
                 composable ("signIn"){
-                    login(navController)
+                    login(navController, authViewModel = viewModel)
                 }
                 composable ("VerificationCode/{email}") { backStackEntry ->
                     val email = backStackEntry.arguments?.getString("email")
@@ -243,7 +243,7 @@ fun AppContent () {
         is AuthState.Unauthenticated -> {
             NavHost(navController = navController, startDestination = "signIn") {
                 composable ("signIn"){
-                    login(navController)
+                    login(navController, authViewModel = viewModel)
                 }
                 composable ("VerificationCode/{email}") { backStackEntry ->
                     val email = backStackEntry.arguments?.getString("email")
