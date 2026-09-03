@@ -10,6 +10,8 @@ class ServiceCheckModel {
     data class ServiceCheckData(
         val serviceState: Boolean? = null,
         val serviceMessage: String? = null,
+        val serviceStartTime: String? = null,
+        val serviceEndTime: String? = null,
         val appVersion: String? = null
     )
 }
