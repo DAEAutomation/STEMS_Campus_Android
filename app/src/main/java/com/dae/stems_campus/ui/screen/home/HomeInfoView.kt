@@ -462,12 +462,15 @@ private fun homeContent(mainNavController: NavController,
             }
             Row {
                 Spacer(modifier = Modifier.width(25.dp))
-                if (profileInfo?.role.equals("staff")) {
-                    Text(text = "Hi,${profileInfo?.name} ${profileInfo?.jobTitle}", color = Color(0xFF656565), style = MaterialTheme.typography.titleMedium)
-                }else if (profileInfo?.role.equals("student")){
-                    Text(text = "Hi,${profileInfo?.name} 同學", color = Color(0xFF656565), style = MaterialTheme.typography.titleMedium)
+                if (profileInfo?.registrationSource.equals("visitor")) {
+                    Text(text = "Hi,${profileInfo?.name} 訪客", color = Color(0xFF656565), style = MaterialTheme.typography.titleMedium)
+                }else{
+                    if (profileInfo?.role.equals("staff")) {
+                        Text(text = "Hi,${profileInfo?.name} ${profileInfo?.jobTitle}", color = Color(0xFF656565), style = MaterialTheme.typography.titleMedium)
+                    }else if (profileInfo?.role.equals("student")){
+                        Text(text = "Hi,${profileInfo?.name} 同學", color = Color(0xFF656565), style = MaterialTheme.typography.titleMedium)
+                    }
                 }
-
             }
             Spacer(modifier = Modifier.height(30.dp))
 

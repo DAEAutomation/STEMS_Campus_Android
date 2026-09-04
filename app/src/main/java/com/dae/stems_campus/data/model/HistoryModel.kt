@@ -139,6 +139,7 @@ class HistoryModel {
         val serialNo: String? = null,
         val createdAt: String? = null,
         val roomNumber: String? = null,
+        val walletType: String? = null,
         val payerName: String? = null,
         val payerEmail: String? = null,
         val amount: Double? = null,

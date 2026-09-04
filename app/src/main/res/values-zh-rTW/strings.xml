@@ -26,6 +26,7 @@
     <string name="resend_verification_code">沒收到驗證碼？重新發送</string>
     <string name="please_enter_verification_code">請輸入驗證碼</string>
     <string name="account_not_entered">尚未輸入帳號</string>
+    <string name="credential_not_saved">尚未儲存登入資訊，請先以帳號密碼登入一次</string>
     <string name="password_not_entered">尚未輸入密碼</string>
     <string name="please_re_login">請重新登入</string>
     <string name="verify">驗證</string>

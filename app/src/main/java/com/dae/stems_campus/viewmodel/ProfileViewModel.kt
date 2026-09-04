@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dae.stems_campus.data.model.ProfileModel
 import com.dae.stems_campus.data.repository.BaseRepository
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.dae.stems_campus.data.repository.CredentialRepository
 import com.dae.stems_campus.data.repository.ProfileRepository
 import com.dae.stems_campus.data.repository.UserPreferencesRepository
@@ -41,6 +42,9 @@ class ProfileViewModel @Inject constructor(private var profileRepository: Profil
                     _showLoadingView.value = false
                     _resGetProfileInfoSuccessFlag.value = true
                     _profileInfo.value = result.data
+                    // crash 報告關聯到使用者，方便追重複閃退的個案
+                    FirebaseCrashlytics.getInstance()
+                        .setUserId(result.data.userId ?: result.data.studentId ?: "")
                 }
                 is BaseRepository.Result.Error -> {
                     _showLoadingView.value = false

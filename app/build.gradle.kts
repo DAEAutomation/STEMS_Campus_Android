@@ -5,6 +5,7 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
     id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -114,6 +115,9 @@ dependencies {
     // Import the Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-analytics")
+
+    // Crashlytics
+    implementation("com.google.firebase:firebase-crashlytics")
 
     // FCM
     implementation("com.google.firebase:firebase-messaging")

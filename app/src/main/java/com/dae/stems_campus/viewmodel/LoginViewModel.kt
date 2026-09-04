@@ -105,6 +105,21 @@ class LoginViewModel @Inject constructor(private var loginRepository: LoginRepos
         }
     }
 
+    /**
+     * 生物辨識登入：憑證在按下的當下才從 CredentialRepository 讀，
+     * 不受「記住帳密」勾選影響，也避免另存一份造成換帳號後拿到舊帳密。
+     */
+    fun biometricLoginAction() {
+        val userName = credentialRepository.getUsername().orEmpty()
+        val password = credentialRepository.getPassword().orEmpty()
+        if (userName.isEmpty() || password.isEmpty()) {
+            _showLoginFailMsgDialogFlag.value = true
+            _showLoginFailMsg.value = "CredentialNotSaved"
+            return
+        }
+        loginAction(userName, password, _UUID.value)
+    }
+
     //登入
     fun loginAction(userName: String, password: String, uuid: String) {
         viewModelScope.launch {
