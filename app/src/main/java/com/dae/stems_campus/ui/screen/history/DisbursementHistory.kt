@@ -193,7 +193,7 @@ private fun disbursementHistoryRow(
                     color = Color.Unspecified
                 ) {
                     Row {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Spacer(modifier = Modifier.height(20.dp))
                             Text(dateText, color = Color.Black, style = MaterialTheme.typography.bodySmall)
                             Spacer(modifier = Modifier.height(5.dp))
@@ -210,7 +210,7 @@ private fun disbursementHistoryRow(
 
                             Spacer(modifier = Modifier.height(20.dp))
                         }
-                        Spacer(modifier = Modifier.weight(1f))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Column(modifier = Modifier.align(Alignment.CenterVertically)) {
                             Text(
                                 "$${item.amount?.toAmountString() ?: 0}",
