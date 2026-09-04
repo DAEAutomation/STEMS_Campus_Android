@@ -2,6 +2,7 @@ package com.dae.stems_campus.ui.screen.history
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -196,7 +197,17 @@ private fun disbursementHistoryRow(
                             Spacer(modifier = Modifier.height(20.dp))
                             Text(dateText, color = Color.Black, style = MaterialTheme.typography.bodySmall)
                             Spacer(modifier = Modifier.height(5.dp))
-                            Text(item.payerName ?: "", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                            Row {
+                                if (item.walletType.equals("dorm")){
+                                    Text(stringResource(R.string.dormitory), color = Color(0xFF2D859D), style = MaterialTheme.typography.titleMedium, modifier = Modifier.background(Color.Unspecified).border(1.dp, Color(0xFF2D859D)).padding(2.dp))
+                                }else if (item.walletType.equals("classroom")) {
+                                    Text(stringResource(R.string.classroom), color = Color(0xFFD08024), style = MaterialTheme.typography.titleMedium, modifier = Modifier.background(Color.Unspecified).border(1.dp, Color(0xFFD08024)).padding(2.dp))
+                                }else if (item.walletType.equals("other")) {
+                                    Text(stringResource(R.string.other), color = Color(0xFF303236), style = MaterialTheme.typography.titleMedium, modifier = Modifier.background(Color.Unspecified).border(1.dp, Color(0xFF303236)).padding(2.dp))
+                                }
+                                Text(" ${item.roomNumber ?: ""} | ${item.payerName ?: ""}", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+                            }
+
                             Spacer(modifier = Modifier.height(20.dp))
                         }
                         Spacer(modifier = Modifier.weight(1f))
