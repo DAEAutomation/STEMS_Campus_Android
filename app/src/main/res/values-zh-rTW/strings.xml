@@ -51,7 +51,7 @@
     <string name="terms_of_use">使用須知</string>
     <string name="account_and_system_settings">帳戶與系統設置</string>
     <string name="user_or_card">用戶/卡片</string>
-    <string name="identity">身分</string>
+    <string name="identity">身份</string>
     <string name="mail">信箱</string>
     <string name="physical_card_id">實體卡ID</string>
     <string name="edit_physical_card_id">編輯 實體卡ID</string>
@@ -236,4 +236,5 @@
     <string name="binding_success">綁定成功</string>
     <string name="dormitory_left_success">已退出此宿舍</string>
     <string name="please_select_disbursement_wallet">請選擇撥入錢包</string>
+    <string name="staff_id">教職員編號</string>
 </resources>
