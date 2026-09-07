@@ -878,6 +878,37 @@ private fun userInfoByTeacherView(profileInfo: ProfileModel.ProfileData? = null,
             Spacer(modifier = Modifier.width(20.dp))
         }
         Spacer(modifier = Modifier.height(2.dp))
+        //<-----學號 教職員編號----->
+        Row {
+            Spacer(modifier = Modifier.width(20.dp))
+            Surface (modifier = Modifier
+                .weight(1f),
+                color = Color.White,
+                shape = RoundedCornerShape(0.dp)){
+
+                Row (verticalAlignment = Alignment.CenterVertically){
+                    Spacer(modifier = Modifier.width(20.dp))
+
+                    Surface (
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .weight(0.9f),
+                        color = Color.Unspecified
+                    ){
+                        Column {
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Text(stringResource(R.string.staff_id), color = Color(0xFF303236), style = MaterialTheme.typography.bodyLarge)
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(profileInfo?.userId ?: "", color = Color.Black, style = MaterialTheme.typography.titleLarge)
+                            Spacer(modifier = Modifier.height(20.dp))
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(20.dp))
+                }
+            }
+            Spacer(modifier = Modifier.width(20.dp))
+        }
+        Spacer(modifier = Modifier.height(2.dp))
         //<-----單位----->
         Row {
             Spacer(modifier = Modifier.width(20.dp))
@@ -1122,6 +1153,37 @@ private fun userInfoByStudentView(profileInfo: ProfileModel.ProfileData? = null,
                         }
                     }
 
+                    Spacer(modifier = Modifier.width(20.dp))
+                }
+            }
+            Spacer(modifier = Modifier.width(20.dp))
+        }
+        Spacer(modifier = Modifier.height(2.dp))
+        //<-----學號 教職員編號----->
+        Row {
+            Spacer(modifier = Modifier.width(20.dp))
+            Surface (modifier = Modifier
+                .weight(1f),
+                color = Color.White,
+                shape = RoundedCornerShape(0.dp)){
+
+                Row (verticalAlignment = Alignment.CenterVertically){
+                    Spacer(modifier = Modifier.width(20.dp))
+
+                    Surface (
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .weight(0.9f),
+                        color = Color.Unspecified
+                    ){
+                        Column {
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Text(stringResource(R.string.student_id), color = Color(0xFF303236), style = MaterialTheme.typography.bodyLarge)
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(profileInfo?.userId ?: "", color = Color.Black, style = MaterialTheme.typography.titleLarge)
+                            Spacer(modifier = Modifier.height(20.dp))
+                        }
+                    }
                     Spacer(modifier = Modifier.width(20.dp))
                 }
             }
