@@ -70,6 +70,7 @@ import com.dae.stems_campus.viewmodel.HomeInfoViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.time.Instant
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
@@ -651,11 +652,14 @@ private fun stopPowerInfoBottomSheetView(aBillingDetail : BillingDetail?, aStopP
     }
 }
 
-private fun formatIso8601(isoString: String, zoneOffset: ZoneOffset = ZoneOffset.UTC): String {
+private fun formatIso8601(
+    isoString: String,
+    zoneId: ZoneId = ZoneId.systemDefault()  // 改成 ZoneId,預設用裝置時區
+): String {
     if (isoString.isBlank()) return "--"
     return try {
         val instant = Instant.parse(isoString)
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(zoneOffset)
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(zoneId)
         formatter.format(instant)
     } catch (e: Exception) {
         "--"
