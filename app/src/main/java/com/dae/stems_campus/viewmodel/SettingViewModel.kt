@@ -7,6 +7,7 @@ import com.dae.stems_campus.data.model.SettingModel
 import com.dae.stems_campus.data.repository.AccountRepository
 import com.dae.stems_campus.data.repository.BaseRepository
 import com.dae.stems_campus.data.repository.CredentialRepository
+import com.dae.stems_campus.data.repository.LoginRepository
 import com.dae.stems_campus.data.repository.ProfileRepository
 import com.dae.stems_campus.data.repository.SettingRepository
 import com.dae.stems_campus.data.repository.UserPreferencesRepository
@@ -20,7 +21,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SettingViewModel @Inject constructor(private var profileRepository: ProfileRepository, private val userPreferences: UserPreferencesRepository, private val credentialRepository: CredentialRepository, private val accountRepository: AccountRepository, private val settingRepository: SettingRepository) : ViewModel() {
+class SettingViewModel @Inject constructor(private var loginRepository: LoginRepository, private val userPreferences: UserPreferencesRepository, private val credentialRepository: CredentialRepository, private val accountRepository: AccountRepository, private val settingRepository: SettingRepository) : ViewModel() {
 
 
     private val _UUID = MutableStateFlow("")
@@ -133,6 +134,16 @@ class SettingViewModel @Inject constructor(private var profileRepository: Profil
 
     private val _showMyDormitoryFailMsg = MutableStateFlow<String?>("")
     val showMyDormitoryFailMsg: StateFlow<String?> = _showMyDormitoryFailMsg
+
+    //登出
+    private val _resLogoutSuccessFlag = MutableStateFlow(false)
+    val resLogoutSuccessFlag: StateFlow<Boolean> get() = _resLogoutSuccessFlag
+
+    private val _showLogoutFailDialogFlag = MutableStateFlow(false)
+    val showLogoutFailDialogFlag: StateFlow<Boolean> get() = _showLogoutFailDialogFlag
+
+    private val _showLogoutFailMsg = MutableStateFlow<String?>("")
+    val showLogoutFailMsg: StateFlow<String?> = _showLogoutFailMsg
 
     init {
         loadLoginPreferences()
@@ -477,5 +488,36 @@ class SettingViewModel @Inject constructor(private var profileRepository: Profil
 
     fun resetShowMyDormitoryFailDialogFlag(value: Boolean) {
         _showMyDormitoryFailDialogFlag.value = value
+    }
+
+    //登出
+    fun logoutAction() {
+        viewModelScope.launch {
+            _showLoadingView.value = true
+            when (val result = loginRepository.logout()) {
+                is BaseRepository.Result.Success -> {
+                    _showLoadingView.value = false
+                    _resLogoutSuccessFlag.value = true
+                }
+                is BaseRepository.Result.Error -> {
+                    _showLoadingView.value = false
+                    _showLogoutFailDialogFlag.value = true
+                    _showLogoutFailMsg.value = result.message
+                }
+                is BaseRepository.Result.Unauthorized -> {
+                    _showLoadingView.value = false
+                    _showLogoutFailDialogFlag.value = true
+                    _showLogoutFailMsg.value = "PleaseReLogin"
+                }
+            }
+        }
+    }
+
+    fun resetResLogoutSuccessFlag(value: Boolean) {
+        _resLogoutSuccessFlag.value = value
+    }
+
+    fun resetShowLogoutFailDialogFlag(value: Boolean) {
+        _showLogoutFailDialogFlag.value = value
     }
 }

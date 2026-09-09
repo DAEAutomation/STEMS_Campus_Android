@@ -76,6 +76,9 @@ fun changePasswordScreen(
     val showChangePasswordFailMsg by settingViewModel.showChangePasswordFailMsg.collectAsState()
     val showChangePasswordInputFailTag by settingViewModel.showChangePasswordInputFailTag.collectAsState()
     val showChangePasswordInputFailMsg by settingViewModel.showChangePasswordInputFailMsg.collectAsState()
+    val resLogoutSuccessFlag by settingViewModel.resLogoutSuccessFlag.collectAsState()
+    val showLogoutFailDialogFlag by settingViewModel.showLogoutFailDialogFlag.collectAsState()
+    val showLogoutFailMsg by settingViewModel.showLogoutFailMsg.collectAsState()
 
     // 離開頁面時清空輸入
     DisposableEffect(Unit) {
@@ -100,18 +103,35 @@ fun changePasswordScreen(
             settingViewModel.changePasswordAction(oldPw, newPw, confirmNewPw)
         },
         onChangePasswordSuccessHandled = {
+            settingViewModel.logoutAction()
             settingViewModel.resetResChangePasswordSuccessFlag(false)
-            mainNavController.navigate("signIn") {
-                popUpTo(0) {
-                    inclusive = true // 包含起始頁一起清掉
-                }
-                launchSingleTop = true
-            }
         },
         onChangePasswordFailDismissed = {
             settingViewModel.resetShowChangePasswordFailDialogFlag(false)
         }
     )
+
+    if (resLogoutSuccessFlag) {
+        mainNavController.navigate("signIn") {
+            popUpTo(0) {
+                inclusive = true // 包含起始頁一起清掉
+            }
+            launchSingleTop = true
+        }
+        settingViewModel.resetResLogoutSuccessFlag(false)
+    }
+
+    if (showLogoutFailDialogFlag) {
+        textTNoButtonAlert(
+            onDismissRequest = {},
+            dialogTitle = parseDialogMsg(showLogoutFailMsg ?: "")
+        )
+        // 在 Dialog 顯示後啟動計時器
+        LaunchedEffect(Unit) {
+            delay(1500) // 延遲 1.5 秒
+            settingViewModel.resetShowLogoutFailDialogFlag(false)
+        }
+    }
 }
 
 @Composable
@@ -380,6 +400,17 @@ private fun TopTitleBar(navTitle: String, navController: NavHostController) {
         },
         actions = {},
     )
+}
+
+@Composable
+private fun parseDialogMsg(aMsg: String):(String){
+    var msg: String = ""
+    if (aMsg == "PleaseReLogin") {
+        msg = stringResource(id = R.string.please_re_login)
+    }else {
+        msg = aMsg
+    }
+    return msg
 }
 
 @Composable
