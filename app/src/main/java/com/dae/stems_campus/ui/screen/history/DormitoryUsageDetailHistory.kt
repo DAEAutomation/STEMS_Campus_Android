@@ -37,7 +37,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.testing.TestNavHostController
 import com.dae.stems_campus.R
 import com.dae.stems_campus.data.model.HistoryModel
-import com.dae.stems_campus.utils.computeDurationAtLeastOneMinute
 import com.dae.stems_campus.utils.toAmountString
 import com.dae.stems_campus.utils.toLocalDateTimeText
 import com.dae.stems_campus.utils.toTwoDecimalString
