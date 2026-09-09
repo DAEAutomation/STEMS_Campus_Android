@@ -88,7 +88,7 @@ fun needUpdateScreen(currentVersion: String, requiredVersion: String) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "前往 Play Store 更新",
+                        text = "前往 Google Play 更新",
                         color = Color.White,
                         style = MaterialTheme.typography.titleMedium
                     )

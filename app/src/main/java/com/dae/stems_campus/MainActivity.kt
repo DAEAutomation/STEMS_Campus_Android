@@ -98,7 +98,7 @@ fun AppContent () {
         }
     }
 
-    // 切回前景時重查維護狀態；冷啟動那次 ON_RESUME 跳過，避免跟上面的 checkToken() 重複打 API
+    // 切回前景時重查維護狀態與版本要求；冷啟動那次 ON_RESUME 跳過，避免跟上面的 checkToken() 重複打 API
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         var skipFirstResume = true
@@ -115,8 +115,8 @@ fun AppContent () {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // 全域輪詢：不分畫面每 10 分鐘重查一次維護狀態，
-    // 讓維護開始時「一直開著 App 沒切背景」的使用者也會被切到維護畫面。
+    // 全域輪詢：不分畫面每 10 分鐘重查一次維護狀態與版本要求，
+    // 讓維護開始／後端調高 appVersion 時，「一直開著 App 沒切背景」的使用者也會被切到攔截畫面。
     // 用 repeatOnLifecycle 限制在前景才跑，切背景就停，避免背景發請求
     LaunchedEffect(Unit) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {

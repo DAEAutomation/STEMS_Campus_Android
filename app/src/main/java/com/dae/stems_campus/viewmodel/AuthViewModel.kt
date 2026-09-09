@@ -3,6 +3,7 @@ package com.dae.stems_campus.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dae.stems_campus.data.model.ServiceCheckModel
 import com.dae.stems_campus.data.repository.BaseRepository
 import com.dae.stems_campus.data.repository.ServiceCheckRepository
 import com.dae.stems_campus.data.repository.UserPreferencesRepository
@@ -82,6 +83,35 @@ class AuthViewModel @Inject constructor(
     }
 
     /**
+     * 把 service-check 的結果換算成「該擋下來」的畫面狀態，沒有要擋就回 null。
+     * 判斷順序固定：維護中優先於強制更新。
+     * 只做判斷不寫 _authState，因為 checkToken() 與 recheckServiceState()
+     * 對「沒擋下來」要做的事不一樣（前者繼續驗 token，後者可能要放人回 App）。
+     */
+    private fun blockingStateOf(data: ServiceCheckModel.ServiceCheckData): AuthState? {
+        // 服務維護中
+        if (data.serviceState == false) {
+            return AuthState.ServiceUnavailable(
+                message = data.serviceMessage.orEmpty(),
+                endTime = data.serviceEndTime.orEmpty()
+            )
+        }
+
+        // 強制更新檢查
+        val requiredVersion = data.appVersion.orEmpty()
+        val currentVersion = BuildConfig.VERSION_NAME
+        if (requiredVersion.isNotEmpty() &&
+            isVersionOutdated(currentVersion, requiredVersion)) {
+            return AuthState.NeedAppUpdate(
+                currentVersion = currentVersion,
+                requiredVersion = requiredVersion
+            )
+        }
+
+        return null
+    }
+
+    /**
      * 服務維護與強制更新檢查。
      * 回傳 true 表示可繼續；false 表示已把 _authState 切到攔截畫面。
      * serviceCheck 失敗（網路/500 等）一律回 true，維持既有的 fail-open 策略。
@@ -90,30 +120,9 @@ class AuthViewModel @Inject constructor(
         val serviceCheckResult = serviceCheckRepository.getServiceCheckData()
         if (serviceCheckResult !is BaseRepository.Result.Success) return true
 
-        val data = serviceCheckResult.data
-
-        // 服務維護中
-        if (data.serviceState == false) {
-            _authState.value = AuthState.ServiceUnavailable(
-                message = data.serviceMessage.orEmpty(),
-                endTime = data.serviceEndTime.orEmpty()
-            )
-            return false
-        }
-
-        // 強制更新檢查
-        val requiredVersion = data.appVersion.orEmpty()
-        val currentVersion = BuildConfig.VERSION_NAME
-        if (requiredVersion.isNotEmpty() &&
-            isVersionOutdated(currentVersion, requiredVersion)) {
-            _authState.value = AuthState.NeedAppUpdate(
-                currentVersion = currentVersion,
-                requiredVersion = requiredVersion
-            )
-            return false
-        }
-
-        return true
+        val blockingState = blockingStateOf(serviceCheckResult.data) ?: return true
+        _authState.value = blockingState
+        return false
     }
 
     /**
@@ -143,9 +152,13 @@ class AuthViewModel @Inject constructor(
     }
 
     /**
-     * 只重查服務維護狀態，不碰 token。
-     * 給「切回前景」與「停在維護畫面時輪詢」用；
+     * 只重查服務維護狀態與版本要求，不碰 token。
+     * 給「切回前景」與「輪詢」用；
      * 刻意不複用 checkToken()，避免每次回前景都重驗 token 把使用者踢回登入頁。
+     *
+     * 版本檢查也放這裡：checkToken() 掛在 AppContent 的 LaunchedEffect(Unit)，
+     * 一個 App 生命週期只跑一次，只靠它的話後端調高 appVersion 後，
+     * 已開著 App 的使用者要完全關掉重開才會被擋。
      */
     fun recheckServiceState() {
         viewModelScope.launch {
@@ -155,19 +168,17 @@ class AuthViewModel @Inject constructor(
                 baseUrlHolder.baseUrl = storedBaseUrl
 
                 val result = serviceCheckRepository.getServiceCheckData()
+                // 這裡刻意不 fail-open：查不到就原地不動，
+                // 停在攔截畫面時斷網，留在原畫面比放進 App 然後每支 API 都失敗合理
                 if (result !is BaseRepository.Result.Success) return@launch
 
-                val data = result.data
+                val blockingState = blockingStateOf(result.data)
                 when {
-                    // 維護中 → 不管目前在哪一頁都切到維護畫面
-                    data.serviceState == false -> {
-                        _authState.value = AuthState.ServiceUnavailable(
-                            message = data.serviceMessage.orEmpty(),
-                            endTime = data.serviceEndTime.orEmpty()
-                        )
-                    }
-                    // 維護結束且正卡在維護畫面 → 走完整啟動流程回到 App
-                    _authState.value is AuthState.ServiceUnavailable -> checkToken()
+                    // 維護中或版本過舊 → 不管目前在哪一頁都切到攔截畫面
+                    blockingState != null -> _authState.value = blockingState
+                    // 攔截條件解除且正卡在攔截畫面 → 走完整啟動流程回到 App
+                    _authState.value is AuthState.ServiceUnavailable ||
+                            _authState.value is AuthState.NeedAppUpdate -> checkToken()
                 }
             } catch (e: Exception) {
                 Log.e("DAE_Develop", "重查服務狀態錯誤", e)
