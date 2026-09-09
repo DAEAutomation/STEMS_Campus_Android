@@ -59,14 +59,21 @@ fun computeDuration(startDate: String, endDate: String): String {
     }
 }
 
+/**
+ * 計算兩個時間的間隔，**只要有餘秒就無條件進位成一分鐘**。
+ * 例：0分40秒 → 1分鐘、1分30秒 → 2分鐘、1小時0分1秒 → 1小時1分鐘。
+ * 用意是不讓使用者看到「0分鐘」這種像是沒用到電的顯示。
+ * 結束時間早於開始時間（資料異常）一律當 0 分鐘，不顯示負值。
+ */
 fun computeDurationAtLeastOneMinute(startDate: String, endDate: String): String {
     return try {
         val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
         val startTime = OffsetDateTime.parse(startDate, formatter)
         val endTime = OffsetDateTime.parse(endDate, formatter)
         val duration = Duration.between(startTime, endTime)
-        val totalMinutes = duration.toMinutes()
-        val adjustedMinutes = if (totalMinutes == 0L && duration.seconds > 0) 1L else totalMinutes
+        val totalSeconds = duration.seconds
+        // 無條件進位：(秒 + 59) / 60
+        val adjustedMinutes = if (totalSeconds <= 0L) 0L else (totalSeconds + 59) / 60
         val hours = adjustedMinutes / 60
         val minutes = adjustedMinutes % 60
         when {

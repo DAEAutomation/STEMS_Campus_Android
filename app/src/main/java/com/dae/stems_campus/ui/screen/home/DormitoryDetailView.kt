@@ -63,7 +63,6 @@ import com.dae.stems_campus.data.model.ProfileModel.SpaceDetail
 import com.dae.stems_campus.data.model.ScanModel
 import com.dae.stems_campus.ui.components.textTNoButtonAlert
 import com.dae.stems_campus.ui.theme.STEMS_CampusTheme
-import com.dae.stems_campus.utils.computeDurationAtLeastOneMinute
 import com.dae.stems_campus.utils.toAmountString
 import com.dae.stems_campus.utils.toTwoDecimalString
 import com.dae.stems_campus.viewmodel.HomeInfoViewModel
